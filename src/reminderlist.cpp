@@ -1,7 +1,5 @@
 #include "reminderlist.h"
 #include "./ui_reminderlist.h"
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>
@@ -35,7 +33,6 @@ ReminderList::ReminderList(QWidget *parent)
     , editDialog(new ReminderEdit(this))
 {
     ui->setupUi(this);
-    setupUI();
     setupModel();
     setupConnections();
 }
@@ -55,39 +52,28 @@ void ReminderList::setReminderManager(ReminderManager *manager)
     }
 }
 
-void ReminderList::setupUI()
+void ReminderList::setupConnections()
 {
-    // 创建主布局
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    
-    // 创建顶部工具栏
-    QHBoxLayout *toolbarLayout = new QHBoxLayout();
-    
-    searchEdit = new QLineEdit(this);
-    searchEdit->setPlaceholderText(tr("搜索提醒..."));
-    searchEdit->setMinimumWidth(200);
-    
-    addButton = new QPushButton(tr("添加提醒"), this);
-    importButton = new QPushButton(tr("导入"), this);
-    exportButton = new QPushButton(tr("导出"), this);
-    
-    toolbarLayout->addWidget(searchEdit);
-    toolbarLayout->addStretch();
-    toolbarLayout->addWidget(addButton);
-    toolbarLayout->addWidget(importButton);
-    toolbarLayout->addWidget(exportButton);
-    
-    mainLayout->addLayout(toolbarLayout);
-    
-    // 创建表格视图
-    tableView = new QTableView(this);
-    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    tableView->verticalHeader()->hide();
-    
+    connect(ui->searchEdit, &QLineEdit::textChanged,
+            this, &ReminderList::onSearchTextChanged);
+    connect(ui->addButton, &QPushButton::clicked,
+            this, &ReminderList::onAddClicked);
+    connect(ui->editButton, &QPushButton::clicked,
+            this, &ReminderList::onEditClicked);
+    connect(ui->deleteButton, &QPushButton::clicked,
+            this, &ReminderList::onDeleteClicked);
+    connect(ui->importButton, &QPushButton::clicked,
+            this, &ReminderList::onImportClicked);
+    connect(ui->exportButton, &QPushButton::clicked,
+            this, &ReminderList::onExportClicked);
+    connect(ui->tableView, &QTableView::doubleClicked,
+            this, &ReminderList::onEditClicked);
+}
+
+void ReminderList::setupModel()
+{
     // 创建数据模型
+    model = new QStandardItemModel(this);
     model->setHorizontalHeaderLabels({
         tr("ID"),
         tr("任务名称"),
@@ -96,26 +82,27 @@ void ReminderList::setupUI()
         tr("状态"),
         tr("操作")
     });
-    
-    tableView->setModel(model);
-    
-    mainLayout->addWidget(tableView);
-    
-    setLayout(mainLayout);
-}
 
-void ReminderList::setupConnections()
-{
-    connect(searchEdit, &QLineEdit::textChanged,
-            this, &ReminderList::onSearchTextChanged);
-    connect(addButton, &QPushButton::clicked,
-            this, &ReminderList::onAddClicked);
-    connect(importButton, &QPushButton::clicked,
-            this, &ReminderList::onImportClicked);
-    connect(exportButton, &QPushButton::clicked,
-            this, &ReminderList::onExportClicked);
-    connect(tableView, &QTableView::doubleClicked,
-            this, &ReminderList::onEditClicked);
+    // 创建代理模型
+    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(model);
+    proxyModel->setFilterKeyColumn(1); // 按名称列过滤
+
+    // 设置表格视图
+    ui->tableView->setModel(proxyModel);
+    ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableView->verticalHeader()->hide();
+    ui->tableView->setAlternatingRowColors(true);
+    ui->tableView->setShowGrid(false);
+    ui->tableView->setStyleSheet(
+        "QTableView { background: #fff; border: none; font-size: 15px; }"
+        "QHeaderView::section { background: #f0f0f0; font-weight: bold; height: 32px; border: none; }"
+        "QTableView::item:selected { background: #e6f7ff; }"
+        "QTableView::item:hover { background: #f5faff; }"
+    );
 }
 
 void ReminderList::addNewReminder()
@@ -156,7 +143,7 @@ void ReminderList::editReminder(const QModelIndex &index)
 
 void ReminderList::onEditClicked()
 {
-    QModelIndex currentIndex = tableView->currentIndex();
+    QModelIndex currentIndex = ui->tableView->currentIndex();
     if (!currentIndex.isValid()) {
         LOG_WARNING("尝试编辑未选中的提醒");
         QMessageBox::warning(this, tr("警告"), tr("请先选择一个提醒"));
@@ -516,33 +503,6 @@ void ReminderList::onSearchTextChanged(const QString &text)
     proxyModel->setFilterFixedString(text);
 }
 
-void ReminderList::setupModel()
-{
-    // 创建数据模型
-    model = new QStandardItemModel(this);
-    model->setHorizontalHeaderLabels({
-        tr("ID"),
-        tr("任务名称"),
-        tr("类型"),
-        tr("下次触发"),
-        tr("状态"),
-        tr("操作")
-    });
-
-    // 创建代理模型
-    proxyModel = new QSortFilterProxyModel(this);
-    proxyModel->setSourceModel(model);
-    proxyModel->setFilterKeyColumn(1); // 按名称列过滤
-
-    // 设置表格视图
-    tableView->setModel(proxyModel);
-    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    tableView->setSelectionMode(QAbstractItemView::SingleSelection);
-    tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    tableView->verticalHeader()->hide();
-}
-
 void ReminderList::loadReminders()
 {
     if (!reminderManager) {
@@ -558,7 +518,7 @@ void ReminderList::loadReminders()
 
 void ReminderList::onDeleteClicked()
 {
-    QModelIndex currentIndex = tableView->currentIndex();
+    QModelIndex currentIndex = ui->tableView->currentIndex();
     if (!currentIndex.isValid()) {
         LOG_WARNING("尝试删除未选中的提醒");
         QMessageBox::warning(this, tr("警告"), tr("请先选择一个提醒"));

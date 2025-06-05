@@ -2,14 +2,10 @@
 #define REMINDERLIST_H
 
 #include <QWidget>
-#include <QTableView>
 #include <QStandardItemModel>
+#include <QSortFilterProxyModel>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QComboBox>
-#include <QSortFilterProxyModel>
 #include "reminderedit.h"
 #include "remindermanager.h"
 
@@ -46,7 +42,6 @@ public slots:
     void onSearchTextChanged(const QString &text);
 
 private:
-    void setupUI();
     void setupConnections();
     void setupModel();
     void addReminderToModel(const QJsonObject &reminder);
@@ -63,13 +58,6 @@ private:
     QStandardItemModel *model;
     QSortFilterProxyModel *proxyModel;
     ReminderManager *reminderManager;
-    QLineEdit *searchEdit;
-    QPushButton *addButton;
-    QPushButton *editButton;
-    QPushButton *deleteButton;
-    QPushButton *importButton;
-    QPushButton *exportButton;
-    QTableView *tableView;
     ReminderEdit *editDialog;
 };
 

@@ -27,84 +27,134 @@
       <widget class="QLineEdit" name="nameEdit"/>
      </item>
      <item row="1" column="0">
+      <widget class="QLabel" name="categoryLabel">
+       <property name="text">
+        <string>分类：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="categoryCombo"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="newCategoryLabel">
+       <property name="text">
+        <string>新建分类：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QLineEdit" name="newCategoryEdit"/>
+     </item>
+     <item row="3" column="0">
       <widget class="QLabel" name="typeLabel">
        <property name="text">
         <string>提醒类型：</string>
        </property>
       </widget>
      </item>
-     <item row="1" column="1">
+     <item row="3" column="1">
       <widget class="QComboBox" name="typeCombo"/>
      </item>
-     <item row="2" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="timeLabel">
        <property name="text">
         <string>提醒时间：</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="4" column="1">
       <widget class="QDateTimeEdit" name="dateTimeEdit">
        <property name="displayFormat">
         <string>yyyy-MM-dd HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="timeLabel_2">
        <property name="text">
         <string>时间：</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="5" column="1">
       <widget class="QTimeEdit" name="timeEdit">
        <property name="displayFormat">
         <string>HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="6" column="0">
       <widget class="QLabel" name="dateLabel">
        <property name="text">
         <string>日期：</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="6" column="1">
       <widget class="QDateEdit" name="dateEdit">
        <property name="displayFormat">
         <string>yyyy-MM-dd</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
+     <item row="7" column="0">
       <widget class="QLabel" name="weekDaysLabel">
        <property name="text">
         <string>星期：</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="7" column="1">
       <widget class="QListWidget" name="weekDaysList">
        <property name="selectionMode">
         <enum>QAbstractItemView::MultiSelection</enum>
        </property>
       </widget>
      </item>
-     <item row="6" column="0">
+     <item row="8" column="0">
       <widget class="QLabel" name="monthDaysLabel">
        <property name="text">
         <string>日期：</string>
        </property>
       </widget>
      </item>
-     <item row="6" column="1">
+     <item row="8" column="1">
       <widget class="QListWidget" name="monthDaysList">
        <property name="selectionMode">
         <enum>QAbstractItemView::MultiSelection</enum>
        </property>
       </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="newTagLabel">
+       <property name="text">
+        <string>新建标签：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1">
+      <widget class="QLineEdit" name="newTagEdit"/>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="tagListLabel">
+       <property name="text">
+        <string>标签：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1">
+      <widget class="QListWidget" name="tagList"/>
+     </item>
+     <item row="11" column="0">
+      <widget class="QLabel" name="nextTriggerLabelTitle">
+       <property name="text">
+        <string>下次触发时间：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="1">
+      <widget class="QLabel" name="nextTriggerLabel"/>
      </item>
     </layout>
    </item>

@@ -41,4 +41,19 @@ RESOURCES += \
 QTDIR = C:/Qt/6.8.2/msvc2022_64
 
 # 指定编译器
-QMAKE_CXXFLAGS += /std:c++17 
+QMAKE_CXXFLAGS += /std:c++17
+
+# 添加 dbghelp 库
+LIBS += -ldbghelp
+
+# 设置应用程序信息
+QMAKE_TARGET_COMPANY = "Your Company"
+QMAKE_TARGET_PRODUCT = "EasyNotify"
+QMAKE_TARGET_DESCRIPTION = "A simple reminder application"
+QMAKE_TARGET_COPYRIGHT = "Copyright (C) 2024"
+
+# 生成 PDB 文件
+QMAKE_CXXFLAGS_DEBUG += /Zi
+QMAKE_CXXFLAGS_RELEASE += /Zi
+QMAKE_LFLAGS_DEBUG += /DEBUG
+QMAKE_LFLAGS_RELEASE += /DEBUG /OPT:REF /OPT:ICF 

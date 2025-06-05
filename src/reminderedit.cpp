@@ -27,10 +27,9 @@ ReminderEdit::ReminderEdit(QWidget *parent)
     , ui(new Ui::ReminderEdit)
 {
     ui->setupUi(this);
-    setupUI();
+    setWindowTitle(tr("新增提醒"));
     setupConnections();
     loadCategories();
-    
     // 设置默认值
     reminderData["Id"] = generateId();
     reminderData["IsEnabled"] = true;
@@ -44,98 +43,16 @@ ReminderEdit::~ReminderEdit()
     delete ui;
 }
 
-void ReminderEdit::setupUI()
-{
-    setWindowTitle(tr("编辑提醒"));
-    resize(400, 300);
-
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-
-    // 创建表单布局
-    QFormLayout *formLayout = new QFormLayout();
-    
-    nameEdit = new QLineEdit(this);
-    formLayout->addRow(tr("名称:"), nameEdit);
-
-    typeCombo = new QComboBox(this);
-    typeCombo->addItems({
-        tr("一次性"),
-        tr("每天"),
-        tr("每周"),
-        tr("每月")
-    });
-    formLayout->addRow(tr("类型:"), typeCombo);
-
-    dateTimeEdit = new QDateTimeEdit(this);
-    dateTimeEdit->setCalendarPopup(true);
-    dateTimeEdit->setDateTime(QDateTime::currentDateTime());
-    formLayout->addRow(tr("时间:"), dateTimeEdit);
-
-    weekDaysList = new QListWidget(this);
-    weekDaysList->addItems({
-        tr("星期一"),
-        tr("星期二"),
-        tr("星期三"),
-        tr("星期四"),
-        tr("星期五"),
-        tr("星期六"),
-        tr("星期日")
-    });
-    for (int i = 0; i < weekDaysList->count(); ++i) {
-        weekDaysList->item(i)->setFlags(weekDaysList->item(i)->flags() | Qt::ItemIsUserCheckable);
-        weekDaysList->item(i)->setCheckState(Qt::Unchecked);
-    }
-    formLayout->addRow(tr("星期:"), weekDaysList);
-
-    monthDaysList = new QListWidget(this);
-    for (int i = 1; i <= 31; ++i) {
-        QListWidgetItem *item = new QListWidgetItem(QString::number(i));
-        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-        item->setCheckState(Qt::Unchecked);
-        monthDaysList->addItem(item);
-    }
-    formLayout->addRow(tr("日期:"), monthDaysList);
-
-    // 添加下次触发时间标签
-    nextTriggerLabel = new QLabel(this);
-    nextTriggerLabel->setText(tr("下次触发时间："));
-    formLayout->addRow(tr(""), nextTriggerLabel);
-
-    mainLayout->addLayout(formLayout);
-
-    // 创建按钮布局
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    okButton = new QPushButton(tr("确定"), this);
-    cancelButton = new QPushButton(tr("取消"), this);
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(okButton);
-    buttonLayout->addWidget(cancelButton);
-    mainLayout->addLayout(buttonLayout);
-
-    setLayout(mainLayout);
-    updateUI();
-}
-
 void ReminderEdit::setupConnections()
 {
-    connect(typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+    connect(ui->typeCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &ReminderEdit::onTypeChanged);
-    connect(dateTimeEdit, &QDateTimeEdit::dateTimeChanged,
+    connect(ui->dateTimeEdit, &QDateTimeEdit::dateTimeChanged,
             this, &ReminderEdit::onDateTimeChanged);
-    connect(okButton, &QPushButton::clicked,
+    connect(ui->buttonBox, &QDialogButtonBox::accepted,
             this, &ReminderEdit::onOkClicked);
-    connect(cancelButton, &QPushButton::clicked,
+    connect(ui->buttonBox, &QDialogButtonBox::rejected,
             this, &ReminderEdit::onCancelClicked);
-}
-
-void ReminderEdit::updateUI()
-{
-    bool isWeekly = typeCombo->currentText() == tr("每周");
-    bool isMonthly = typeCombo->currentText() == tr("每月");
-    
-    weekDaysList->setVisible(isWeekly);
-    monthDaysList->setVisible(isMonthly);
-    dateTimeEdit->setVisible(!isWeekly && !isMonthly);
 }
 
 void ReminderEdit::loadCategories()
@@ -151,7 +68,7 @@ void ReminderEdit::loadCategories()
             for (const QJsonValue &value : array) {
                 categories.append(value.toString());
             }
-            categoryCombo->addItems(categories);
+            ui->categoryCombo->addItems(categories);
         }
     }
 }
@@ -191,31 +108,31 @@ void ReminderEdit::removeCategory(const QString &category)
 
 void ReminderEdit::onAddCategory()
 {
-    QString category = newCategoryEdit->text().trimmed();
+    QString category = ui->newCategoryEdit->text().trimmed();
     if (!category.isEmpty()) {
         addCategory(category);
-        categoryCombo->addItem(category);
-        newCategoryEdit->clear();
+        ui->categoryCombo->addItem(category);
+        ui->newCategoryEdit->clear();
     }
 }
 
 void ReminderEdit::onRemoveCategory()
 {
-    QString category = categoryCombo->currentText();
+    QString category = ui->categoryCombo->currentText();
     if (!category.isEmpty()) {
         removeCategory(category);
-        categoryCombo->removeItem(categoryCombo->currentIndex());
+        ui->categoryCombo->removeItem(ui->categoryCombo->currentIndex());
     }
 }
 
 void ReminderEdit::onAddTag()
 {
-    QString tag = newTagEdit->text().trimmed();
+    QString tag = ui->newTagEdit->text().trimmed();
     if (!tag.isEmpty()) {
         QListWidgetItem *item = new QListWidgetItem(tag);
         item->setFlags(item->flags() | Qt::ItemIsEditable);
-        tagList->addItem(item);
-        newTagEdit->clear();
+        ui->tagList->addItem(item);
+        ui->newTagEdit->clear();
         
         QJsonArray tags = reminderData["Tags"].toArray();
         tags.append(tag);
@@ -225,10 +142,10 @@ void ReminderEdit::onAddTag()
 
 void ReminderEdit::onRemoveTag()
 {
-    QListWidgetItem *item = tagList->currentItem();
+    QListWidgetItem *item = ui->tagList->currentItem();
     if (item) {
         QString tag = item->text();
-        tagList->takeItem(tagList->row(item));
+        ui->tagList->takeItem(ui->tagList->row(item));
         
         QJsonArray tags = reminderData["Tags"].toArray();
         for (int i = 0; i < tags.size(); ++i) {
@@ -243,25 +160,24 @@ void ReminderEdit::onRemoveTag()
 
 void ReminderEdit::loadReminderData(const QJsonObject &reminder)
 {
+    setWindowTitle(tr("编辑提醒"));
     reminderData = reminder;
-    
-    // 设置名称
-    nameEdit->setText(reminder["Name"].toString());
+    ui->nameEdit->setText(reminder["Name"].toString());
     
     // 设置分类
     QString category = reminder["Category"].toString();
-    int categoryIndex = categoryCombo->findText(category);
+    int categoryIndex = ui->categoryCombo->findText(category);
     if (categoryIndex >= 0) {
-        categoryCombo->setCurrentIndex(categoryIndex);
+        ui->categoryCombo->setCurrentIndex(categoryIndex);
     }
     
     // 设置标签
-    tagList->clear();
+    ui->tagList->clear();
     QJsonArray tags = reminder["Tags"].toArray();
     for (const QJsonValue &tag : tags) {
         QListWidgetItem *item = new QListWidgetItem(tag.toString());
         item->setFlags(item->flags() | Qt::ItemIsEditable);
-        tagList->addItem(item);
+        ui->tagList->addItem(item);
     }
     
     // 设置类型
@@ -270,11 +186,11 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
     if (type == "Daily") typeIndex = 1;
     else if (type == "Weekly") typeIndex = 2;
     else if (type == "Monthly") typeIndex = 3;
-    typeCombo->setCurrentIndex(typeIndex);
+    ui->typeCombo->setCurrentIndex(typeIndex);
     
     // 设置时间
     QDateTime nextTrigger = QDateTime::fromString(reminder["NextTrigger"].toString(), Qt::ISODate);
-    dateTimeEdit->setDateTime(nextTrigger);
+    ui->dateTimeEdit->setDateTime(nextTrigger);
     
     // 设置星期
     if (type == "Weekly") {
@@ -283,8 +199,8 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
         for (const QJsonValue &value : weekDaysArray) {
             weekDays.append(value.toInt());
         }
-        for (int i = 0; i < weekDaysList->count(); ++i) {
-            weekDaysList->item(i)->setCheckState(
+        for (int i = 0; i < ui->weekDaysList->count(); ++i) {
+            ui->weekDaysList->item(i)->setCheckState(
                 weekDays.contains(i + 1) ? Qt::Checked : Qt::Unchecked
             );
         }
@@ -297,8 +213,8 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
         for (const QJsonValue &value : monthDaysArray) {
             monthDays.append(value.toInt());
         }
-        for (int i = 0; i < monthDaysList->count(); ++i) {
-            monthDaysList->item(i)->setCheckState(
+        for (int i = 0; i < ui->monthDaysList->count(); ++i) {
+            ui->monthDaysList->item(i)->setCheckState(
                 monthDays.contains(i + 1) ? Qt::Checked : Qt::Unchecked
             );
         }
@@ -313,25 +229,25 @@ QJsonObject ReminderEdit::getReminderData() const
 void ReminderEdit::onTypeChanged(int index)
 {
     // 隐藏所有时间相关控件
-    dateTimeEdit->hide();
-    weekDaysList->hide();
-    monthDaysList->hide();
+    ui->dateTimeEdit->hide();
+    ui->weekDaysList->hide();
+    ui->monthDaysList->hide();
     
     // 根据类型显示相应控件
     switch (index) {
         case 0: // 一次性提醒
-            dateTimeEdit->show();
+            ui->dateTimeEdit->show();
             reminderData["Type"] = "OneTime";
             break;
         case 1: // 每日提醒
             reminderData["Type"] = "Daily";
             break;
         case 2: // 每周提醒
-            weekDaysList->show();
+            ui->weekDaysList->show();
             reminderData["Type"] = "Weekly";
             break;
         case 3: // 每月提醒
-            monthDaysList->show();
+            ui->monthDaysList->show();
             reminderData["Type"] = "Monthly";
             break;
     }
@@ -370,7 +286,7 @@ void ReminderEdit::onOkClicked()
 
 void ReminderEdit::updateNextTriggerTime()
 {
-    QString type = typeCombo->currentText();
+    QString type = ui->typeCombo->currentText();
     QDateTime nextTime = nextTriggerTime;
 
     if (type == tr("每天")) {
@@ -381,7 +297,7 @@ void ReminderEdit::updateNextTriggerTime()
         nextTime = nextTime.addMonths(1);
     }
 
-    nextTriggerLabel->setText(tr("下次触发时间：%1")
+    ui->nextTriggerLabel->setText(tr("下次触发时间：%1")
         .arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
 }
 
@@ -395,12 +311,12 @@ QDateTime ReminderEdit::calculateNextTrigger() const
     QDateTime now = QDateTime::currentDateTime();
     QDateTime nextTrigger;
     
-    switch (typeCombo->currentIndex()) {
+    switch (ui->typeCombo->currentIndex()) {
         case 0: // 一次性提醒
-            nextTrigger = dateTimeEdit->dateTime();
+            nextTrigger = ui->dateTimeEdit->dateTime();
             break;
         case 1: { // 每日提醒
-            QTime time = dateTimeEdit->time();
+            QTime time = ui->dateTimeEdit->time();
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
                 nextTrigger = nextTrigger.addDays(1);
@@ -408,10 +324,10 @@ QDateTime ReminderEdit::calculateNextTrigger() const
             break;
         }
         case 2: { // 每周提醒
-            QTime time = dateTimeEdit->time();
+            QTime time = ui->dateTimeEdit->time();
             QList<int> weekDays;
-            for (int i = 0; i < weekDaysList->count(); ++i) {
-                if (weekDaysList->item(i)->checkState() == Qt::Checked) {
+            for (int i = 0; i < ui->weekDaysList->count(); ++i) {
+                if (ui->weekDaysList->item(i)->checkState() == Qt::Checked) {
                     weekDays << (i + 1);
                 }
             }
@@ -427,10 +343,10 @@ QDateTime ReminderEdit::calculateNextTrigger() const
             break;
         }
         case 3: { // 每月提醒
-            QTime time = dateTimeEdit->time();
+            QTime time = ui->dateTimeEdit->time();
             QList<int> monthDays;
-            for (int i = 0; i < monthDaysList->count(); ++i) {
-                if (monthDaysList->item(i)->checkState() == Qt::Checked) {
+            for (int i = 0; i < ui->monthDaysList->count(); ++i) {
+                if (ui->monthDaysList->item(i)->checkState() == Qt::Checked) {
                     monthDays << (i + 1);
                 }
             }
@@ -452,8 +368,8 @@ QDateTime ReminderEdit::calculateNextTrigger() const
 
 bool ReminderEdit::validateInput() const
 {
-    bool isValid = !nameEdit->text().trimmed().isEmpty();
-    okButton->setEnabled(isValid);
+    bool isValid = !ui->nameEdit->text().trimmed().isEmpty();
+    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
     return isValid;
 }
 
@@ -470,10 +386,10 @@ void ReminderEdit::onDaysChanged()
 
 bool ReminderEdit::isDaySelected(int day) const
 {
-    if (typeCombo->currentIndex() == 2) { // 每周
-        return weekDaysList->item(day - 1)->checkState() == Qt::Checked;
-    } else if (typeCombo->currentIndex() == 3) { // 每月
-        return monthDaysList->item(day - 1)->checkState() == Qt::Checked;
+    if (ui->typeCombo->currentIndex() == 2) { // 每周
+        return ui->weekDaysList->item(day - 1)->checkState() == Qt::Checked;
+    } else if (ui->typeCombo->currentIndex() == 3) { // 每月
+        return ui->monthDaysList->item(day - 1)->checkState() == Qt::Checked;
     }
     return false;
 } 
