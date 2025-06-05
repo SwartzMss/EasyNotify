@@ -13,7 +13,14 @@
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(parent)
     , isPaused(false)
+    , trayIcon(nullptr)
 {
+    // 托盘初始化
+    trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
+    trayIcon->setToolTip(tr("EasyNotify 提醒"));
+    trayIcon->show();
+
     setupTimer();
     loadReminders();
 }
@@ -144,15 +151,9 @@ bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
 
 void ReminderManager::showNotification(const QJsonObject &reminder)
 {
-    if (!trayIcon) {
-        trayIcon = new QSystemTrayIcon(this);
-        trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
-    }
-
+    if (!trayIcon) return;
     QString title = reminder["Name"].toString();
     QString message = tr("提醒时间到了！");
-    
-    trayIcon->show();
     trayIcon->showMessage(title, message, QSystemTrayIcon::Information, 5000);
 }
 

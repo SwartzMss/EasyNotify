@@ -46,7 +46,7 @@ private:
     QTimer *checkTimer;
     QMap<QString, QJsonObject> reminders;
     bool isPaused;
-    QSystemTrayIcon *trayIcon;
+    QSystemTrayIcon *trayIcon = nullptr;
     QString dataFilePath;
     static constexpr const char* REMINDERS_FILE = "reminders.json";
 };
