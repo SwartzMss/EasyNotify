@@ -27,9 +27,7 @@ private slots:
     void onOkClicked();
     void onCancelClicked();
     void onDateTimeChanged(const QDateTime &dateTime);
-    void onTimeChanged(const QTime &time);
     void onDaysChanged();
-    void onDateChanged(const QDate &date);
 
 private:
     void setupConnections();
