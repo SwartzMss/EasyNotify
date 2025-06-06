@@ -8,8 +8,13 @@
 #include <QFile>
 #include <QPushButton>
 
-QStringList ReminderEdit::categories;
-const QString ReminderEdit::CATEGORIES_FILE = "categories.json";
+// 提醒类型枚举
+enum class ReminderType {
+    OneTime = 0,
+    Daily = 1,
+    Weekly = 2,
+    Monthly = 3
+};
 
 ReminderEdit::ReminderEdit(QWidget *parent)
     : QDialog(parent)
@@ -54,11 +59,11 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
     ui->nameEdit->setText(reminder["Name"].toString());
     // 设置类型
     QString type = reminder["Type"].toString();
-    int typeIndex = 0;
-    if (type == "Daily") typeIndex = 1;
-    else if (type == "Weekly") typeIndex = 2;
-    else if (type == "Monthly") typeIndex = 3;
-    ui->typeCombo->setCurrentIndex(typeIndex);
+    ReminderType typeIndex = ReminderType::OneTime;
+    if (type == "Daily") typeIndex = ReminderType::Daily;
+    else if (type == "Weekly") typeIndex = ReminderType::Weekly;
+    else if (type == "Monthly") typeIndex = ReminderType::Monthly;
+    ui->typeCombo->setCurrentIndex(static_cast<int>(typeIndex));
     // 设置时间
     QDateTime nextTrigger = QDateTime::fromString(reminder["NextTrigger"].toString(), Qt::ISODate);
     ui->dateTimeEdit->setDateTime(nextTrigger);
@@ -147,21 +152,6 @@ void ReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
     updateNextTriggerTime();
 }
 
-void ReminderEdit::onTimeChanged(const QTime &time)
-{
-    QDateTime currentDateTime = nextTriggerTime;
-    currentDateTime.setTime(time);
-    nextTriggerTime = currentDateTime;
-    updateNextTriggerTime();
-}
-
-void ReminderEdit::onDateChanged(const QDate &date)
-{
-    QDateTime currentDateTime = nextTriggerTime;
-    currentDateTime.setDate(date);
-    nextTriggerTime = currentDateTime;
-    updateNextTriggerTime();
-}
 
 void ReminderEdit::onOkClicked()
 {
@@ -189,49 +179,79 @@ QDateTime ReminderEdit::calculateNextTrigger() const
 {
     QDateTime now = QDateTime::currentDateTime();
     QDateTime nextTrigger;
-    switch (ui->typeCombo->currentIndex()) {
-        case 0: // 一次性提醒
+    ReminderType type = static_cast<ReminderType>(ui->typeCombo->currentIndex());
+
+    switch (type) {
+        case ReminderType::OneTime: {
+            // 一次性提醒直接使用日期时间选择器的值
             nextTrigger = ui->dateTimeEdit->dateTime();
             break;
-        case 1: { // 每日提醒
-            QTime time = ui->dateTimeEdit->time();
+        }
+        case ReminderType::Daily: {
+            // 每日提醒，使用时间选择器的值
+            QTime time = ui->timeEdit->time();
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
                 nextTrigger = nextTrigger.addDays(1);
             }
             break;
         }
-        case 2: { // 每周提醒
-            QTime time = ui->dateTimeEdit->time();
+        case ReminderType::Weekly: {
+            // 每周提醒，需要考虑选中的星期
+            QTime time = ui->timeEdit->time();
             QList<int> weekDays;
             for (int i = 0; i < ui->weekDaysList->count(); ++i) {
                 if (ui->weekDaysList->item(i)->checkState() == Qt::Checked) {
                     weekDays << (i + 1);
                 }
             }
+            
+            if (weekDays.isEmpty()) {
+                // 如果没有选择任何星期，返回当前时间
+                return now;
+            }
+
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
                 nextTrigger = nextTrigger.addDays(1);
             }
+
+            // 找到下一个符合条件的日期
             while (!weekDays.contains(nextTrigger.date().dayOfWeek())) {
                 nextTrigger = nextTrigger.addDays(1);
             }
             break;
         }
-        case 3: { // 每月提醒
-            QTime time = ui->dateTimeEdit->time();
+        case ReminderType::Monthly: {
+            // 每月提醒，需要考虑选中的日期
+            QTime time = ui->timeEdit->time();
             QList<int> monthDays;
             for (int i = 0; i < ui->monthDaysList->count(); ++i) {
                 if (ui->monthDaysList->item(i)->checkState() == Qt::Checked) {
                     monthDays << (i + 1);
                 }
             }
+
+            if (monthDays.isEmpty()) {
+                // 如果没有选择任何日期，返回当前时间
+                return now;
+            }
+
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
                 nextTrigger = nextTrigger.addDays(1);
             }
+
+            // 找到下一个符合条件的日期
             while (!monthDays.contains(nextTrigger.date().day())) {
                 nextTrigger = nextTrigger.addDays(1);
+                // 如果已经到下个月，重置到月初
+                if (nextTrigger.date().day() == 1) {
+                    nextTrigger = QDateTime(QDate(nextTrigger.date().year(), 
+                                                nextTrigger.date().month(), 
+                                                monthDays.first()), 
+                                          time);
+                }
             }
             break;
         }
@@ -248,16 +268,14 @@ bool ReminderEdit::validateInput() const
 
 void ReminderEdit::updateNextTriggerTime()
 {
-    QString type = ui->typeCombo->currentText();
-    QDateTime nextTime = nextTriggerTime;
-    if (type == tr("每天")) {
-        nextTime = nextTime.addDays(1);
-    } else if (type == tr("每周")) {
-        nextTime = nextTime.addDays(7);
-    } else if (type == tr("每月")) {
-        nextTime = nextTime.addMonths(1);
-    }
+    // 直接使用calculateNextTrigger计算下一个触发时间
+    QDateTime nextTime = calculateNextTrigger();
+    
+    // 更新显示
     ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
+    
+    // 更新数据
+    reminderData["NextTrigger"] = nextTime.toString(Qt::ISODate);
 }
 
 bool ReminderEdit::isDaySelected(int day) const
