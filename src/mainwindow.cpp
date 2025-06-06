@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent)
     , isPaused(false)
 {
     ui->setupUi(this);
+    //resize(400, 300);
+
     setupUI();
     
     // 创建提醒管理器
@@ -23,20 +25,16 @@ MainWindow::MainWindow(QWidget *parent)
     createActions();
     setupConnections();
     
-    // 加载设置
-    loadSettings();
 }
 
 MainWindow::~MainWindow()
 {
-    saveSettings();
     delete ui;
 }
 
 void MainWindow::setupUI()
 {
     setWindowTitle(tr("EasyNotify"));
-    resize(800, 600);
 
     // 创建中央部件
     QWidget *centralWidget = new QWidget(this);
@@ -130,28 +128,6 @@ void MainWindow::onQuit()
                                 tr("确定要退出程序吗？"),
                                 QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes) {
-        saveSettings();
         QApplication::quit();
     }
 }
-
-void MainWindow::loadSettings()
-{
-    QSettings settings;
-    restoreGeometry(settings.value("geometry").toByteArray());
-    restoreState(settings.value("windowState").toByteArray());
-    isPaused = settings.value("isPaused", false).toBool();
-    
-    if (isPaused) {
-        pauseAction->setText(tr("恢复提醒"));
-        reminderManager->pauseAll();
-    }
-}
-
-void MainWindow::saveSettings()
-{
-    QSettings settings;
-    settings.setValue("geometry", saveGeometry());
-    settings.setValue("windowState", saveState());
-    settings.setValue("isPaused", isPaused);
-} 

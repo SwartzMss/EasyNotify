@@ -27,7 +27,6 @@ ReminderEdit::ReminderEdit(QWidget *parent)
     QDateTime now = QDateTime::currentDateTime();
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
-    reminderData["Id"] = generateId();
     reminderData["IsEnabled"] = true;
     reminderData["Type"] = "OneTime";
     reminderData["NextTrigger"] = now.toString(Qt::ISODate);
@@ -156,6 +155,7 @@ void ReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 void ReminderEdit::onOkClicked()
 {
     if (validateInput()) {
+        reminderData["Name"] = ui->nameEdit->text().trimmed();
         accept();
     }
 }
@@ -168,11 +168,6 @@ void ReminderEdit::onCancelClicked()
 void ReminderEdit::onDaysChanged()
 {
     updateNextTriggerTime();
-}
-
-QString ReminderEdit::generateId() const
-{
-    return QUuid::createUuid().toString(QUuid::WithoutBraces);
 }
 
 QDateTime ReminderEdit::calculateNextTrigger() const

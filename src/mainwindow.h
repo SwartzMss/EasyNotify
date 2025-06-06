@@ -32,8 +32,6 @@ private:
     void setupConnections();
     void createTrayIcon();
     void createActions();
-    void loadSettings();
-    void saveSettings();
 
     Ui::MainWindow *ui;
     ReminderList *reminderList;

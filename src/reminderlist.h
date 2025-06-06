@@ -30,7 +30,7 @@ public:
     void toggleReminder(const QModelIndex &index);
     void refreshList();
     void searchReminders(const QString &text);
-    QJsonObject getReminderData(const QString &id) const;
+    QJsonObject getReminderData(const QString &name) const;
 
 public slots:
     void onReminderTriggered(const QJsonObject &reminder);
@@ -46,7 +46,7 @@ private:
     void setupModel();
     void addReminderToModel(const QJsonObject &reminder);
     void updateReminderInModel(const QJsonObject &reminder);
-    void removeReminderFromModel(const QString &id);
+    void removeReminderFromModel(const QString &name);
     void updateReminderStatus(const QModelIndex &index, bool enabled);
     bool importReminders(const QString &fileName);
     bool exportReminders(const QString &fileName);

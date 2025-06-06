@@ -31,7 +31,6 @@ private slots:
 
 private:
     void setupConnections();
-    QString generateId() const;
     QDateTime calculateNextTrigger() const;
     bool validateInput() const;
     bool isDaySelected(int day) const;
