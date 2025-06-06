@@ -16,12 +16,10 @@
 #include <QContextMenuEvent>
 
 enum ColumnIndex {
-    Id = 0,
-    Name = 1,
-    Type = 2,
-    NextTrigger = 3,
-    Status = 4,
-    Action = 5
+    Name = 0,
+    Type = 1,
+    Status = 2,
+    NextTrigger = 3
 };
 
 ReminderList::ReminderList(QWidget *parent)
@@ -58,8 +56,6 @@ void ReminderList::setupConnections()
             this, &ReminderList::onSearchTextChanged);
     connect(ui->addButton, &QPushButton::clicked,
             this, &ReminderList::onAddClicked);
-    connect(ui->editButton, &QPushButton::clicked,
-            this, &ReminderList::onEditClicked);
     connect(ui->deleteButton, &QPushButton::clicked,
             this, &ReminderList::onDeleteClicked);
     connect(ui->importButton, &QPushButton::clicked,
@@ -75,18 +71,17 @@ void ReminderList::setupModel()
     // 创建数据模型
     model = new QStandardItemModel(this);
     model->setHorizontalHeaderLabels({
-        tr("ID"),
         tr("任务名称"),
         tr("类型"),
-        tr("下次触发"),
         tr("状态"),
-        tr("操作")
+        tr("下次触发")
     });
 
     // 创建代理模型
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
-    proxyModel->setFilterKeyColumn(1); // 按名称列过滤
+    proxyModel->setFilterKeyColumn(-1); // 设置为-1表示搜索所有列
+    proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive); // 不区分大小写
 
     // 设置表格视图
     ui->tableView->setModel(proxyModel);
@@ -97,12 +92,6 @@ void ReminderList::setupModel()
     ui->tableView->verticalHeader()->hide();
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setShowGrid(false);
-    ui->tableView->setStyleSheet(
-        "QTableView { background: #fff; border: none; font-size: 15px; }"
-        "QHeaderView::section { background: #f0f0f0; font-weight: bold; height: 32px; border: none; }"
-        "QTableView::item:selected { background: #e6f7ff; }"
-        "QTableView::item:hover { background: #f5faff; }"
-    );
 }
 
 void ReminderList::addNewReminder()
@@ -121,22 +110,27 @@ void ReminderList::onAddClicked()
     ReminderEdit dialog(this);
     if (dialog.exec() == QDialog::Accepted) {
         QJsonObject reminder = dialog.getReminderData();
-        reminderManager->addReminder(reminder);
-        LOG_INFO(QString("添加提醒: %1").arg(reminder["Name"].toString()));
-        loadReminders();
+        if (reminder.contains("Name") && !reminder["Name"].toString().isEmpty()) {
+            reminderManager->addReminder(reminder);
+            LOG_INFO(QString("添加提醒: %1").arg(reminder["Name"].toString()));
+            loadReminders();
+        } else {
+            LOG_WARNING("尝试添加没有名称的提醒");
+            QMessageBox::warning(this, tr("警告"), tr("提醒名称不能为空"));
+        }
     }
 }
 
 void ReminderList::editReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
-    QString id = model->data(model->index(sourceIndex.row(), Id)).toString();
-    editDialog->loadReminderData(getReminderData(id));
+    QString name = model->data(model->index(sourceIndex.row(), Name)).toString();
+    editDialog->loadReminderData(getReminderData(name));
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject reminder = editDialog->getReminderData();
         updateReminderInModel(reminder);
         if (reminderManager) {
-            reminderManager->updateReminder(id, reminder);
+            reminderManager->updateReminder(name, reminder);
         }
     }
 }
@@ -150,10 +144,14 @@ void ReminderList::onEditClicked()
         return;
     }
 
-    QString id = currentIndex.data(Qt::UserRole).toString();
-    QJsonObject reminder = getReminderData(id);
+    // 获取源模型中的索引
+    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
+    // 获取名称列的数据
+    QString name = model->data(model->index(sourceIndex.row(), Name)).toString();
+    
+    QJsonObject reminder = getReminderData(name);
     if (reminder.isEmpty()) {
-        LOG_ERROR(QString("无法获取提醒数据: %1").arg(id));
+        LOG_ERROR(QString("无法获取提醒数据: %1").arg(name));
         return;
     }
 
@@ -161,9 +159,10 @@ void ReminderList::onEditClicked()
     dialog.loadReminderData(reminder);
     if (dialog.exec() == QDialog::Accepted) {
         reminder = dialog.getReminderData();
-        reminderManager->updateReminder(id, reminder);
+        reminderManager->updateReminder(name, reminder);
         LOG_INFO(QString("更新提醒: %1").arg(reminder["Name"].toString()));
         loadReminders();
+        reminderManager->saveReminders();
     }
 }
 
@@ -171,7 +170,6 @@ void ReminderList::deleteReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     QString name = model->data(model->index(sourceIndex.row(), Name)).toString();
-    QString id = model->data(model->index(sourceIndex.row(), Id)).toString();
     
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
@@ -183,7 +181,7 @@ void ReminderList::deleteReminder(const QModelIndex &index)
     if (reply == QMessageBox::Yes) {
         model->removeRow(sourceIndex.row());
         if (reminderManager) {
-            reminderManager->deleteReminder(id);
+            reminderManager->deleteReminder(name);
         }
     }
 }
@@ -192,15 +190,14 @@ void ReminderList::toggleReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     bool currentStatus = model->data(model->index(sourceIndex.row(), Status)).toBool();
-    QString id = model->data(model->index(sourceIndex.row(), Id)).toString();
     QString name = model->data(model->index(sourceIndex.row(), Name)).toString();
     
     updateReminderStatus(sourceIndex, !currentStatus);
     
-    QJsonObject reminder = getReminderData(id);
+    QJsonObject reminder = getReminderData(name);
     reminder["IsEnabled"] = !currentStatus;
     if (reminderManager) {
-        reminderManager->updateReminder(reminder["Id"].toString(), reminder);
+        reminderManager->updateReminder(name, reminder);
     }
     
     saveReminders();
@@ -223,9 +220,9 @@ void ReminderList::searchReminders(const QString &text)
 void ReminderList::onReminderTriggered(const QJsonObject &reminder)
 {
     // 更新列表中的提醒状态
-    QString id = reminder["Id"].toString();
+    QString name = reminder["Name"].toString();
     for (int row = 0; row < model->rowCount(); ++row) {
-        if (model->data(model->index(row, Id)).toString() == id) {
+        if (model->data(model->index(row, Name)).toString() == name) {
             updateReminderInModel(reminder);
             break;
         }
@@ -297,10 +294,38 @@ void ReminderList::onExportClicked()
         return;
     }
 
-    QJsonArray reminders = reminderManager->getReminders();
+    QJsonArray reminders;
+    for (int row = 0; row < model->rowCount(); ++row) {
+        QJsonObject reminder;
+        reminder["Name"] = model->data(model->index(row, Name)).toString();
+        reminder["Type"] = model->data(model->index(row, Type)).toString();
+        reminder["NextTrigger"] = model->data(model->index(row, NextTrigger)).toString();
+        reminder["IsEnabled"] = model->data(model->index(row, Status)).toBool();
+        
+        // 添加额外的时间信息
+        if (reminder["Type"] == "Weekly") {
+            QJsonArray weekDays;
+            QJsonObject reminderData = getReminderData(reminder["Name"].toString());
+            if (reminderData.contains("WeekDays")) {
+                weekDays = reminderData["WeekDays"].toArray();
+            }
+            reminder["WeekDays"] = weekDays;
+        } else if (reminder["Type"] == "Monthly") {
+            QJsonArray monthDays;
+            QJsonObject reminderData = getReminderData(reminder["Name"].toString());
+            if (reminderData.contains("MonthDays")) {
+                monthDays = reminderData["MonthDays"].toArray();
+            }
+            reminder["MonthDays"] = monthDays;
+        }
+        
+        reminders.append(reminder);
+    }
+    
     QJsonDocument doc(reminders);
     file.write(doc.toJson());
-
+    file.close();
+    
     LOG_INFO(QString("导出 %1 个提醒到 %2").arg(reminders.size()).arg(fileName));
     QMessageBox::information(this, tr("成功"), tr("导出完成"));
 }
@@ -353,7 +378,6 @@ bool ReminderList::exportReminders(const QString &fileName)
     QJsonArray reminders;
     for (int row = 0; row < model->rowCount(); ++row) {
         QJsonObject reminder;
-        reminder["Id"] = model->data(model->index(row, Id)).toString();
         reminder["Name"] = model->data(model->index(row, Name)).toString();
         reminder["Type"] = model->data(model->index(row, Type)).toString();
         reminder["NextTrigger"] = model->data(model->index(row, NextTrigger)).toString();
@@ -362,14 +386,14 @@ bool ReminderList::exportReminders(const QString &fileName)
         // 添加额外的时间信息
         if (reminder["Type"] == "Weekly") {
             QJsonArray weekDays;
-            QJsonObject reminderData = getReminderData(reminder["Id"].toString());
+            QJsonObject reminderData = getReminderData(reminder["Name"].toString());
             if (reminderData.contains("WeekDays")) {
                 weekDays = reminderData["WeekDays"].toArray();
             }
             reminder["WeekDays"] = weekDays;
         } else if (reminder["Type"] == "Monthly") {
             QJsonArray monthDays;
-            QJsonObject reminderData = getReminderData(reminder["Id"].toString());
+            QJsonObject reminderData = getReminderData(reminder["Name"].toString());
             if (reminderData.contains("MonthDays")) {
                 monthDays = reminderData["MonthDays"].toArray();
             }
@@ -388,11 +412,10 @@ bool ReminderList::exportReminders(const QString &fileName)
 
 void ReminderList::handleImportConflict(const QJsonObject &importedReminder)
 {
-    QString importedId = importedReminder["Id"].toString();
     QString importedName = importedReminder["Name"].toString();
     bool hasConflict = false;
     for (int row = 0; row < model->rowCount(); ++row) {
-        if (model->data(model->index(row, Id)).toString() == importedId) {
+        if (model->data(model->index(row, Name)).toString() == importedName) {
             hasConflict = true;
             break;
         }
@@ -407,7 +430,7 @@ void ReminderList::handleImportConflict(const QJsonObject &importedReminder)
         if (reply == QMessageBox::Yes) {
             updateReminderInModel(importedReminder);
             if (reminderManager) {
-                reminderManager->updateReminder(importedId, importedReminder);
+                reminderManager->updateReminder(importedName, importedReminder);
             }
         }
     } else {
@@ -435,7 +458,6 @@ void ReminderList::saveReminders()
     QJsonArray reminders;
     for (int row = 0; row < model->rowCount(); ++row) {
         QJsonObject reminder;
-        reminder["Id"] = model->data(model->index(row, Id)).toString();
         reminder["Name"] = model->data(model->index(row, Name)).toString();
         reminder["Type"] = model->data(model->index(row, Type)).toString();
         reminder["NextTrigger"] = model->data(model->index(row, NextTrigger)).toString();
@@ -457,12 +479,21 @@ void ReminderList::updateReminderStatus(const QModelIndex &index, bool enabled)
 void ReminderList::addReminderToModel(const QJsonObject &reminder)
 {
     QList<QStandardItem*> row;
-    row << new QStandardItem(reminder["Id"].toString());
     row << new QStandardItem(reminder["Name"].toString());
-    row << new QStandardItem(reminder["Type"].toString());
-    row << new QStandardItem(reminder["NextTrigger"].toString());
+    
+    // 转换类型为中文
+    QString type = reminder["Type"].toString();
+    QString typeText;
+    if (type == "OneTime") typeText = tr("一次性");
+    else if (type == "Daily") typeText = tr("每天");
+    else if (type == "Workday") typeText = tr("工作日");
+    else if (type == "Weekly") typeText = tr("每周");
+    else if (type == "Monthly") typeText = tr("每月");
+    else typeText = type;
+    
+    row << new QStandardItem(typeText);
     row << new QStandardItem(reminder["IsEnabled"].toBool() ? tr("启用") : tr("禁用"));
-    row << new QStandardItem(tr("编辑"));
+    row << new QStandardItem(reminder["NextTrigger"].toString());
     
     model->appendRow(row);
 }
@@ -470,24 +501,34 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
 void ReminderList::updateReminderInModel(const QJsonObject &reminder)
 {
     for (int row = 0; row < model->rowCount(); ++row) {
-        if (model->data(model->index(row, Id)).toString() == reminder["Id"].toString()) {
+        if (model->data(model->index(row, Name)).toString() == reminder["Name"].toString()) {
             model->setData(model->index(row, Name), reminder["Name"].toString());
-            model->setData(model->index(row, Type), reminder["Type"].toString());
-            model->setData(model->index(row, NextTrigger), reminder["NextTrigger"].toString());
+            
+            // 转换类型为中文
+            QString type = reminder["Type"].toString();
+            QString typeText;
+            if (type == "OneTime") typeText = tr("一次性");
+            else if (type == "Daily") typeText = tr("每天");
+            else if (type == "Workday") typeText = tr("工作日");
+            else if (type == "Weekly") typeText = tr("每周");
+            else if (type == "Monthly") typeText = tr("每月");
+            else typeText = type;
+            
+            model->setData(model->index(row, Type), typeText);
             model->setData(model->index(row, Status), reminder["IsEnabled"].toBool());
             model->setData(model->index(row, Status), 
                           reminder["IsEnabled"].toBool() ? tr("启用") : tr("禁用"), Qt::DisplayRole);
+            model->setData(model->index(row, NextTrigger), reminder["NextTrigger"].toString());
             break;
         }
     }
 }
 
-QJsonObject ReminderList::getReminderData(const QString &id) const
+QJsonObject ReminderList::getReminderData(const QString &name) const
 {
     QJsonObject reminder;
     for (int row = 0; row < model->rowCount(); ++row) {
-        if (model->data(model->index(row, Id)).toString() == id) {
-            reminder["Id"] = model->data(model->index(row, Id)).toString();
+        if (model->data(model->index(row, Name)).toString() == name) {
             reminder["Name"] = model->data(model->index(row, Name)).toString();
             reminder["Type"] = model->data(model->index(row, Type)).toString();
             reminder["NextTrigger"] = model->data(model->index(row, NextTrigger)).toString();
@@ -500,7 +541,9 @@ QJsonObject ReminderList::getReminderData(const QString &id) const
 
 void ReminderList::onSearchTextChanged(const QString &text)
 {
+    // 设置过滤规则
     proxyModel->setFilterFixedString(text);
+    LOG_DEBUG(QString("搜索提醒，关键字：%1").arg(text));
 }
 
 void ReminderList::loadReminders()
@@ -525,23 +568,27 @@ void ReminderList::onDeleteClicked()
         return;
     }
 
-    QString id = currentIndex.data(Qt::UserRole).toString();
-    QJsonObject reminder = getReminderData(id);
+    // 获取源模型中的索引
+    QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
+    // 获取名称列的数据
+    QString name = model->data(model->index(sourceIndex.row(), Name)).toString();
+    
+    QJsonObject reminder = getReminderData(name);
     if (reminder.isEmpty()) {
-        LOG_ERROR(QString("无法获取提醒数据: %1").arg(id));
+        LOG_ERROR(QString("无法获取提醒数据: %1").arg(name));
         return;
     }
 
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
         tr("确认删除"),
-        tr("确定要删除提醒\"%1\"吗？").arg(reminder["Name"].toString()),
+        tr("确定要删除提醒\"%1\"吗？").arg(name),
         QMessageBox::Yes | QMessageBox::No
     );
 
     if (reply == QMessageBox::Yes) {
-        reminderManager->deleteReminder(id);
-        LOG_INFO(QString("删除提醒: %1").arg(reminder["Name"].toString()));
+        reminderManager->deleteReminder(name);
+        LOG_INFO(QString("删除提醒: %1").arg(name));
         loadReminders();
     }
 } 

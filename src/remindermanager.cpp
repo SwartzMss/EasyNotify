@@ -39,36 +39,47 @@ void ReminderManager::setupTimer()
 
 void ReminderManager::addReminder(const QJsonObject &reminder)
 {
-    QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    QJsonObject reminderWithId = reminder;
-    reminderWithId["Id"] = id;
-    reminders[id] = reminderWithId;
-    saveReminders();
-    LOG_INFO(QString("添加提醒: %1").arg(reminder["Name"].toString()));
-}
-
-void ReminderManager::updateReminder(const QString &id, const QJsonObject &reminder)
-{
-    if (!reminders.contains(id)) {
-        LOG_WARNING(QString("尝试更新不存在的提醒: %1").arg(id));
+    QString name = reminder["Name"].toString();
+    if (name.isEmpty()) {
+        LOG_WARNING("尝试添加没有名称的提醒");
         return;
     }
-    QJsonObject reminderWithId = reminder;
-    reminderWithId["Id"] = id;
-    reminders[id] = reminderWithId;
+    reminders[name] = reminder;
     saveReminders();
-    LOG_INFO(QString("更新提醒: %1").arg(reminder["Name"].toString()));
+    emit remindersChanged();
+    LOG_INFO(QString("添加提醒: %1").arg(name));
 }
 
-void ReminderManager::deleteReminder(const QString &id)
+void ReminderManager::updateReminder(const QString &name, const QJsonObject &reminder)
 {
-    if (!reminders.contains(id)) {
-        LOG_WARNING(QString("尝试删除不存在的提醒: %1").arg(id));
+    if (!reminders.contains(name)) {
+        LOG_WARNING(QString("尝试更新不存在的提醒: %1").arg(name));
         return;
     }
-    QString name = reminders[id]["Name"].toString();
-    reminders.remove(id);
+    
+    // 如果名称改变了，需要更新键
+    QString newName = reminder["Name"].toString();
+    if (newName != name) {
+        reminders.remove(name);
+        reminders[newName] = reminder;
+    } else {
+        reminders[name] = reminder;
+    }
+    
     saveReminders();
+    emit remindersChanged();
+    LOG_INFO(QString("更新提醒: %1").arg(newName));
+}
+
+void ReminderManager::deleteReminder(const QString &name)
+{
+    if (!reminders.contains(name)) {
+        LOG_WARNING(QString("尝试删除不存在的提醒: %1").arg(name));
+        return;
+    }
+    reminders.remove(name);
+    saveReminders();
+    emit remindersChanged();
     LOG_INFO(QString("删除提醒: %1").arg(name));
 }
 
@@ -159,7 +170,7 @@ void ReminderManager::showNotification(const QJsonObject &reminder)
 
 void ReminderManager::loadReminders()
 {
-    QFile file("reminders.json");
+    QFile file(REMINDERS_FILE);
     if (!file.exists()) {
         LOG_DEBUG("提醒数据文件不存在，将创建新文件");
         return;
@@ -175,7 +186,9 @@ void ReminderManager::loadReminders()
         QJsonObject obj = doc.object();
         reminders.clear();
         for (auto it = obj.begin(); it != obj.end(); ++it) {
-            reminders[it.key()] = it.value().toObject();
+            QJsonObject reminder = it.value().toObject();
+            reminder["Name"] = it.key(); // 确保名称与 key 一致
+            reminders[it.key()] = reminder;
         }
         LOG_INFO(QString("已加载 %1 个提醒").arg(reminders.size()));
     } else {
@@ -185,7 +198,7 @@ void ReminderManager::loadReminders()
 
 void ReminderManager::saveReminders()
 {
-    QFile file("reminders.json");
+    QFile file(REMINDERS_FILE);
     if (!file.open(QIODevice::WriteOnly)) {
         LOG_ERROR("无法保存提醒数据");
         return;
@@ -193,7 +206,9 @@ void ReminderManager::saveReminders()
 
     QJsonObject obj;
     for (auto it = reminders.begin(); it != reminders.end(); ++it) {
-        obj[it.key()] = it.value();
+        QJsonObject reminder = it.value();
+        reminder.remove("Id"); // 移除冗余的 ID
+        obj[it.key()] = reminder;
     }
     QJsonDocument doc(obj);
     file.write(doc.toJson());
