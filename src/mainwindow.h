@@ -23,7 +23,6 @@ public:
 private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void onShowMainWindow();
-    void onAddReminder();
     void onPauseReminders();
     void onQuit();
 
@@ -39,7 +38,6 @@ private:
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     QAction *showAction;
-    QAction *addAction;
     QAction *pauseAction;
     QAction *quitAction;
     bool isPaused;

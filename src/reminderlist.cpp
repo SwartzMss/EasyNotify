@@ -14,6 +14,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QCoreApplication>
 
 enum ColumnIndex {
     Name = 0,
@@ -111,8 +112,19 @@ void ReminderList::onAddClicked()
     if (dialog.exec() == QDialog::Accepted) {
         QJsonObject reminder = dialog.getReminderData();
         if (reminder.contains("Name") && !reminder["Name"].toString().isEmpty()) {
+            // 确保提醒对象包含所有必要字段
+            reminder["id"] = reminder["Name"].toString(); // 使用名称作为ID
+            reminder["title"] = reminder["Name"].toString();
+            reminder["message"] = QCoreApplication::translate("ReminderManager", "提醒时间到了！");
+            reminder["type"] = reminder["Type"].toString();
+            reminder["nextTrigger"] = reminder["NextTrigger"].toString();
+            reminder["isEnabled"] = true;
+
             reminderManager->addReminder(reminder);
-            LOG_INFO(QString("添加提醒: %1").arg(reminder["Name"].toString()));
+            LOG_INFO(QString("添加提醒: %1, 类型: %2, 下次触发时间: %3")
+                .arg(reminder["id"].toString())
+                .arg(reminder["type"].toString())
+                .arg(reminder["nextTrigger"].toString()));
             loadReminders();
         } else {
             LOG_WARNING("尝试添加没有名称的提醒");
