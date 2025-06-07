@@ -1,6 +1,5 @@
 #include "logger.h"
 #include <QCoreApplication>
-#include <QDebug>
 #include <QDateTime>
 #include <QDir>
 #include <QFile>
@@ -41,9 +40,7 @@ void Logger::init()
     logFile.setFileName(logPath);
     if (logFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
         logStream.setDevice(&logFile);
-    } else {
-        qWarning() << "无法打开日志文件:" << logPath;
-    }
+    } 
 }
 
 void Logger::log(LogLevel level, const QString& message)
@@ -51,7 +48,6 @@ void Logger::log(LogLevel level, const QString& message)
     QMutexLocker locker(&mutex);
     QString formattedMessage = formatMessage(level, message);
     writeToFile(formattedMessage);
-    qDebug().noquote() << formattedMessage;
 }
 
 void Logger::writeToFile(const QString& message)
@@ -83,16 +79,3 @@ QString Logger::formatMessage(LogLevel level, const QString& message) const
         .arg(message);
 }
 
-void Logger::setLogLevel(const QString& level)
-{
-    QMutexLocker locker(&mutex);
-    // 在 Qt6 中，我们不再需要设置编码
-}
-
-QString Logger::formatLogMessage(const QString& message, const QString& level) const
-{
-    return QString("[%1] [%2] %3")
-        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz"))
-        .arg(level)
-        .arg(message);
-} 

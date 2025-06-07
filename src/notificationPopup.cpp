@@ -72,26 +72,23 @@ NotificationPopup::NotificationPopup(const QString &title,
     });
 }
 
-void NotificationPopup::showNearTray(const QRect &trayGeom)
+
+void NotificationPopup::show()
 {
-    // 计算右下角偏移一点的位置
     adjustSize();
-    int x = trayGeom.x() + trayGeom.width() - width() - 8;
-    int y = trayGeom.y() - height() - 8;
+
+    QPoint cursorPos = QCursor::pos();
+    QScreen *screen = QGuiApplication::screenAt(cursorPos);
+    if (!screen) screen = QGuiApplication::primaryScreen();
+
+    QRect avail = screen->availableGeometry();
+
+    int x = avail.x() + avail.width()  - width()  - 8;
+    int y = avail.y() + avail.height() - height() - 8;
     move(x, y);
 
     setWindowOpacity(0);
-    show();
-    fadeIn->start();
-    closeTimer->start();
-}
-
-void NotificationPopup::showAt(const QPoint &pos)
-{
-    adjustSize();
-    move(pos.x() - width(), pos.y() - height());
-    setWindowOpacity(0);
-    show();
+    QWidget::show();
     fadeIn->start();
     closeTimer->start();
 }

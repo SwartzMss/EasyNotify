@@ -14,12 +14,8 @@ public:
                       const QIcon &icon = {},
                       int timeoutMs = 5000,
                       QWidget *parent = nullptr);
-
-    // 在系统托盘图标的位置附近弹出
-    void showNearTray(const QRect &trayGeom);
     
-    // 在指定位置显示
-    void showAt(const QPoint &pos);
+    void show();
 
 private:
     QLabel *iconLabel, *titleLabel, *msgLabel;

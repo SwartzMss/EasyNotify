@@ -12,12 +12,12 @@
 #include <QApplication>
 #include <QScreen>
 #include <QCoreApplication>
+#include "configmanager.h"
 
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(parent)
     , checkTimer(new QTimer(this))
     , isPaused(false)
-    , dataFilePath(REMINDERS_FILE)
 {
     LOG_INFO("ReminderManager 初始化");
     setupTimer();
@@ -40,29 +40,25 @@ void ReminderManager::setupTimer()
 void ReminderManager::loadReminders()
 {
     LOG_INFO("开始加载提醒");
-    QFile file(dataFilePath);
-    if (file.exists()) {
-        if (file.open(QIODevice::ReadOnly)) {
-            QByteArray data = file.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            if (doc.isArray()) {
-                QJsonArray array = doc.array();
-                for (const QJsonValue &value : array) {
-                    if (value.isObject()) {
-                        QJsonObject reminder = value.toObject();
-                        QString id = reminder["id"].toString();
-                        if (!id.isEmpty()) {
-                            reminders[id] = reminder;
-                            LOG_INFO(QString("加载提醒: %1, 下次触发时间: %2")
-                                .arg(id)
-                                .arg(reminder["nextTrigger"].toString()));
-                        }
-                    }
-                }
+    QJsonArray remindersArray = ConfigManager::instance().getReminders();
+    reminders.clear();
+    
+    for (const QJsonValue &value : remindersArray) {
+        if (value.isObject()) {
+            QJsonObject reminder = value.toObject();
+            QString id = reminder["id"].toString();
+            if (!id.isEmpty()) {
+                reminders[id] = reminder;
+                LOG_INFO(QString("加载提醒: %1, 下次触发时间: %2")
+                    .arg(id)
+                    .arg(reminder["nextTrigger"].toString()));
             }
-            file.close();
         }
     }
+    
+    // 同步暂停状态
+    isPaused = ConfigManager::instance().isPaused();
+    
     LOG_INFO(QString("共加载 %1 个提醒").arg(reminders.size()));
 }
 
@@ -124,12 +120,14 @@ void ReminderManager::pauseAll()
 {
     LOG_INFO("暂停所有提醒");
     isPaused = true;
+    ConfigManager::instance().setPaused(true);
 }
 
 void ReminderManager::resumeAll()
 {
     LOG_INFO("恢复所有提醒");
     isPaused = false;
+    ConfigManager::instance().setPaused(false);
 }
 
 QJsonArray ReminderManager::getReminders() const
@@ -144,22 +142,11 @@ QJsonArray ReminderManager::getReminders() const
 void ReminderManager::saveReminders()
 {
     LOG_INFO("保存提醒数据");
-    QFile file(dataFilePath);
-    if (file.open(QIODevice::WriteOnly)) {
-        QJsonArray array;
-        for (const auto &reminder : reminders) {
-            array.append(reminder);
-        }
-        QJsonDocument doc(array);
-        QByteArray jsonData = doc.toJson();
-        file.write(jsonData);
-        file.close();
-        LOG_INFO(QString("成功保存 %1 个提醒，数据大小: %2 字节")
-            .arg(reminders.size())
-            .arg(jsonData.size()));
-    } else {
-        LOG_ERROR(QString("保存提醒数据失败: %1").arg(file.errorString()));
+    QJsonArray array;
+    for (const auto &reminder : reminders) {
+        array.append(reminder);
     }
+    ConfigManager::instance().setReminders(array);
 }
 
 void ReminderManager::checkReminders()
@@ -248,8 +235,7 @@ void ReminderManager::showNotification(const QJsonObject &reminder)
         .arg(message));
     
     NotificationPopup *popup = new NotificationPopup(title, message, icon, 5000);
-    QScreen *screen = QApplication::primaryScreen();
-    popup->showAt(screen->availableGeometry().bottomRight());
+    popup->show();
 }
 
 void ReminderManager::updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger)
