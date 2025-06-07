@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "logger.h"
+#include "singleinstance.h"
 #include <QApplication>
 #include <QDir>
 #include <QDateTime>
@@ -7,6 +8,7 @@
 #include <dbghelp.h>
 #include <QStandardPaths>
 #include <QCoreApplication>
+#include <QMessageBox>
 
 // 设置异常处理函数
 LONG WINAPI TopLevelExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo)
@@ -68,9 +70,26 @@ int main(int argc, char *argv[])
     // 初始化日志系统
     Logger::instance();
     LOG_INFO("应用程序启动");
+
+    // 检查是否已经有实例在运行
+    if (SingleInstance::instance().isRunning()) {
+        LOG_INFO("程序已经在运行，发送激活消息");
+        SingleInstance::instance().sendMessage("ACTIVATE");
+        return 0;
+    }
     
     MainWindow w;
     w.show();
+    
+    // 连接消息接收信号
+    QObject::connect(&SingleInstance::instance(), &SingleInstance::messageReceived,
+                    &w, [&w](const QString &message) {
+                        if (message == "ACTIVATE") {
+                            w.show();
+                            w.activateWindow();
+                            w.raise();
+                        }
+                    });
     
     int result = a.exec();
     

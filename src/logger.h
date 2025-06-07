@@ -23,7 +23,6 @@ public:
 
     static Logger& instance();
     void log(LogLevel level, const QString& message);
-    void setLogLevel(const QString& level);
 
 private:
     explicit Logger(QObject *parent = nullptr);
@@ -32,7 +31,6 @@ private:
     void writeToFile(const QString& message);
     QString getLogFileName() const;
     QString formatMessage(LogLevel level, const QString& message) const;
-    QString formatLogMessage(const QString& message, const QString& level) const;
 
     QFile logFile;
     QTextStream logStream;

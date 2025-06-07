@@ -41,5 +41,8 @@ private:
     QAction *pauseAction;
     QAction *quitAction;
     bool isPaused;
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };
 #endif // MAINWINDOW_H 

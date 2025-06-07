@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -15,7 +15,9 @@ SOURCES += \
     src/reminderedit.cpp \
     src/remindermanager.cpp \
     src/logger.cpp \
-    src/notificationPopup.cpp
+    src/notificationPopup.cpp \
+    src/configmanager.cpp \
+    src/singleinstance.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -23,7 +25,9 @@ HEADERS += \
     src/reminderedit.h \
     src/remindermanager.h \
     src/logger.h \
-    src/notificationPopup.h
+    src/notificationPopup.h \
+    src/configmanager.h \
+    src/singleinstance.h
 
 FORMS += \
     src/mainwindow.ui \

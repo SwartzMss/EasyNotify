@@ -3,14 +3,21 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QVBoxLayout>
+#include <QCloseEvent>
+#include "configmanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , isPaused(false)
 {
+    setWindowFlags(
+        Qt::Window                                   
+      | Qt::CustomizeWindowHint                       
+      | Qt::WindowTitleHint                           
+      | Qt::WindowCloseButtonHint                     
+    );
     ui->setupUi(this);
-    //resize(400, 300);
 
     setupUI();
     
@@ -24,7 +31,13 @@ MainWindow::MainWindow(QWidget *parent)
     createTrayIcon();
     createActions();
     setupConnections();
-    
+
+    // 加载配置
+    isPaused = ConfigManager::instance().isPaused();
+    if (isPaused) {
+        pauseAction->setText(tr("恢复提醒"));
+        reminderManager->pauseAll();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -100,7 +113,6 @@ void MainWindow::onShowMainWindow()
     raise();
 }
 
-
 void MainWindow::onPauseReminders()
 {
     isPaused = !isPaused;
@@ -111,6 +123,7 @@ void MainWindow::onPauseReminders()
         pauseAction->setText(tr("暂停提醒"));
         reminderManager->resumeAll();
     }
+    ConfigManager::instance().setPaused(isPaused);
 }
 
 void MainWindow::onQuit()
@@ -121,5 +134,15 @@ void MainWindow::onQuit()
                                 QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes) {
         QApplication::quit();
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (trayIcon->isVisible()) {
+        hide();
+        event->ignore();
+    } else {
+        QMainWindow::closeEvent(event);
     }
 }
