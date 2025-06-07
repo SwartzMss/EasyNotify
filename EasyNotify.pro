@@ -14,14 +14,16 @@ SOURCES += \
     src/reminderlist.cpp \
     src/reminderedit.cpp \
     src/remindermanager.cpp \
-    src/logger.cpp
+    src/logger.cpp \
+    src/notificationPopup.cpp
 
 HEADERS += \
     src/mainwindow.h \
     src/reminderlist.h \
     src/reminderedit.h \
     src/remindermanager.h \
-    src/logger.h
+    src/logger.h \
+    src/notificationPopup.h
 
 FORMS += \
     src/mainwindow.ui \

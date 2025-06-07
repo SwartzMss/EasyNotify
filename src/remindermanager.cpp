@@ -1,4 +1,4 @@
-#include "remindermanager.h"
+#include "ReminderManager.h"
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -9,217 +9,258 @@
 #include <QDir>
 #include <QUuid>
 #include <QDateTime>
+#include <QApplication>
+#include <QScreen>
+#include <QCoreApplication>
 
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(parent)
+    , checkTimer(new QTimer(this))
     , isPaused(false)
-    , trayIcon(nullptr)
+    , dataFilePath(REMINDERS_FILE)
 {
-    // 托盘初始化
-    trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
-    trayIcon->setToolTip(tr("EasyNotify 提醒"));
-    trayIcon->show();
-
+    LOG_INFO("ReminderManager 初始化");
     setupTimer();
     loadReminders();
 }
 
 ReminderManager::~ReminderManager()
 {
+    LOG_INFO("ReminderManager 析构");
     saveReminders();
 }
 
 void ReminderManager::setupTimer()
 {
-    checkTimer = new QTimer(this);
+    LOG_INFO("设置定时器");
     connect(checkTimer, &QTimer::timeout, this, &ReminderManager::checkReminders);
     checkTimer->start(1000); // 每秒检查一次
 }
 
+void ReminderManager::loadReminders()
+{
+    LOG_INFO("开始加载提醒");
+    QFile file(dataFilePath);
+    if (file.exists()) {
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray data = file.readAll();
+            QJsonDocument doc = QJsonDocument::fromJson(data);
+            if (doc.isArray()) {
+                QJsonArray array = doc.array();
+                for (const QJsonValue &value : array) {
+                    if (value.isObject()) {
+                        QJsonObject reminder = value.toObject();
+                        QString id = reminder["id"].toString();
+                        if (!id.isEmpty()) {
+                            reminders[id] = reminder;
+                            LOG_INFO(QString("加载提醒: %1, 下次触发时间: %2")
+                                .arg(id)
+                                .arg(reminder["nextTrigger"].toString()));
+                        }
+                    }
+                }
+            }
+            file.close();
+        }
+    }
+    LOG_INFO(QString("共加载 %1 个提醒").arg(reminders.size()));
+}
+
 void ReminderManager::addReminder(const QJsonObject &reminder)
 {
-    QString name = reminder["Name"].toString();
-    if (name.isEmpty()) {
-        LOG_WARNING("尝试添加没有名称的提醒");
-        return;
-    }
-    reminders[name] = reminder;
-    saveReminders();
-    emit remindersChanged();
-    LOG_INFO(QString("添加提醒: %1").arg(name));
-}
+    QString id = reminder["id"].toString();
+    if (!id.isEmpty()) {
+        // 确保提醒对象包含所有必要字段
+        QJsonObject newReminder = reminder;
+        if (!newReminder.contains("nextTrigger")) {
+            QDateTime currentTime = QDateTime::currentDateTime();
+            newReminder["nextTrigger"] = currentTime.toString(Qt::ISODate);
+        }
+        if (!newReminder.contains("type")) {
+            newReminder["type"] = QCoreApplication::translate("ReminderManager", "一次性");
+        }
+        if (!newReminder.contains("title")) {
+            newReminder["title"] = id;
+        }
+        if (!newReminder.contains("message")) {
+            newReminder["message"] = QCoreApplication::translate("ReminderManager", "提醒时间到了！");
+        }
 
-void ReminderManager::updateReminder(const QString &name, const QJsonObject &reminder)
-{
-    if (!reminders.contains(name)) {
-        LOG_WARNING(QString("尝试更新不存在的提醒: %1").arg(name));
-        return;
-    }
-    
-    // 如果名称改变了，需要更新键
-    QString newName = reminder["Name"].toString();
-    if (newName != name) {
-        reminders.remove(name);
-        reminders[newName] = reminder;
+        reminders[id] = newReminder;
+        LOG_INFO(QString("添加提醒: %1, 类型: %2, 下次触发时间: %3")
+            .arg(id)
+            .arg(newReminder["type"].toString())
+            .arg(newReminder["nextTrigger"].toString()));
+        saveReminders();
+        emit remindersChanged();
     } else {
-        reminders[name] = reminder;
+        LOG_ERROR("尝试添加没有ID的提醒");
     }
-    
-    saveReminders();
-    emit remindersChanged();
-    LOG_INFO(QString("更新提醒: %1").arg(newName));
 }
 
-void ReminderManager::deleteReminder(const QString &name)
+void ReminderManager::updateReminder(const QString &id, const QJsonObject &reminder)
 {
-    if (!reminders.contains(name)) {
-        LOG_WARNING(QString("尝试删除不存在的提醒: %1").arg(name));
-        return;
+    if (reminders.contains(id)) {
+        reminders[id] = reminder;
+        LOG_INFO(QString("更新提醒: %1, 类型: %2, 下次触发时间: %3")
+            .arg(id)
+            .arg(reminder["type"].toString())
+            .arg(reminder["nextTrigger"].toString()));
+        saveReminders();
+        emit remindersChanged();
     }
-    reminders.remove(name);
-    saveReminders();
-    emit remindersChanged();
-    LOG_INFO(QString("删除提醒: %1").arg(name));
+}
+
+void ReminderManager::deleteReminder(const QString &id)
+{
+    if (reminders.remove(id) > 0) {
+        LOG_INFO(QString("删除提醒: %1").arg(id));
+        saveReminders();
+        emit remindersChanged();
+    }
 }
 
 void ReminderManager::pauseAll()
 {
+    LOG_INFO("暂停所有提醒");
     isPaused = true;
-    checkTimer->stop();
-    LOG_INFO("所有提醒已暂停");
 }
 
 void ReminderManager::resumeAll()
 {
+    LOG_INFO("恢复所有提醒");
     isPaused = false;
-    checkTimer->start();
-    LOG_INFO("所有提醒已恢复");
+}
+
+QJsonArray ReminderManager::getReminders() const
+{
+    QJsonArray array;
+    for (const auto &reminder : reminders) {
+        array.append(reminder);
+    }
+    return array;
+}
+
+void ReminderManager::saveReminders()
+{
+    LOG_INFO("保存提醒数据");
+    QFile file(dataFilePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        QJsonArray array;
+        for (const auto &reminder : reminders) {
+            array.append(reminder);
+        }
+        QJsonDocument doc(array);
+        QByteArray jsonData = doc.toJson();
+        file.write(jsonData);
+        file.close();
+        LOG_INFO(QString("成功保存 %1 个提醒，数据大小: %2 字节")
+            .arg(reminders.size())
+            .arg(jsonData.size()));
+    } else {
+        LOG_ERROR(QString("保存提醒数据失败: %1").arg(file.errorString()));
+    }
 }
 
 void ReminderManager::checkReminders()
 {
     if (isPaused) {
+        LOG_DEBUG("提醒检查已暂停");
         return;
     }
 
     QDateTime currentTime = QDateTime::currentDateTime();
-    QList<QString> triggeredIds;
-
+    LOG_DEBUG(QString("检查提醒，当前时间: %1").arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));
+    
     for (auto it = reminders.begin(); it != reminders.end(); ++it) {
         QJsonObject reminder = it.value();
-        if (reminder["IsEnabled"].toBool() && shouldTrigger(reminder)) {
-            triggeredIds.append(it.key());
-            onReminderTriggered(reminder);
+        QString id = reminder["id"].toString();
+        QString nextTrigger = reminder["nextTrigger"].toString();
+        
+        LOG_DEBUG(QString("检查提醒 [%1]: 下次触发时间 = %2")
+            .arg(id)
+            .arg(nextTrigger));
+            
+        if (shouldTrigger(reminder)) {
+            LOG_INFO(QString("触发提醒 [%1]").arg(id));
+            showNotification(reminder);
+            calculateNextTrigger(reminder);
+            it.value() = reminder;
+            saveReminders();
         }
-    }
-
-    // 更新已触发的提醒
-    for (const QString &id : triggeredIds) {
-        QJsonObject &reminder = reminders[id];
-        calculateNextTrigger(reminder);
-    }
-
-    if (!triggeredIds.isEmpty()) {
-        saveReminders();
     }
 }
 
 void ReminderManager::onReminderTriggered(const QJsonObject &reminder)
 {
-    showNotification(reminder);
+    LOG_INFO(QString("提醒已触发: %1").arg(reminder["id"].toString()));
     emit reminderTriggered(reminder);
 }
 
 void ReminderManager::calculateNextTrigger(QJsonObject &reminder)
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    QDateTime nextTime = QDateTime::fromString(reminder["NextTrigger"].toString(), "yyyy-MM-dd HH:mm:ss");
-    QString type = reminder["Type"].toString();
+    QString type = reminder["type"].toString();
+    QDateTime nextTrigger;
 
-    if (type == tr("一次性")) {
-        // 一次性提醒触发后自动禁用
-        reminder["IsEnabled"] = false;
-    } else if (type == tr("每天")) {
-        nextTime = nextTime.addDays(1);
-    } else if (type == tr("每周")) {
-        nextTime = nextTime.addDays(7);
-    } else if (type == tr("每月")) {
-        nextTime = nextTime.addMonths(1);
+    LOG_DEBUG(QString("计算下次触发时间 [%1]: 类型 = %2")
+        .arg(reminder["id"].toString())
+        .arg(type));
+
+    if (type == QCoreApplication::translate("ReminderManager", "一次性")) {
+        // 一次性提醒触发后，将nextTrigger设置为一个很远的未来时间，防止重复触发
+        nextTrigger = currentTime.addYears(100);
+    } else if (type == QCoreApplication::translate("ReminderManager", "每天")) {
+        nextTrigger = currentTime.addDays(1);
+    } else if (type == QCoreApplication::translate("ReminderManager", "每周")) {
+        nextTrigger = currentTime.addDays(7);
+    } else if (type == QCoreApplication::translate("ReminderManager", "每月")) {
+        nextTrigger = currentTime.addMonths(1);
     }
 
-    reminder["NextTrigger"] = nextTime.toString("yyyy-MM-dd HH:mm:ss");
+    reminder["nextTrigger"] = nextTrigger.toString(Qt::ISODate);
+    LOG_INFO(QString("下次触发时间设置为: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
 }
 
 bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    QDateTime triggerTime = QDateTime::fromString(reminder["NextTrigger"].toString(), "yyyy-MM-dd HH:mm:ss");
+    QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
     
-    // 允许1秒的误差
-    return qAbs(currentTime.secsTo(triggerTime)) <= 1;
+    bool shouldTrigger = nextTrigger <= currentTime;
+    LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 当前时间 = %2, 触发时间 = %3, 结果 = %4")
+        .arg(reminder["id"].toString())
+        .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss"))
+        .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss"))
+        .arg(shouldTrigger ? "是" : "否"));
+        
+    return shouldTrigger;
 }
 
 void ReminderManager::showNotification(const QJsonObject &reminder)
 {
-    if (!trayIcon) return;
-    QString title = reminder["Name"].toString();
-    QString message = tr("提醒时间到了！");
-    trayIcon->showMessage(title, message, QSystemTrayIcon::Information, 5000);
+    QString title = reminder["title"].toString();
+    QString message = reminder["message"].toString();
+    QIcon icon(":/img/tray_icon.png");
+    
+    LOG_INFO(QString("显示通知: 标题 = %1, 消息 = %2")
+        .arg(title)
+        .arg(message));
+    
+    NotificationPopup *popup = new NotificationPopup(title, message, icon, 5000);
+    QScreen *screen = QApplication::primaryScreen();
+    popup->showAt(screen->availableGeometry().bottomRight());
 }
 
-void ReminderManager::loadReminders()
+void ReminderManager::updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger)
 {
-    QFile file(REMINDERS_FILE);
-    if (!file.exists()) {
-        LOG_DEBUG("提醒数据文件不存在，将创建新文件");
-        return;
+    if (reminders.contains(id)) {
+        QJsonObject reminder = reminders[id];
+        reminder["nextTrigger"] = nextTrigger.toString(Qt::ISODate);
+        reminders[id] = reminder;
+        LOG_INFO(QString("更新提醒 [%1] 的下次触发时间: %2")
+            .arg(id)
+            .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+        saveReminders();
     }
-
-    if (!file.open(QIODevice::ReadOnly)) {
-        LOG_ERROR("无法读取提醒数据");
-        return;
-    }
-
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-    if (doc.isObject()) {
-        QJsonObject obj = doc.object();
-        reminders.clear();
-        for (auto it = obj.begin(); it != obj.end(); ++it) {
-            QJsonObject reminder = it.value().toObject();
-            reminder["Name"] = it.key(); // 确保名称与 key 一致
-            reminders[it.key()] = reminder;
-        }
-        LOG_INFO(QString("已加载 %1 个提醒").arg(reminders.size()));
-    } else {
-        LOG_WARNING("提醒数据格式无效");
-    }
-}
-
-void ReminderManager::saveReminders()
-{
-    QFile file(REMINDERS_FILE);
-    if (!file.open(QIODevice::WriteOnly)) {
-        LOG_ERROR("无法保存提醒数据");
-        return;
-    }
-
-    QJsonObject obj;
-    for (auto it = reminders.begin(); it != reminders.end(); ++it) {
-        QJsonObject reminder = it.value();
-        reminder.remove("Id"); // 移除冗余的 ID
-        obj[it.key()] = reminder;
-    }
-    QJsonDocument doc(obj);
-    file.write(doc.toJson());
-    LOG_DEBUG("提醒数据已保存");
-}
-
-QJsonArray ReminderManager::getReminders() const
-{
-    QJsonArray array;
-    for (const auto& reminder : reminders) {
-        array.append(reminder);
-    }
-    return array;
 } 

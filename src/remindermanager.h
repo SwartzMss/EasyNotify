@@ -8,8 +8,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QMap>
-#include <QSystemTrayIcon>
 #include <QFile>
+#include "NotificationPopup.h"
 
 class ReminderManager : public QObject
 {
@@ -46,7 +46,6 @@ private:
     QTimer *checkTimer;
     QMap<QString, QJsonObject> reminders;
     bool isPaused;
-    QSystemTrayIcon *trayIcon = nullptr;
     QString dataFilePath;
     static constexpr const char* REMINDERS_FILE = "reminders.json";
 };

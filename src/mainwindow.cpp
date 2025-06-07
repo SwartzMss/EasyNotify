@@ -56,8 +56,6 @@ void MainWindow::setupConnections()
             this, &MainWindow::onTrayIconActivated);
     connect(showAction, &QAction::triggered,
             this, &MainWindow::onShowMainWindow);
-    connect(addAction, &QAction::triggered,
-            this, &MainWindow::onAddReminder);
     connect(pauseAction, &QAction::triggered,
             this, &MainWindow::onPauseReminders);
     connect(quitAction, &QAction::triggered,
@@ -77,12 +75,10 @@ void MainWindow::createActions()
     trayIconMenu = new QMenu(this);
     
     showAction = new QAction(tr("显示主界面"), this);
-    addAction = new QAction(tr("添加提醒"), this);
     pauseAction = new QAction(tr("暂停提醒"), this);
     quitAction = new QAction(tr("退出"), this);
     
     trayIconMenu->addAction(showAction);
-    trayIconMenu->addAction(addAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(pauseAction);
     trayIconMenu->addAction(quitAction);
@@ -104,10 +100,6 @@ void MainWindow::onShowMainWindow()
     raise();
 }
 
-void MainWindow::onAddReminder()
-{
-    reminderList->onAddClicked();
-}
 
 void MainWindow::onPauseReminders()
 {
