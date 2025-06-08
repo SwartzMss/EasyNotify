@@ -5,12 +5,14 @@
 #include <QPropertyAnimation>
 #include <QTimer>
 #include <QGraphicsDropShadowEffect>
+#include <QPushButton>
+#include <QScopedPointer>
+#include "ui_notificationPopup.h"
 
 class NotificationPopup : public QWidget {
     Q_OBJECT
 public:
     NotificationPopup(const QString &title,
-                      const QString &message,
                       const QIcon &icon = {},
                       int timeoutMs = 5000,
                       QWidget *parent = nullptr);
@@ -18,7 +20,7 @@ public:
     void show();
 
 private:
-    QLabel *iconLabel, *titleLabel, *msgLabel;
+    QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn, *fadeOut;
     QTimer *closeTimer;
 };

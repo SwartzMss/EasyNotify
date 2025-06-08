@@ -194,15 +194,20 @@ void ReminderManager::calculateNextTrigger(QJsonObject &reminder)
         .arg(reminder["id"].toString())
         .arg(type));
 
-    if (type == QCoreApplication::translate("ReminderManager", "一次性")) {
-        // 一次性提醒触发后，将nextTrigger设置为一个很远的未来时间，防止重复触发
-        nextTrigger = currentTime.addYears(100);
-    } else if (type == QCoreApplication::translate("ReminderManager", "每天")) {
+    if (type == "OneTime") {
+        // 一次性提醒触发后，将nextTrigger设置为空字符串，防止重复触发
+        reminder["nextTrigger"] = "";
+        LOG_INFO(QString("一次性提醒已触发，设置为空，不再触发"));
+        return;
+    } else if (type == "Daily") {
         nextTrigger = currentTime.addDays(1);
-    } else if (type == QCoreApplication::translate("ReminderManager", "每周")) {
+        LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+    } else if (type == "Weekly") {
         nextTrigger = currentTime.addDays(7);
-    } else if (type == QCoreApplication::translate("ReminderManager", "每月")) {
+        LOG_INFO(QString("每周提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+    } else if (type == "Monthly") {
         nextTrigger = currentTime.addMonths(1);
+        LOG_INFO(QString("每月提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
     }
 
     reminder["nextTrigger"] = nextTrigger.toString(Qt::ISODate);
@@ -212,7 +217,21 @@ void ReminderManager::calculateNextTrigger(QJsonObject &reminder)
 bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
+    QString nextTriggerStr = reminder["nextTrigger"].toString();
+    
+    // 如果下次触发时间为空，说明是新建的提醒，不应该触发
+    if (nextTriggerStr.isEmpty()) {
+        LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 下次触发时间为空，不触发")
+            .arg(reminder["id"].toString()));
+        return false;
+    }
+    
+    QDateTime nextTrigger = QDateTime::fromString(nextTriggerStr, Qt::ISODate);
+    if (!nextTrigger.isValid()) {
+        LOG_ERROR(QString("检查提醒 [%1] 是否触发: 无效的触发时间格式")
+            .arg(reminder["id"].toString()));
+        return false;
+    }
     
     bool shouldTrigger = nextTrigger <= currentTime;
     LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 当前时间 = %2, 触发时间 = %3, 结果 = %4")
@@ -227,14 +246,11 @@ bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
 void ReminderManager::showNotification(const QJsonObject &reminder)
 {
     QString title = reminder["title"].toString();
-    QString message = reminder["message"].toString();
     QIcon icon(":/img/tray_icon.png");
     
-    LOG_INFO(QString("显示通知: 标题 = %1, 消息 = %2")
-        .arg(title)
-        .arg(message));
+    LOG_INFO(QString("显示通知: 标题 = %1").arg(title));
     
-    NotificationPopup *popup = new NotificationPopup(title, message, icon, 5000);
+    NotificationPopup *popup = new NotificationPopup(title, icon, 5000);
     popup->show();
 }
 
