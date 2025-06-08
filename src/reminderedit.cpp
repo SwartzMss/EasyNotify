@@ -27,9 +27,9 @@ ReminderEdit::ReminderEdit(QWidget *parent)
     QDateTime now = QDateTime::currentDateTime();
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
-    reminderData["IsEnabled"] = true;
-    reminderData["Type"] = "OneTime";
-    reminderData["NextTrigger"] = now.toString(Qt::ISODate);
+    reminderData["isEnabled"] = true;
+    reminderData["type"] = "OneTime";
+    reminderData["nextTrigger"] = now.toString(Qt::ISODate);
     // 初始化控件显示
     onTypeChanged(ui->typeCombo->currentIndex());
 }
@@ -55,20 +55,20 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
 {
     setWindowTitle(tr("编辑提醒"));
     reminderData = reminder;
-    ui->nameEdit->setText(reminder["Name"].toString());
+    ui->nameEdit->setText(reminder["name"].toString());
     // 设置类型
-    QString type = reminder["Type"].toString();
+    QString type = reminder["type"].toString();
     ReminderType typeIndex = ReminderType::OneTime;
     if (type == "Daily") typeIndex = ReminderType::Daily;
     else if (type == "Weekly") typeIndex = ReminderType::Weekly;
     else if (type == "Monthly") typeIndex = ReminderType::Monthly;
     ui->typeCombo->setCurrentIndex(static_cast<int>(typeIndex));
     // 设置时间
-    QDateTime nextTrigger = QDateTime::fromString(reminder["NextTrigger"].toString(), Qt::ISODate);
+    QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
     ui->dateTimeEdit->setDateTime(nextTrigger);
     // 设置星期
     if (type == "Weekly") {
-        QJsonArray weekDaysArray = reminder["WeekDays"].toArray();
+        QJsonArray weekDaysArray = reminder["weekDays"].toArray();
         QList<int> weekDays;
         for (const QJsonValue &value : weekDaysArray) {
             weekDays.append(value.toInt());
@@ -81,7 +81,7 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
     }
     // 设置日期
     if (type == "Monthly") {
-        QJsonArray monthDaysArray = reminder["MonthDays"].toArray();
+        QJsonArray monthDaysArray = reminder["monthDays"].toArray();
         QList<int> monthDays;
         for (const QJsonValue &value : monthDaysArray) {
             monthDays.append(value.toInt());
@@ -115,31 +115,31 @@ void ReminderEdit::onTypeChanged(int index)
         case 0: // 一次性
             ui->dateTimeEdit->show();
             ui->dateTimeLabel->show();
-            reminderData["Type"] = "OneTime";
+            reminderData["type"] = "OneTime";
             break;
         case 1: // 每天
             ui->timeEdit->show();
             ui->timeLabel->show();
-            reminderData["Type"] = "Daily";
+            reminderData["type"] = "Daily";
             break;
         case 2: // 工作日
             ui->timeEdit->show();
             ui->timeLabel->show();
-            reminderData["Type"] = "Workday";
+            reminderData["type"] = "Workday";
             break;
         case 3: // 每周
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->weekDaysList->show();
             ui->weekDaysLabel->show();
-            reminderData["Type"] = "Weekly";
+            reminderData["type"] = "Weekly";
             break;
         case 4: // 每月
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->monthDaysList->show();
             ui->monthDaysLabel->show();
-            reminderData["Type"] = "Monthly";
+            reminderData["type"] = "Monthly";
             break;
     }
     updateNextTriggerTime();
@@ -155,7 +155,7 @@ void ReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 void ReminderEdit::onOkClicked()
 {
     if (validateInput()) {
-        reminderData["Name"] = ui->nameEdit->text().trimmed();
+        reminderData["name"] = ui->nameEdit->text().trimmed();
         accept();
     }
 }
@@ -270,7 +270,7 @@ void ReminderEdit::updateNextTriggerTime()
     ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
     
     // 更新数据
-    reminderData["NextTrigger"] = nextTime.toString(Qt::ISODate);
+    reminderData["nextTrigger"] = nextTime.toString(Qt::ISODate);
 }
 
 bool ReminderEdit::isDaySelected(int day) const

@@ -32,7 +32,8 @@ HEADERS += \
 FORMS += \
     src/mainwindow.ui \
     src/reminderlist.ui \
-    src/reminderedit.ui
+    src/reminderedit.ui \
+    src/notificationPopup.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
