@@ -122,19 +122,14 @@ void ReminderEdit::onTypeChanged(int index)
             ui->timeLabel->show();
             reminderData["type"] = "Daily";
             break;
-        case 2: // 工作日
-            ui->timeEdit->show();
-            ui->timeLabel->show();
-            reminderData["type"] = "Workday";
-            break;
-        case 3: // 每周
+        case 2: // 每周
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->weekDaysList->show();
             ui->weekDaysLabel->show();
             reminderData["type"] = "Weekly";
             break;
-        case 4: // 每月
+        case 3: // 每月
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->monthDaysList->show();
