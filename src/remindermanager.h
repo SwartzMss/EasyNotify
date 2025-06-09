@@ -9,6 +9,9 @@
 #include <QJsonDocument>
 #include <QMap>
 #include "NotificationPopup.h"
+#include <QVector>
+#include "reminder.h"
+#include "configmanager.h"
 
 class ReminderManager : public QObject
 {
@@ -18,34 +21,42 @@ public:
     explicit ReminderManager(QObject *parent = nullptr);
     ~ReminderManager();
 
-    void addReminder(const QJsonObject &reminder);
-    void updateReminder(const QString &id, const QJsonObject &reminder);
-    void deleteReminder(const QString &id);
+    void addReminder(const Reminder &reminder);
+    void updateReminder(int index, const Reminder &reminder);
+    void deleteReminder(int index);
+    QVector<Reminder> getReminders() const;
+    void toggleReminder(int index);
+
+    void importReminders(const QString &filePath);
+    void exportReminders(const QString &filePath);
+
     void pauseAll();
     void resumeAll();
-    QJsonArray getReminders() const;
+    QJsonArray getRemindersJson() const;
     void saveReminders();
     void loadReminders();
 
 signals:
-    void reminderTriggered(const QJsonObject &reminder);
     void remindersChanged();
+    void reminderTriggered(const Reminder &reminder);
 
 private slots:
     void checkReminders();
-    void onReminderTriggered(const QJsonObject &reminder);
+    void onReminderTriggered(const Reminder &reminder);
 
 private:
     void setupTimer();
-    void calculateNextTrigger(QJsonObject &reminder);
-    bool shouldTrigger(const QJsonObject &reminder) const;
-    void showNotification(const QJsonObject &reminder);
+    void calculateNextTrigger(Reminder &reminder);
+    bool shouldTrigger(const Reminder &reminder) const;
+    void showNotification(const Reminder &reminder);
     void updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger);
     void initializeReminders();
 
     QTimer *checkTimer;
     QMap<QString, QJsonObject> reminders;
     bool isPaused;
+
+    QVector<Reminder> m_reminders;
 };
 
 #endif // REMINDERMANAGER_H 

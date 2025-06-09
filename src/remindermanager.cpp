@@ -13,6 +13,9 @@
 #include <QScreen>
 #include <QCoreApplication>
 #include "configmanager.h"
+#include "reminder.h"
+#include <QSystemTrayIcon>
+#include <QTimer>
 
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(parent)
@@ -40,77 +43,40 @@ void ReminderManager::setupTimer()
 void ReminderManager::loadReminders()
 {
     LOG_INFO("开始加载提醒");
-    QJsonArray remindersArray = ConfigManager::instance().getReminders();
-    reminders.clear();
-    
-    for (const QJsonValue &value : remindersArray) {
+    QJsonArray reminders = ConfigManager::instance().getReminders();
+    m_reminders.clear();
+    for (const QJsonValue &value : reminders) {
         if (value.isObject()) {
-            QJsonObject reminder = value.toObject();
-            QString id = reminder["id"].toString();
-            if (!id.isEmpty()) {
-                reminders[id] = reminder;
-                LOG_INFO(QString("加载提醒: %1, 下次触发时间: %2")
-                    .arg(id)
-                    .arg(reminder["nextTrigger"].toString()));
-            }
+            m_reminders.append(Reminder::fromJson(value.toObject()));
         }
     }
     
     // 同步暂停状态
     isPaused = ConfigManager::instance().isPaused();
     
-    LOG_INFO(QString("共加载 %1 个提醒").arg(reminders.size()));
+    LOG_INFO(QString("共加载 %1 个提醒").arg(m_reminders.size()));
 }
 
-void ReminderManager::addReminder(const QJsonObject &reminder)
+void ReminderManager::addReminder(const Reminder &reminder)
 {
-    QString id = reminder["id"].toString();
-    if (!id.isEmpty()) {
-        // 确保提醒对象包含所有必要字段
-        QJsonObject newReminder = reminder;
-        if (!newReminder.contains("nextTrigger")) {
-            QDateTime currentTime = QDateTime::currentDateTime();
-            newReminder["nextTrigger"] = currentTime.toString(Qt::ISODate);
-        }
-        if (!newReminder.contains("type")) {
-            newReminder["type"] = QCoreApplication::translate("ReminderManager", "一次性");
-        }
-        if (!newReminder.contains("title")) {
-            newReminder["title"] = id;
-        }
-        if (!newReminder.contains("message")) {
-            newReminder["message"] = QCoreApplication::translate("ReminderManager", "提醒时间到了！");
-        }
-
-        reminders[id] = newReminder;
-        LOG_INFO(QString("添加提醒: %1, 类型: %2, 下次触发时间: %3")
-            .arg(id)
-            .arg(newReminder["type"].toString())
-            .arg(newReminder["nextTrigger"].toString()));
-        saveReminders();
-        emit remindersChanged();
-    } else {
-        LOG_ERROR("尝试添加没有ID的提醒");
-    }
+    m_reminders.append(reminder);
+    saveReminders();
+    emit remindersChanged();
 }
 
-void ReminderManager::updateReminder(const QString &id, const QJsonObject &reminder)
+void ReminderManager::updateReminder(int index, const Reminder &reminder)
 {
-    if (reminders.contains(id)) {
-        reminders[id] = reminder;
-        LOG_INFO(QString("更新提醒: %1, 类型: %2, 下次触发时间: %3")
-            .arg(id)
-            .arg(reminder["type"].toString())
-            .arg(reminder["nextTrigger"].toString()));
+    if (index >= 0 && index < m_reminders.size()) {
+        m_reminders[index] = reminder;
         saveReminders();
         emit remindersChanged();
     }
 }
 
-void ReminderManager::deleteReminder(const QString &id)
+void ReminderManager::deleteReminder(int index)
 {
-    if (reminders.remove(id) > 0) {
-        LOG_INFO(QString("删除提醒: %1").arg(id));
+    if (index >= 0 && index < m_reminders.size()) {
+        m_reminders.removeAt(index);
         saveReminders();
         emit remindersChanged();
     }
@@ -130,21 +96,17 @@ void ReminderManager::resumeAll()
     ConfigManager::instance().setPaused(false);
 }
 
-QJsonArray ReminderManager::getReminders() const
+QVector<Reminder> ReminderManager::getReminders() const
 {
-    QJsonArray array;
-    for (const auto &reminder : reminders) {
-        array.append(reminder);
-    }
-    return array;
+    return m_reminders;
 }
 
 void ReminderManager::saveReminders()
 {
     LOG_INFO("保存提醒数据");
     QJsonArray array;
-    for (const auto &reminder : reminders) {
-        array.append(reminder);
+    for (const Reminder &reminder : m_reminders) {
+        array.append(reminder.toJson());
     }
     ConfigManager::instance().setReminders(array);
 }
@@ -159,83 +121,76 @@ void ReminderManager::checkReminders()
     QDateTime currentTime = QDateTime::currentDateTime();
     LOG_DEBUG(QString("检查提醒，当前时间: %1").arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));
     
-    for (auto it = reminders.begin(); it != reminders.end(); ++it) {
-        QJsonObject reminder = it.value();
-        QString id = reminder["id"].toString();
-        QString nextTrigger = reminder["nextTrigger"].toString();
+    for (auto it = m_reminders.begin(); it != m_reminders.end(); ++it) {
+        Reminder &reminder = *it;
+        QString id = reminder.id();
+        QDateTime nextTrigger = reminder.nextTrigger();
         
         LOG_DEBUG(QString("检查提醒 [%1]: 下次触发时间 = %2")
             .arg(id)
-            .arg(nextTrigger));
+            .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
             
         if (shouldTrigger(reminder)) {
             LOG_INFO(QString("触发提醒 [%1]").arg(id));
             showNotification(reminder);
             calculateNextTrigger(reminder);
-            it.value() = reminder;
             saveReminders();
         }
     }
 }
 
-void ReminderManager::onReminderTriggered(const QJsonObject &reminder)
+void ReminderManager::onReminderTriggered(const Reminder &reminder)
 {
-    LOG_INFO(QString("提醒已触发: %1").arg(reminder["id"].toString()));
+    LOG_INFO(QString("提醒已触发: %1").arg(reminder.id()));
     emit reminderTriggered(reminder);
 }
 
-void ReminderManager::calculateNextTrigger(QJsonObject &reminder)
+void ReminderManager::calculateNextTrigger(Reminder &reminder)
 {
     QDateTime currentTime = QDateTime::currentDateTime();
-    QString type = reminder["type"].toString();
+    Reminder::Type type = reminder.type();
     QDateTime nextTrigger;
 
-    LOG_DEBUG(QString("计算下次触发时间 [%1]: 类型 = %2")
-        .arg(reminder["id"].toString())
-        .arg(type));
-
-    if (type == "OneTime") {
-        // 一次性提醒触发后，将nextTrigger设置为空字符串，防止重复触发
-        reminder["nextTrigger"] = "";
+    if (type == Reminder::Type::Once) {
+        // 一次性提醒触发后，将nextTrigger设置为空，防止重复触发
+        reminder.setNextTrigger(QDateTime());
         LOG_INFO(QString("一次性提醒已触发，设置为空，不再触发"));
         return;
-    } else if (type == "Daily") {
+    } else if (type == Reminder::Type::Daily) {
         nextTrigger = currentTime.addDays(1);
         LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
-    } else if (type == "Weekly") {
+    } else if (type == Reminder::Type::Weekly) {
         nextTrigger = currentTime.addDays(7);
         LOG_INFO(QString("每周提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
-    } else if (type == "Monthly") {
+    } else if (type == Reminder::Type::Monthly) {
         nextTrigger = currentTime.addMonths(1);
         LOG_INFO(QString("每月提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
     }
 
-    reminder["nextTrigger"] = nextTrigger.toString(Qt::ISODate);
+    reminder.setNextTrigger(nextTrigger);
     LOG_INFO(QString("下次触发时间设置为: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
 }
 
-bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
+bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 {
-    QDateTime currentTime = QDateTime::currentDateTime();
-    QString nextTriggerStr = reminder["nextTrigger"].toString();
-    
-    // 如果下次触发时间为空，说明是新建的提醒，不应该触发
-    if (nextTriggerStr.isEmpty()) {
-        LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 下次触发时间为空，不触发")
-            .arg(reminder["id"].toString()));
+    if (!reminder.isEnabled()) {
+        LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 提醒已禁用，不触发")
+            .arg(reminder.id()));
         return false;
     }
     
-    QDateTime nextTrigger = QDateTime::fromString(nextTriggerStr, Qt::ISODate);
+    QDateTime currentTime = QDateTime::currentDateTime();
+    QDateTime nextTrigger = reminder.nextTrigger();
+    
     if (!nextTrigger.isValid()) {
         LOG_ERROR(QString("检查提醒 [%1] 是否触发: 无效的触发时间格式")
-            .arg(reminder["id"].toString()));
+            .arg(reminder.id()));
         return false;
     }
     
     bool shouldTrigger = nextTrigger <= currentTime;
     LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 当前时间 = %2, 触发时间 = %3, 结果 = %4")
-        .arg(reminder["id"].toString())
+        .arg(reminder.id())
         .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss"))
         .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss"))
         .arg(shouldTrigger ? "是" : "否"));
@@ -243,26 +198,106 @@ bool ReminderManager::shouldTrigger(const QJsonObject &reminder) const
     return shouldTrigger;
 }
 
-void ReminderManager::showNotification(const QJsonObject &reminder)
+void ReminderManager::showNotification(const Reminder &reminder)
 {
-    QString title = reminder["title"].toString();
-    QIcon icon(":/img/tray_icon.png");
-    
-    LOG_INFO(QString("显示通知: 标题 = %1").arg(title));
-    
-    NotificationPopup *popup = new NotificationPopup(title, icon, 5000);
-    popup->show();
+    QString typeStr;
+    switch (reminder.type()) {
+        case Reminder::Type::Once:
+            typeStr = tr("一次性");
+            break;
+        case Reminder::Type::Daily:
+            typeStr = tr("每日");
+            break;
+        case Reminder::Type::Weekly:
+            typeStr = tr("每周");
+            break;
+        case Reminder::Type::Monthly:
+            typeStr = tr("每月");
+            break;
+        default:
+            typeStr = tr("未知");
+            break;
+    }
+
+    QString message = tr("提醒: %1\n类型: %2\n时间: %3")
+        .arg(reminder.title())
+        .arg(typeStr)
+        .arg(reminder.nextTrigger().toString("yyyy-MM-dd HH:mm:ss"));
+
+    QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information;
+    int duration = 5000; // 显示5秒
+
+    QSystemTrayIcon *trayIcon = new QSystemTrayIcon(this);
+    trayIcon->setIcon(QIcon(":/icons/icon.png"));
+    trayIcon->show();
+    trayIcon->showMessage(tr("EasyNotify"), message, icon, duration);
 }
 
 void ReminderManager::updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger)
 {
-    if (reminders.contains(id)) {
-        QJsonObject reminder = reminders[id];
-        reminder["nextTrigger"] = nextTrigger.toString(Qt::ISODate);
-        reminders[id] = reminder;
-        LOG_INFO(QString("更新提醒 [%1] 的下次触发时间: %2")
-            .arg(id)
-            .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
-        saveReminders();
+    for (Reminder &reminder : m_reminders) {
+        if (reminder.id() == id) {
+            reminder.setNextTrigger(nextTrigger);
+            saveReminders();
+            break;
+        }
     }
-} 
+}
+
+QJsonArray ReminderManager::getRemindersJson() const
+{
+    QJsonArray array;
+    for (const Reminder &reminder : m_reminders) {
+        array.append(reminder.toJson());
+    }
+    return array;
+}
+
+void ReminderManager::importReminders(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (doc.isArray()) {
+        m_reminders.clear();
+        QJsonArray array = doc.array();
+        for (const QJsonValue &value : array) {
+            if (value.isObject()) {
+                m_reminders.append(Reminder::fromJson(value.toObject()));
+            }
+        }
+        saveReminders();
+        emit remindersChanged();
+    }
+    file.close();
+}
+
+void ReminderManager::exportReminders(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return;
+    }
+
+    QJsonArray array;
+    for (const Reminder &reminder : m_reminders) {
+        array.append(reminder.toJson());
+    }
+
+    QJsonDocument doc(array);
+    file.write(doc.toJson());
+    file.close();
+}
+
+void ReminderManager::toggleReminder(int index)
+{
+    if (index >= 0 && index < m_reminders.size()) {
+        Reminder &reminder = m_reminders[index];
+        reminder.setEnabled(!reminder.isEnabled());
+        saveReminders();
+        emit remindersChanged();
+    }
+}

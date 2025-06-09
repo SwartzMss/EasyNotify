@@ -2,12 +2,12 @@
 #define REMINDERLIST_H
 
 #include <QWidget>
-#include <QStandardItemModel>
 #include <QSortFilterProxyModel>
 #include <QJsonObject>
 #include <QJsonArray>
 #include "reminderedit.h"
 #include "remindermanager.h"
+#include "remindertablemodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ReminderList; }
@@ -22,7 +22,7 @@ public:
     ~ReminderList();
 
     void setReminderManager(ReminderManager *manager);
-    void loadReminders(const QJsonArray &reminders);
+    void loadReminders(const QList<Reminder> &reminders);
     QJsonArray getReminders() const;
     void addNewReminder();
     void editReminder(const QModelIndex &index);
@@ -33,7 +33,7 @@ public:
     QJsonObject getReminderData(const QString &name) const;
 
 public slots:
-    void onReminderTriggered(const QJsonObject &reminder);
+    void onReminderTriggered(const Reminder &reminder);
     void onAddClicked();
     void onEditClicked();
     void onDeleteClicked();
@@ -55,10 +55,11 @@ private:
     void saveReminders();
 
     Ui::ReminderList *ui;
-    QStandardItemModel *model;
-    QSortFilterProxyModel *proxyModel;
     ReminderManager *reminderManager;
+    ReminderTableModel *model;
+    QSortFilterProxyModel *proxyModel;
     ReminderEdit *editDialog;
+    QString m_searchText;
 };
 
 #endif // REMINDERLIST_H 

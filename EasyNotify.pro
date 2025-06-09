@@ -17,7 +17,9 @@ SOURCES += \
     src/logger.cpp \
     src/notificationPopup.cpp \
     src/configmanager.cpp \
-    src/singleinstance.cpp
+    src/singleinstance.cpp \
+    src/reminder.cpp   \
+    src/remindertablemodel.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -27,7 +29,9 @@ HEADERS += \
     src/logger.h \
     src/notificationPopup.h \
     src/configmanager.h \
-    src/singleinstance.h
+    src/singleinstance.h \\
+    src/reminder.h \
+    src/remindertablemodel.h
 
 FORMS += \
     src/mainwindow.ui \

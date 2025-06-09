@@ -47,11 +47,6 @@
        </item>
        <item>
         <property name="text">
-         <string>工作日</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>每周</string>
         </property>
        </item>
