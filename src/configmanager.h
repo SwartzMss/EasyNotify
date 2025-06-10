@@ -26,7 +26,6 @@ public:
     void updateReminder(const QString &id, const QJsonObject &reminder);
     void deleteReminder(const QString &id);
 
-    // 保存和加载配置
     void saveConfig();
     void loadConfig();
 

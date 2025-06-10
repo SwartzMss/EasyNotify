@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QFile>
 #include <QTextStream>
+#include <QFileInfo>
 
 const QString Logger::LOG_DIR = "logs";
 
@@ -43,10 +44,10 @@ void Logger::init()
     } 
 }
 
-void Logger::log(LogLevel level, const QString& message)
+void Logger::log(LogLevel level, const QString& message, const QString& file, int line)
 {
     QMutexLocker locker(&mutex);
-    QString formattedMessage = formatMessage(level, message);
+    QString formattedMessage = formatMessage(level, message, file, line);
     writeToFile(formattedMessage);
 }
 
@@ -63,7 +64,7 @@ QString Logger::getLogFileName() const
     return QDateTime::currentDateTime().toString("yyyy-MM-dd") + ".log";
 }
 
-QString Logger::formatMessage(LogLevel level, const QString& message) const
+QString Logger::formatMessage(LogLevel level, const QString& message, const QString& file, int line) const
 {
     QString levelStr;
     switch (level) {
@@ -73,9 +74,15 @@ QString Logger::formatMessage(LogLevel level, const QString& message) const
         case LogLevel::Error:   levelStr = "ERROR"; break;
     }
 
-    return QString("[%1] [%2] %3")
+    // 获取文件名（不包含路径）
+    QFileInfo fileInfo(file);
+    QString fileName = fileInfo.fileName();
+
+    return QString("[%1] [%2] [%3:%4] %5")
         .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz"))
         .arg(levelStr)
+        .arg(fileName)
+        .arg(line)
         .arg(message);
 }
 

@@ -253,45 +253,6 @@ QJsonArray ReminderManager::getRemindersJson() const
     return array;
 }
 
-void ReminderManager::importReminders(const QString &filePath)
-{
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly)) {
-        return;
-    }
-
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-    if (doc.isArray()) {
-        m_reminders.clear();
-        QJsonArray array = doc.array();
-        for (const QJsonValue &value : array) {
-            if (value.isObject()) {
-                m_reminders.append(Reminder::fromJson(value.toObject()));
-            }
-        }
-        saveReminders();
-        emit remindersChanged();
-    }
-    file.close();
-}
-
-void ReminderManager::exportReminders(const QString &filePath)
-{
-    QFile file(filePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        return;
-    }
-
-    QJsonArray array;
-    for (const Reminder &reminder : m_reminders) {
-        array.append(reminder.toJson());
-    }
-
-    QJsonDocument doc(array);
-    file.write(doc.toJson());
-    file.close();
-}
-
 void ReminderManager::toggleReminder(int index)
 {
     if (index >= 0 && index < m_reminders.size()) {

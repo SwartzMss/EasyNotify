@@ -31,28 +31,34 @@ ReminderList::ReminderList(QWidget *parent)
     , proxyModel(new QSortFilterProxyModel(this))
     , editDialog(new ReminderEdit(this))
 {
+    LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
     setupModel();
     setupConnections();
+    LOG_INFO("提醒列表界面初始化完成");
 }
 
 ReminderList::~ReminderList()
 {
+    LOG_INFO("销毁提醒列表界面");
     delete ui;
 }
 
 void ReminderList::setReminderManager(ReminderManager *manager)
 {
+    LOG_INFO("设置提醒管理器");
     reminderManager = manager;
     if (reminderManager) {
         connect(reminderManager, &ReminderManager::reminderTriggered,
                 this, &ReminderList::onReminderTriggered, Qt::AutoConnection);
         loadReminders(reminderManager->getReminders());
+        LOG_INFO("提醒管理器设置完成，已加载提醒列表");
     }
 }
 
 void ReminderList::setupConnections()
 {
+    LOG_INFO("设置信号连接");
     connect(ui->searchEdit, &QLineEdit::textChanged,
             this, &ReminderList::onSearchTextChanged);
     connect(ui->addButton, &QPushButton::clicked,
@@ -65,10 +71,12 @@ void ReminderList::setupConnections()
             this, &ReminderList::onExportClicked);
     connect(ui->tableView, &QTableView::doubleClicked,
             this, &ReminderList::onEditClicked);
+    LOG_INFO("信号连接设置完成");
 }
 
 void ReminderList::setupModel()
 {
+    LOG_INFO("设置数据模型");
     // 设置代理模型
     proxyModel->setSourceModel(model);
     proxyModel->setFilterKeyColumn(-1); // 设置为-1表示搜索所有列
@@ -83,10 +91,12 @@ void ReminderList::setupModel()
     ui->tableView->verticalHeader()->hide();
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setShowGrid(false);
+    LOG_INFO("数据模型设置完成");
 }
 
 void ReminderList::loadReminders(const QList<Reminder> &reminders)
 {
+    LOG_INFO(QString("加载提醒列表，共 %1 个提醒").arg(reminders.size()));
     model->loadFromJson(reminders);
 }
 
@@ -97,6 +107,7 @@ QJsonArray ReminderList::getReminders() const
 
 void ReminderList::addNewReminder()
 {
+    LOG_INFO("添加新提醒");
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject reminder = editDialog->getReminderData();
         if (reminderManager) {
@@ -104,12 +115,18 @@ void ReminderList::addNewReminder()
             reminderManager->addReminder(reminderObj);
             addReminderToModel(reminder);
             reminderManager->saveReminders();
+            LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
+                    .arg(reminderObj.name())
+                    .arg(reminderObj.id()));
         }
+    } else {
+        LOG_INFO("取消添加新提醒");
     }
 }
 
 void ReminderList::addReminderToModel(const QJsonObject &reminder)
 {
+    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder["name"].toString()));
     Reminder newReminder;
     newReminder.setName(reminder["name"].toString());
     newReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
@@ -131,10 +148,12 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
     newReminder.setMonthDays(monthDays);
     
     model->addReminder(newReminder);
+    LOG_INFO("提醒已添加到模型");
 }
 
 void ReminderList::updateReminderInModel(const QJsonObject &reminder)
 {
+    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder["name"].toString()));
     for (int i = 0; i < model->rowCount(); ++i) {
         Reminder existingReminder = model->getReminder(i);
         if (existingReminder.name() == reminder["name"].toString()) {
@@ -159,6 +178,10 @@ void ReminderList::updateReminderInModel(const QJsonObject &reminder)
             updatedReminder.setMonthDays(monthDays);
             
             model->updateReminder(i, updatedReminder);
+            LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2, 启用状态=%3")
+                    .arg(updatedReminder.name())
+                    .arg(static_cast<int>(updatedReminder.type()))
+                    .arg(updatedReminder.isEnabled()));
             break;
         }
     }
@@ -168,6 +191,8 @@ void ReminderList::editReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     Reminder reminder = model->getReminder(sourceIndex.row());
+    LOG_INFO(QString("编辑提醒: 名称='%1'").arg(reminder.name()));
+    
     QJsonObject reminderData = reminder.toJson();
     editDialog->loadReminderData(reminderData);
     if (editDialog->exec() == QDialog::Accepted) {
@@ -184,8 +209,11 @@ void ReminderList::editReminder(const QModelIndex &index)
             }
             if (index != -1) {
                 reminderManager->updateReminder(index, updatedReminder);
+                LOG_INFO(QString("提醒管理器更新成功: 名称='%1'").arg(updatedReminder.name()));
             }
         }
+    } else {
+        LOG_INFO("取消编辑提醒");
     }
 }
 
@@ -193,6 +221,7 @@ void ReminderList::deleteReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     Reminder reminder = model->getReminder(sourceIndex.row());
+    LOG_INFO(QString("准备删除提醒: 名称='%1'").arg(reminder.name()));
     
     QMessageBox::StandardButton reply = QMessageBox::question(
         this,
@@ -213,24 +242,33 @@ void ReminderList::deleteReminder(const QModelIndex &index)
             }
             if (index != -1) {
                 reminderManager->deleteReminder(index);
+                LOG_INFO(QString("提醒删除成功: 名称='%1'").arg(reminder.name()));
             }
         }
+    } else {
+        LOG_INFO("取消删除提醒");
     }
 }
 
 void ReminderList::toggleReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
+    Reminder reminder = model->getReminder(sourceIndex.row());
+    LOG_INFO(QString("切换提醒状态: 名称='%1', 当前状态=%2")
+             .arg(reminder.name())
+             .arg(reminder.isEnabled()));
     model->toggleReminder(sourceIndex.row());
 }
 
 void ReminderList::refreshList()
 {
+    LOG_INFO(QString("刷新提醒列表，搜索文本: '%1'").arg(m_searchText));
     model->search(m_searchText);
 }
 
 void ReminderList::searchReminders(const QString &text)
 {
+    LOG_INFO(QString("搜索提醒: '%1'").arg(text));
     model->search(text);
 }
 
@@ -247,6 +285,7 @@ QJsonObject ReminderList::getReminderData(const QString &name) const
 
 void ReminderList::onReminderTriggered(const Reminder &reminder)
 {
+    LOG_INFO(QString("提醒触发: 名称='%1'").arg(reminder.name()));
     refreshList();
 }
 
@@ -273,15 +312,22 @@ void ReminderList::onDeleteClicked()
 
 void ReminderList::onImportClicked()
 {
+    LOG_INFO("开始导入提醒");
     QString fileName = QFileDialog::getOpenFileName(this,
         tr("导入提醒"), "",
         tr("JSON文件 (*.json);;所有文件 (*)"));
 
-    if (fileName.isEmpty())
+    if (fileName.isEmpty()) {
+        LOG_INFO("取消导入提醒");
         return;
+    }
 
+    LOG_INFO(QString("从文件导入提醒: %1").arg(fileName));
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
+        LOG_ERROR(QString("无法打开文件: %1, 错误: %2")
+                 .arg(fileName)
+                 .arg(file.errorString()));
         QMessageBox::warning(this, tr("错误"),
             tr("无法打开文件 %1:\n%2").arg(fileName).arg(file.errorString()));
         return;
@@ -293,11 +339,13 @@ void ReminderList::onImportClicked()
         for (const QJsonValue &value : doc.array()) {
             reminders.append(Reminder::fromJson(value.toObject()));
         }
+        LOG_INFO(QString("成功导入 %1 个提醒").arg(reminders.size()));
         loadReminders(reminders);
         if (reminderManager) {
             reminderManager->saveReminders();
         }
     } else {
+        LOG_ERROR("导入文件格式错误");
         QMessageBox::warning(this, tr("错误"),
             tr("文件格式错误"));
     }
@@ -305,15 +353,22 @@ void ReminderList::onImportClicked()
 
 void ReminderList::onExportClicked()
 {
+    LOG_INFO("开始导出提醒");
     QString fileName = QFileDialog::getSaveFileName(this,
         tr("导出提醒"), "",
         tr("JSON文件 (*.json);;所有文件 (*)"));
 
-    if (fileName.isEmpty())
+    if (fileName.isEmpty()) {
+        LOG_INFO("取消导出提醒");
         return;
+    }
 
+    LOG_INFO(QString("导出提醒到文件: %1").arg(fileName));
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
+        LOG_ERROR(QString("无法保存文件: %1, 错误: %2")
+                 .arg(fileName)
+                 .arg(file.errorString()));
         QMessageBox::warning(this, tr("错误"),
             tr("无法保存文件 %1:\n%2").arg(fileName).arg(file.errorString()));
         return;
@@ -321,10 +376,12 @@ void ReminderList::onExportClicked()
 
     QJsonDocument doc(getReminders());
     file.write(doc.toJson());
+    LOG_INFO(QString("成功导出 %1 个提醒").arg(doc.array().size()));
 }
 
 void ReminderList::onSearchTextChanged(const QString &text)
 {
+    LOG_INFO(QString("搜索文本变更: '%1'").arg(text));
     m_searchText = text;
     searchReminders(text);
 } 

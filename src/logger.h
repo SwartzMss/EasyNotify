@@ -22,7 +22,21 @@ public:
     };
 
     static Logger& instance();
-    void log(LogLevel level, const QString& message);
+    void log(LogLevel level, const QString& message, const QString& file, int line);
+
+    // 便捷的日志方法
+    static void debug(const QString& message, const QString& file, int line) {
+        instance().log(LogLevel::Debug, message, file, line);
+    }
+    static void info(const QString& message, const QString& file, int line) {
+        instance().log(LogLevel::Info, message, file, line);
+    }
+    static void warning(const QString& message, const QString& file, int line) {
+        instance().log(LogLevel::Warning, message, file, line);
+    }
+    static void error(const QString& message, const QString& file, int line) {
+        instance().log(LogLevel::Error, message, file, line);
+    }
 
 private:
     explicit Logger(QObject *parent = nullptr);
@@ -30,7 +44,7 @@ private:
     void init();
     void writeToFile(const QString& message);
     QString getLogFileName() const;
-    QString formatMessage(LogLevel level, const QString& message) const;
+    QString formatMessage(LogLevel level, const QString& message, const QString& file, int line) const;
 
     QFile logFile;
     QTextStream logStream;
@@ -39,9 +53,9 @@ private:
 };
 
 // 定义日志宏
-#define LOG_DEBUG(msg) Logger::instance().log(Logger::LogLevel::Debug, msg)
-#define LOG_INFO(msg) Logger::instance().log(Logger::LogLevel::Info, msg)
-#define LOG_WARNING(msg) Logger::instance().log(Logger::LogLevel::Warning, msg)
-#define LOG_ERROR(msg) Logger::instance().log(Logger::LogLevel::Error, msg)
+#define LOG_DEBUG(msg) Logger::debug(msg, __FILE__, __LINE__)
+#define LOG_INFO(msg) Logger::info(msg, __FILE__, __LINE__)
+#define LOG_WARNING(msg) Logger::warning(msg, __FILE__, __LINE__)
+#define LOG_ERROR(msg) Logger::error(msg, __FILE__, __LINE__)
 
 #endif // LOGGER_H 

@@ -46,11 +46,6 @@ private:
     void setupModel();
     void addReminderToModel(const QJsonObject &reminder);
     void updateReminderInModel(const QJsonObject &reminder);
-    void removeReminderFromModel(const QString &name);
-    void updateReminderStatus(const QModelIndex &index, bool enabled);
-    bool importReminders(const QString &fileName);
-    bool exportReminders(const QString &fileName);
-    void handleImportConflict(const QJsonObject &importedReminder);
     void loadReminders();
     void saveReminders();
 

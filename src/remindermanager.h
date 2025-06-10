@@ -27,9 +27,6 @@ public:
     QVector<Reminder> getReminders() const;
     void toggleReminder(int index);
 
-    void importReminders(const QString &filePath);
-    void exportReminders(const QString &filePath);
-
     void pauseAll();
     void resumeAll();
     QJsonArray getRemindersJson() const;

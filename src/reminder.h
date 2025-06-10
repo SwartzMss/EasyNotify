@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QJsonObject>
 #include <QSet>
+#include "logger.h"
 
 class Reminder {
 public:
