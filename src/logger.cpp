@@ -5,6 +5,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QFileInfo>
+#include <QThread>
 
 const QString Logger::LOG_DIR = "logs";
 
@@ -78,9 +79,13 @@ QString Logger::formatMessage(LogLevel level, const QString& message, const QStr
     QFileInfo fileInfo(file);
     QString fileName = fileInfo.fileName();
 
-    return QString("[%1] [%2] [%3:%4] %5")
+    // 获取当前线程ID
+    Qt::HANDLE threadId = QThread::currentThreadId();
+
+    return QString("[%1] [%2] [Thread: %3] [%4:%5] %6")
         .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz"))
         .arg(levelStr)
+        .arg(reinterpret_cast<quintptr>(threadId))
         .arg(fileName)
         .arg(line)
         .arg(message);

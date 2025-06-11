@@ -7,7 +7,6 @@ Reminder::Reminder(const QString &name, Type type)
     : m_name(name)
     , m_type(type)
     , m_isEnabled(true)
-    , m_id(QUuid::createUuid().toString(QUuid::WithoutBraces))
 {
     LOG_INFO(QString("创建新提醒: 名称='%1', ID='%2'").arg(name).arg(m_id));
 }

@@ -30,7 +30,7 @@ ReminderEdit::ReminderEdit(QWidget *parent)
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
     reminderData["isEnabled"] = true;
-    reminderData["type"] = "OneTime";
+    reminderData["type"] = static_cast<int>(ReminderType::OneTime);
     reminderData["nextTrigger"] = now.toString(Qt::ISODate);
     // 初始化控件显示
     onTypeChanged(ui->typeCombo->currentIndex());
@@ -41,6 +41,25 @@ ReminderEdit::~ReminderEdit()
 {
     LOG_INFO("销毁提醒编辑对话框");
     delete ui;
+}
+
+void ReminderEdit::reset()
+{
+    // 重置所有控件到默认值
+    ui->nameEdit->clear();
+    QDateTime now = QDateTime::currentDateTime();
+    ui->dateTimeEdit->setDateTime(now);
+    ui->timeEdit->setTime(now.time());
+    ui->typeCombo->setCurrentIndex(0);
+    
+    // 重置reminderData
+    reminderData = QJsonObject();
+    reminderData["isEnabled"] = true;
+    reminderData["type"] = static_cast<int>(ReminderType::OneTime);
+    reminderData["nextTrigger"] = now.toString(Qt::ISODate);
+    
+    onTypeChanged(0);
+    LOG_INFO("重置提醒编辑对话框");
 }
 
 void ReminderEdit::setupConnections()
@@ -57,25 +76,20 @@ void ReminderEdit::setupConnections()
 
 void ReminderEdit::loadReminderData(const QJsonObject &reminder)
 {
+    reminderData = reminder;
     QString id = reminder["id"].toString();
     QString name = reminder["name"].toString();
     LOG_INFO(QString("加载提醒数据: ID='%1', 名称='%2'").arg(id).arg(name));
     
-    setWindowTitle(tr("编辑提醒"));
-    reminderData = reminder;
-    ui->nameEdit->setText(reminder["name"].toString());
+    ui->nameEdit->setText(name);
     // 设置类型
-    QString type = reminder["type"].toString();
-    ReminderType typeIndex = ReminderType::OneTime;
-    if (type == "Daily") typeIndex = ReminderType::Daily;
-    else if (type == "Weekly") typeIndex = ReminderType::Weekly;
-    else if (type == "Monthly") typeIndex = ReminderType::Monthly;
-    ui->typeCombo->setCurrentIndex(static_cast<int>(typeIndex));
+    int type = reminder["type"].toInt();
+    ui->typeCombo->setCurrentIndex(type);
     // 设置时间
     QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
     ui->dateTimeEdit->setDateTime(nextTrigger);
     // 设置星期
-    if (type == "Weekly") {
+    if (type == static_cast<int>(ReminderType::Weekly)) {
         QJsonArray weekDaysArray = reminder["weekDays"].toArray();
         QList<int> weekDays;
         for (const QJsonValue &value : weekDaysArray) {
@@ -93,7 +107,7 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
         LOG_INFO(QString("设置每周提醒的星期: %1").arg(weekDaysStr.join(",")));
     }
     // 设置日期
-    if (type == "Monthly") {
+    if (type == static_cast<int>(ReminderType::Monthly)) {
         QJsonArray monthDaysArray = reminder["monthDays"].toArray();
         QList<int> monthDays;
         for (const QJsonValue &value : monthDaysArray) {
@@ -135,26 +149,26 @@ void ReminderEdit::onTypeChanged(int index)
         case 0: // 一次性
             ui->dateTimeEdit->show();
             ui->dateTimeLabel->show();
-            reminderData["type"] = "OneTime";
+            reminderData["type"] = static_cast<int>(ReminderType::OneTime);
             break;
         case 1: // 每天
             ui->timeEdit->show();
             ui->timeLabel->show();
-            reminderData["type"] = "Daily";
+            reminderData["type"] = static_cast<int>(ReminderType::Daily);
             break;
         case 2: // 每周
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->weekDaysList->show();
             ui->weekDaysLabel->show();
-            reminderData["type"] = "Weekly";
+            reminderData["type"] = static_cast<int>(ReminderType::Weekly);
             break;
         case 3: // 每月
             ui->timeEdit->show();
             ui->timeLabel->show();
             ui->monthDaysList->show();
             ui->monthDaysLabel->show();
-            reminderData["type"] = "Monthly";
+            reminderData["type"] = static_cast<int>(ReminderType::Monthly);
             break;
     }
     updateNextTriggerTime();
@@ -173,7 +187,16 @@ void ReminderEdit::onOkClicked()
     if (validateInput()) {
         QString name = ui->nameEdit->text().trimmed();
         reminderData["name"] = name;
-        LOG_INFO(QString("保存提醒: 名称='%1', 类型='%2'")
+        
+        // 如果是新建提醒（没有ID），则生成新的ID
+        if (!reminderData.contains("id") || reminderData["id"].toString().isEmpty()) {
+            QString newId = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            reminderData["id"] = newId;
+            LOG_INFO(QString("新建提醒，生成ID: %1").arg(newId));
+        }
+        
+        LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
+                 .arg(reminderData["id"].toString())
                  .arg(name)
                  .arg(reminderData["type"].toString()));
         accept();

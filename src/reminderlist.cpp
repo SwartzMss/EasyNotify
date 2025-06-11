@@ -108,6 +108,7 @@ QJsonArray ReminderList::getReminders() const
 void ReminderList::addNewReminder()
 {
     LOG_INFO("添加新提醒");
+    editDialog->reset(); 
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject reminder = editDialog->getReminderData();
         if (reminderManager) {

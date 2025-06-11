@@ -21,6 +21,7 @@ public:
 
     void loadReminderData(const QJsonObject &reminder);
     QJsonObject getReminderData() const;
+    void reset();
 
 private slots:
     void onTypeChanged(int index);
