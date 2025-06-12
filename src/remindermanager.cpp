@@ -159,12 +159,6 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
     } else if (type == Reminder::Type::Daily) {
         nextTrigger = currentTime.addDays(1);
         LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
-    } else if (type == Reminder::Type::Weekly) {
-        nextTrigger = currentTime.addDays(7);
-        LOG_INFO(QString("每周提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
-    } else if (type == Reminder::Type::Monthly) {
-        nextTrigger = currentTime.addMonths(1);
-        LOG_INFO(QString("每月提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
     }
 
     reminder.setNextTrigger(nextTrigger);
@@ -207,12 +201,6 @@ void ReminderManager::showNotification(const Reminder &reminder)
             break;
         case Reminder::Type::Daily:
             typeStr = tr("每日");
-            break;
-        case Reminder::Type::Weekly:
-            typeStr = tr("每周");
-            break;
-        case Reminder::Type::Monthly:
-            typeStr = tr("每月");
             break;
         default:
             typeStr = tr("未知");

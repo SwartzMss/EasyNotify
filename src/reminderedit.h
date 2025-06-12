@@ -34,7 +34,6 @@ private:
     void setupConnections();
     QDateTime calculateNextTrigger() const;
     bool validateInput() const;
-    bool isDaySelected(int day) const;
     void updateNextTriggerTime();
 
     Ui::ReminderEdit *ui;

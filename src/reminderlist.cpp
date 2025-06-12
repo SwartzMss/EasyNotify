@@ -134,20 +134,6 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
     newReminder.setEnabled(reminder["isEnabled"].toBool());
     newReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
     
-    QJsonArray weekDaysArray = reminder["weekDays"].toArray();
-    QSet<int> weekDays;
-    for (const QJsonValue &value : weekDaysArray) {
-        weekDays.insert(value.toInt());
-    }
-    newReminder.setWeekDays(weekDays);
-    
-    QJsonArray monthDaysArray = reminder["monthDays"].toArray();
-    QSet<int> monthDays;
-    for (const QJsonValue &value : monthDaysArray) {
-        monthDays.insert(value.toInt());
-    }
-    newReminder.setMonthDays(monthDays);
-    
     model->addReminder(newReminder);
     LOG_INFO("提醒已添加到模型");
 }
@@ -163,20 +149,6 @@ void ReminderList::updateReminderInModel(const QJsonObject &reminder)
             updatedReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
             updatedReminder.setEnabled(reminder["isEnabled"].toBool());
             updatedReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
-            
-            QJsonArray weekDaysArray = reminder["weekDays"].toArray();
-            QSet<int> weekDays;
-            for (const QJsonValue &value : weekDaysArray) {
-                weekDays.insert(value.toInt());
-            }
-            updatedReminder.setWeekDays(weekDays);
-            
-            QJsonArray monthDaysArray = reminder["monthDays"].toArray();
-            QSet<int> monthDays;
-            for (const QJsonValue &value : monthDaysArray) {
-                monthDays.insert(value.toInt());
-            }
-            updatedReminder.setMonthDays(monthDays);
             
             model->updateReminder(i, updatedReminder);
             LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2, 启用状态=%3")

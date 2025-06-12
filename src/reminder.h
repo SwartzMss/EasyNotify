@@ -11,9 +11,7 @@ class Reminder {
 public:
     enum class Type {
         Once,
-        Daily,
-        Weekly,
-        Monthly
+        Daily
     };
 
     Reminder() = default;
@@ -48,8 +46,6 @@ public:
                m_type == other.m_type &&
                m_isEnabled == other.m_isEnabled &&
                m_nextTrigger == other.m_nextTrigger &&
-               m_weekDays == other.m_weekDays &&
-               m_monthDays == other.m_monthDays &&
                m_id == other.m_id;
     }
 

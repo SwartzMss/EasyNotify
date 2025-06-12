@@ -20,18 +20,6 @@ QJsonObject Reminder::toJson() const
     json["type"] = static_cast<int>(m_type);
     json["isEnabled"] = m_isEnabled;
     json["nextTrigger"] = m_nextTrigger.toString(Qt::ISODate);
-    
-    QJsonArray weekDaysArray;
-    for (int day : m_weekDays) {
-        weekDaysArray.append(day);
-    }
-    json["weekDays"] = weekDaysArray;
-
-    QJsonArray monthDaysArray;
-    for (int day : m_monthDays) {
-        monthDaysArray.append(day);
-    }
-    json["monthDays"] = monthDaysArray;
 
     LOG_INFO(QString("提醒序列化完成: ID='%1'").arg(m_id));
     return json;

@@ -12,9 +12,7 @@
 // 提醒类型枚举
 enum class ReminderType {
     OneTime = 0,
-    Daily = 1,
-    Weekly = 2,
-    Monthly = 3
+    Daily = 1
 };
 
 ReminderEdit::ReminderEdit(QWidget *parent)
@@ -88,42 +86,7 @@ void ReminderEdit::loadReminderData(const QJsonObject &reminder)
     // 设置时间
     QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
     ui->dateTimeEdit->setDateTime(nextTrigger);
-    // 设置星期
-    if (type == static_cast<int>(ReminderType::Weekly)) {
-        QJsonArray weekDaysArray = reminder["weekDays"].toArray();
-        QList<int> weekDays;
-        for (const QJsonValue &value : weekDaysArray) {
-            weekDays.append(value.toInt());
-        }
-        for (int i = 0; i < ui->weekDaysList->count(); ++i) {
-            ui->weekDaysList->item(i)->setCheckState(
-                weekDays.contains(i + 1) ? Qt::Checked : Qt::Unchecked
-            );
-        }
-        QStringList weekDaysStr;
-        for (int day : weekDays) {
-            weekDaysStr.append(QString::number(day));
-        }
-        LOG_INFO(QString("设置每周提醒的星期: %1").arg(weekDaysStr.join(",")));
-    }
-    // 设置日期
-    if (type == static_cast<int>(ReminderType::Monthly)) {
-        QJsonArray monthDaysArray = reminder["monthDays"].toArray();
-        QList<int> monthDays;
-        for (const QJsonValue &value : monthDaysArray) {
-            monthDays.append(value.toInt());
-        }
-        for (int i = 0; i < ui->monthDaysList->count(); ++i) {
-            ui->monthDaysList->item(i)->setCheckState(
-                monthDays.contains(i + 1) ? Qt::Checked : Qt::Unchecked
-            );
-        }
-        QStringList monthDaysStr;
-        for (int day : monthDays) {
-            monthDaysStr.append(QString::number(day));
-        }
-        LOG_INFO(QString("设置每月提醒的日期: %1").arg(monthDaysStr.join(",")));
-    }
+    
     LOG_INFO("提醒数据加载完成");
 }
 
@@ -138,10 +101,6 @@ void ReminderEdit::onTypeChanged(int index)
     // 先全部隐藏
     ui->dateTimeEdit->hide();
     ui->timeEdit->hide();
-    ui->weekDaysList->hide();
-    ui->monthDaysList->hide();
-    ui->weekDaysLabel->hide();
-    ui->monthDaysLabel->hide();
     ui->dateTimeLabel->hide();
     ui->timeLabel->hide();
 
@@ -155,20 +114,6 @@ void ReminderEdit::onTypeChanged(int index)
             ui->timeEdit->show();
             ui->timeLabel->show();
             reminderData["type"] = static_cast<int>(ReminderType::Daily);
-            break;
-        case 2: // 每周
-            ui->timeEdit->show();
-            ui->timeLabel->show();
-            ui->weekDaysList->show();
-            ui->weekDaysLabel->show();
-            reminderData["type"] = static_cast<int>(ReminderType::Weekly);
-            break;
-        case 3: // 每月
-            ui->timeEdit->show();
-            ui->timeLabel->show();
-            ui->monthDaysList->show();
-            ui->monthDaysLabel->show();
-            reminderData["type"] = static_cast<int>(ReminderType::Monthly);
             break;
     }
     updateNextTriggerTime();
@@ -238,75 +183,8 @@ QDateTime ReminderEdit::calculateNextTrigger() const
             LOG_INFO(QString("计算每日提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
             break;
         }
-        case ReminderType::Weekly: {
-            QTime time = ui->timeEdit->time();
-            QList<int> weekDays;
-            for (int i = 0; i < ui->weekDaysList->count(); ++i) {
-                if (ui->weekDaysList->item(i)->checkState() == Qt::Checked) {
-                    weekDays << (i + 1);
-                }
-            }
-            
-            if (weekDays.isEmpty()) {
-                LOG_WARNING("未选择任何星期，返回当前时间");
-                return now;
-            }
-
-            nextTrigger = QDateTime(now.date(), time);
-            if (nextTrigger <= now) {
-                nextTrigger = nextTrigger.addDays(1);
-            }
-
-            while (!weekDays.contains(nextTrigger.date().dayOfWeek())) {
-                nextTrigger = nextTrigger.addDays(1);
-            }
-            QStringList weekDaysStr;
-            for (int day : weekDays) {
-                weekDaysStr.append(QString::number(day));
-            }
-            LOG_INFO(QString("计算每周提醒时间: %1, 选中的星期: %2")
-                    .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss"))
-                    .arg(weekDaysStr.join(",")));
-            break;
-        }
-        case ReminderType::Monthly: {
-            QTime time = ui->timeEdit->time();
-            QList<int> monthDays;
-            for (int i = 0; i < ui->monthDaysList->count(); ++i) {
-                if (ui->monthDaysList->item(i)->checkState() == Qt::Checked) {
-                    monthDays << (i + 1);
-                }
-            }
-
-            if (monthDays.isEmpty()) {
-                LOG_WARNING("未选择任何日期，返回当前时间");
-                return now;
-            }
-
-            nextTrigger = QDateTime(now.date(), time);
-            if (nextTrigger <= now) {
-                nextTrigger = nextTrigger.addDays(1);
-            }
-
-            while (!monthDays.contains(nextTrigger.date().day())) {
-                nextTrigger = nextTrigger.addDays(1);
-                if (nextTrigger.date().day() == 1) {
-                    nextTrigger = QDateTime(QDate(nextTrigger.date().year(), 
-                                                nextTrigger.date().month(), 
-                                                monthDays.first()), 
-                                          time);
-                }
-            }
-            QStringList monthDaysStr;
-            for (int day : monthDays) {
-                monthDaysStr.append(QString::number(day));
-            }
-            LOG_INFO(QString("计算每月提醒时间: %1, 选中的日期: %2")
-                    .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss"))
-                    .arg(monthDaysStr.join(",")));
-            break;
-        }
     }
+
     return nextTrigger;
 }
 
@@ -327,15 +205,3 @@ void ReminderEdit::updateNextTriggerTime()
     reminderData["nextTrigger"] = nextTime.toString(Qt::ISODate);
     LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
 }
-
-bool ReminderEdit::isDaySelected(int day) const
-{
-    bool selected = false;
-    if (ui->typeCombo->currentIndex() == 2) { // 每周
-        selected = ui->weekDaysList->item(day - 1)->checkState() == Qt::Checked;
-    } else if (ui->typeCombo->currentIndex() == 3) { // 每月
-        selected = ui->monthDaysList->item(day - 1)->checkState() == Qt::Checked;
-    }
-    LOG_INFO(QString("检查日期 %1 是否被选中: %2").arg(day).arg(selected));
-    return selected;
-} 
