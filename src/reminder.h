@@ -4,7 +4,6 @@
 #include <QString>
 #include <QDateTime>
 #include <QJsonObject>
-#include <QSet>
 #include "logger.h"
 
 class Reminder {
@@ -22,8 +21,6 @@ public:
     Type type() const { return m_type; }
     bool isEnabled() const { return m_isEnabled; }
     QDateTime nextTrigger() const { return m_nextTrigger; }
-    QSet<int> weekDays() const { return m_weekDays; }
-    QSet<int> monthDays() const { return m_monthDays; }
     QString id() const { return m_id; }
     QString title() const { return m_name; }
 
@@ -32,8 +29,6 @@ public:
     void setType(Type type) { m_type = type; }
     void setEnabled(bool enabled) { m_isEnabled = enabled; }
     void setNextTrigger(const QDateTime &trigger) { m_nextTrigger = trigger; }
-    void setWeekDays(const QSet<int> &days) { m_weekDays = days; }
-    void setMonthDays(const QSet<int> &days) { m_monthDays = days; }
     void setId(const QString &id) { m_id = id; }
 
     // JSON serialization
@@ -58,8 +53,6 @@ private:
     Type m_type = Type::Once;
     bool m_isEnabled = true;
     QDateTime m_nextTrigger;
-    QSet<int> m_weekDays;
-    QSet<int> m_monthDays;
     QString m_id;
 };
 
