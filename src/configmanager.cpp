@@ -64,65 +64,6 @@ void ConfigManager::setReminders(const QJsonArray &reminders)
     saveConfig();
 }
 
-void ConfigManager::addReminder(const QJsonObject &reminder)
-{
-    QString id = reminder["id"].toString();
-    QString name = reminder["name"].toString();
-    LOG_INFO(QString("添加新提醒: ID='%1', 名称='%2'").arg(id).arg(name));
-    
-    QJsonArray reminders = config[REMINDERS_KEY].toArray();
-    reminders.append(reminder);
-    config[REMINDERS_KEY] = reminders;
-    saveConfig();
-}
-
-void ConfigManager::updateReminder(const QString &id, const QJsonObject &reminder)
-{
-    LOG_INFO(QString("更新提醒: ID='%1'").arg(id));
-    QJsonArray reminders = config[REMINDERS_KEY].toArray();
-    bool found = false;
-    for (int i = 0; i < reminders.size(); ++i) {
-        QJsonObject obj = reminders[i].toObject();
-        if (obj["id"].toString() == id) {
-            reminders[i] = reminder;
-            found = true;
-            LOG_INFO(QString("找到并更新提醒: ID='%1', 新名称='%2'")
-                    .arg(id)
-                    .arg(reminder["name"].toString()));
-            break;
-        }
-    }
-    if (!found) {
-        LOG_WARNING(QString("未找到要更新的提醒: ID='%1'").arg(id));
-    }
-    config[REMINDERS_KEY] = reminders;
-    saveConfig();
-}
-
-void ConfigManager::deleteReminder(const QString &id)
-{
-    LOG_INFO(QString("删除提醒: ID='%1'").arg(id));
-    QJsonArray reminders = config[REMINDERS_KEY].toArray();
-    QJsonArray newReminders;
-    bool found = false;
-    for (const QJsonValue &value : reminders) {
-        QJsonObject obj = value.toObject();
-        if (obj["id"].toString() != id) {
-            newReminders.append(obj);
-        } else {
-            found = true;
-            LOG_INFO(QString("找到并删除提醒: ID='%1', 名称='%2'")
-                    .arg(id)
-                    .arg(obj["name"].toString()));
-        }
-    }
-    if (!found) {
-        LOG_WARNING(QString("未找到要删除的提醒: ID='%1'").arg(id));
-    }
-    config[REMINDERS_KEY] = newReminders;
-    saveConfig();
-}
-
 void ConfigManager::saveConfig()
 {
     QString path = getConfigPath();
