@@ -2,8 +2,7 @@
 #define REMINDEREDIT_H
 
 #include <QDialog>
-#include <QJsonObject>
-#include <QJsonArray>
+#include "reminder.h"
 #include <QStringList>
 #include <QDateTime>
 
@@ -19,9 +18,9 @@ public:
     explicit ReminderEdit(QWidget *parent = nullptr);
     ~ReminderEdit();
 
-    void prepareEditReminder(const QJsonObject &reminder);
+    void prepareEditReminder(const Reminder &reminder);
     void prepareNewReminder();
-    QJsonObject getReminderData() const;
+    Reminder getReminder() const;
 
 private slots:
     void onTypeChanged(int index);
@@ -37,8 +36,7 @@ private:
     void updateNextTriggerTime();
 
     Ui::ReminderEdit *ui;
-    QJsonObject reminderData;
-    QDateTime nextTriggerTime;
+    Reminder m_reminder;
 
 };
 

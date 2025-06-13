@@ -3,8 +3,6 @@
 #include <QMessageBox>
 #include <QUuid>
 #include <QDateTime>
-#include <QJsonArray>
-#include <QJsonDocument>
 #include <QFile>
 #include <QPushButton>
 #include "logger.h"
@@ -42,11 +40,10 @@ void ReminderEdit::prepareNewReminder()
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
 
-    // QJsonObject does not have a clear() method, so assign a new empty object
-    reminderData = QJsonObject();
-    reminderData["id"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
-    reminderData["type"] = static_cast<int>(ReminderType::OneTime);
-    reminderData["nextTrigger"] = now.toString(Qt::ISODate);
+    m_reminder = Reminder();
+    m_reminder.setId(QUuid::createUuid().toString(QUuid::WithoutBraces));
+    m_reminder.setType(Reminder::Type::Once);
+    m_reminder.setNextTrigger(now);
 
     onTypeChanged(0);
     LOG_INFO("新建提醒准备完成");
@@ -64,19 +61,19 @@ void ReminderEdit::setupConnections()
             this, &ReminderEdit::onCancelClicked);
 }
 
-void ReminderEdit::prepareEditReminder(const QJsonObject &reminder)
+void ReminderEdit::prepareEditReminder(const Reminder &reminder)
 {
     LOG_INFO("加载待编辑的提醒数据");
     setWindowTitle(tr("编辑提醒"));
 
-    reminderData = reminder;
-    ui->nameEdit->setText(reminder["name"].toString());
+    m_reminder = reminder;
+    ui->nameEdit->setText(reminder.name());
 
-    int type = reminder["type"].toInt();
+    int type = static_cast<int>(reminder.type());
     ui->typeCombo->setCurrentIndex(type);
 
-    QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
-    if (type == static_cast<int>(ReminderType::OneTime)) {
+    QDateTime nextTrigger = reminder.nextTrigger();
+    if (reminder.type() == Reminder::Type::Once) {
         ui->dateTimeEdit->setDateTime(nextTrigger);
     } else {
         ui->timeEdit->setTime(nextTrigger.time());
@@ -86,9 +83,10 @@ void ReminderEdit::prepareEditReminder(const QJsonObject &reminder)
     LOG_INFO("编辑提醒准备完成");
 }
 
-QJsonObject ReminderEdit::getReminderData() const
+
+Reminder ReminderEdit::getReminder() const
 {
-    return reminderData;
+    return m_reminder;
 }
 
 void ReminderEdit::onTypeChanged(int index)
@@ -104,12 +102,12 @@ void ReminderEdit::onTypeChanged(int index)
         case 0: // 一次性
             ui->dateTimeEdit->show();
             ui->dateTimeLabel->show();
-            reminderData["type"] = static_cast<int>(ReminderType::OneTime);
+            m_reminder.setType(Reminder::Type::Once);
             break;
         case 1: // 每天
             ui->timeEdit->show();
             ui->timeLabel->show();
-            reminderData["type"] = static_cast<int>(ReminderType::Daily);
+            m_reminder.setType(Reminder::Type::Daily);
             break;
     }
     updateNextTriggerTime();
@@ -118,7 +116,6 @@ void ReminderEdit::onTypeChanged(int index)
 void ReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 {
     LOG_INFO(QString("日期时间变更为: %1").arg(dateTime.toString("yyyy-MM-dd HH:mm:ss")));
-    nextTriggerTime = dateTime;
     updateNextTriggerTime();
 }
 
@@ -127,12 +124,13 @@ void ReminderEdit::onOkClicked()
     LOG_INFO("点击确定按钮");
     if (validateInput()) {
         QString name = ui->nameEdit->text().trimmed();
-        reminderData["name"] = name;
-        
+        m_reminder.setName(name);
+        updateNextTriggerTime();
+
         LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
-                 .arg(reminderData["id"].toString())
+                 .arg(m_reminder.id())
                  .arg(name)
-                 .arg(reminderData["type"].toInt()));
+                 .arg(static_cast<int>(m_reminder.type())));
         accept();
     } else {
         LOG_WARNING("输入验证失败，无法保存提醒");
@@ -191,6 +189,6 @@ void ReminderEdit::updateNextTriggerTime()
 {
     QDateTime nextTime = calculateNextTrigger();
     ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
-    reminderData["nextTrigger"] = nextTime.toString(Qt::ISODate);
+    m_reminder.setNextTrigger(nextTime);
     LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
 }
