@@ -1,0 +1,44 @@
+# Build and package EasyNotify on Windows using MSVC and Qt
+
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.8.2'
+          host: 'windows'
+          arch: 'win64_msvc2022_64'
+          target: 'desktop'
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure project
+        run: qmake EasyNotify.pro
+
+      - name: Build project
+        run: nmake
+
+      - name: Deploy Qt dependencies
+        run: |
+          windeployqt release\\EasyNotify.exe
+
+      - name: Archive build
+        uses: actions/upload-artifact@v3
+        with:
+          name: EasyNotify
+          path: release
