@@ -29,7 +29,6 @@ ReminderList::ReminderList(QWidget *parent)
     , reminderManager(nullptr)
     , model(new ReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))
-    , editDialog(new ReminderEdit(this))
 {
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
@@ -108,9 +107,10 @@ QJsonArray ReminderList::getReminders() const
 void ReminderList::addNewReminder()
 {
     LOG_INFO("添加新提醒");
-    editDialog->reset(); 
-    if (editDialog->exec() == QDialog::Accepted) {
-        QJsonObject reminder = editDialog->getReminderData();
+    ReminderEdit editDialog(this);
+    editDialog.reset();
+    if (editDialog.exec() == QDialog::Accepted) {
+        QJsonObject reminder = editDialog.getReminderData();
         if (reminderManager) {
             Reminder reminderObj = Reminder::fromJson(reminder);
             reminderManager->addReminder(reminderObj);
@@ -193,11 +193,12 @@ void ReminderList::editReminder(const QModelIndex &index)
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
     Reminder reminder = model->getReminder(sourceIndex.row());
     LOG_INFO(QString("编辑提醒: 名称='%1'").arg(reminder.name()));
-    
+
     QJsonObject reminderData = reminder.toJson();
-    editDialog->loadReminderData(reminderData);
-    if (editDialog->exec() == QDialog::Accepted) {
-        QJsonObject updatedData = editDialog->getReminderData();
+    ReminderEdit editDialog(this);
+    editDialog.loadReminderData(reminderData);
+    if (editDialog.exec() == QDialog::Accepted) {
+        QJsonObject updatedData = editDialog.getReminderData();
         updateReminderInModel(updatedData);
         if (reminderManager) {
             Reminder updatedReminder = Reminder::fromJson(updatedData);

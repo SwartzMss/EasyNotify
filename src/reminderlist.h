@@ -53,7 +53,6 @@ private:
     ReminderManager *reminderManager;
     ReminderTableModel *model;
     QSortFilterProxyModel *proxyModel;
-    ReminderEdit *editDialog;
     QString m_searchText;
 };
 
