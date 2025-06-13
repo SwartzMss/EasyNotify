@@ -20,7 +20,7 @@ public:
     explicit ReminderManager(QObject *parent = nullptr);
     ~ReminderManager();
 
-    void addReminder(const Reminder &reminder);
+    Reminder addReminder(const Reminder &reminder);
     void updateReminder(int index, const Reminder &reminder);
     void deleteReminder(int index);
     QVector<Reminder> getReminders() const;

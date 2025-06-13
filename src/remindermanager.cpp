@@ -57,11 +57,19 @@ void ReminderManager::loadReminders()
     LOG_INFO(QString("共加载 %1 个提醒").arg(m_reminders.size()));
 }
 
-void ReminderManager::addReminder(const Reminder &reminder)
+Reminder ReminderManager::addReminder(const Reminder &reminder)
 {
-    m_reminders.append(reminder);
+    Reminder newReminder = reminder;
+    if (newReminder.id().isEmpty()) {
+        QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        newReminder.setId(id);
+        LOG_INFO(QString("生成新的提醒ID: %1").arg(id));
+    }
+
+    m_reminders.append(newReminder);
     saveReminders();
     emit remindersChanged();
+    return newReminder;
 }
 
 void ReminderManager::updateReminder(int index, const Reminder &reminder)

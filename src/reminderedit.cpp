@@ -1,7 +1,6 @@
 #include "reminderedit.h"
 #include "./ui_reminderedit.h"
 #include <QMessageBox>
-#include <QUuid>
 #include <QDateTime>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -130,16 +129,9 @@ void ReminderEdit::onOkClicked()
     if (validateInput()) {
         QString name = ui->nameEdit->text().trimmed();
         reminderData["name"] = name;
-        
-        // 如果是新建提醒（没有ID），则生成新的ID
-        if (!reminderData.contains("id") || reminderData["id"].toString().isEmpty()) {
-            QString newId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-            reminderData["id"] = newId;
-            LOG_INFO(QString("新建提醒，生成ID: %1").arg(newId));
-        }
-        
+
         LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
-                 .arg(reminderData["id"].toString())
+                 .arg(reminderData.value("id").toString())
                  .arg(name)
                  .arg(reminderData["type"].toString()));
         accept();

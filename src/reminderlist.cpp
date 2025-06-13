@@ -109,48 +109,37 @@ void ReminderList::addNewReminder()
     LOG_INFO("添加新提醒");
     editDialog->reset(); 
     if (editDialog->exec() == QDialog::Accepted) {
-        QJsonObject reminder = editDialog->getReminderData();
+        QJsonObject reminderJson = editDialog->getReminderData();
         if (reminderManager) {
-            Reminder reminderObj = Reminder::fromJson(reminder);
-            reminderManager->addReminder(reminderObj);
-            addReminderToModel(reminder);
-            reminderManager->saveReminders();
+            Reminder reminderObj = Reminder::fromJson(reminderJson);
+            Reminder addedReminder = reminderManager->addReminder(reminderObj);
+            addReminderToModel(addedReminder);
             LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
-                    .arg(reminderObj.name())
-                    .arg(reminderObj.id()));
+                    .arg(addedReminder.name())
+                    .arg(addedReminder.id()));
         }
     } else {
         LOG_INFO("取消添加新提醒");
     }
 }
 
-void ReminderList::addReminderToModel(const QJsonObject &reminder)
+void ReminderList::addReminderToModel(const Reminder &reminder)
 {
-    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder["name"].toString()));
-    Reminder newReminder;
-    newReminder.setName(reminder["name"].toString());
-    newReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-    newReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
-    
-    model->addReminder(newReminder);
+    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder.name()));
+    model->addReminder(reminder);
     LOG_INFO("提醒已添加到模型");
 }
 
-void ReminderList::updateReminderInModel(const QJsonObject &reminder)
+void ReminderList::updateReminderInModel(const Reminder &reminder)
 {
-    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder["name"].toString()));
+    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder.name()));
     for (int i = 0; i < model->rowCount(); ++i) {
         Reminder existingReminder = model->getReminder(i);
-        if (existingReminder.name() == reminder["name"].toString()) {
-            Reminder updatedReminder;
-            updatedReminder.setName(reminder["name"].toString());
-            updatedReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-            updatedReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
-            
-            model->updateReminder(i, updatedReminder);
-            LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2")
-                    .arg(updatedReminder.name())
-                    .arg(static_cast<int>(updatedReminder.type())));
+        if (existingReminder.id() == reminder.id()) {
+            model->updateReminder(i, reminder);
+            LOG_INFO(QString("提醒更新成功: 名称='%1', ID='%2'")
+                    .arg(reminder.name())
+                    .arg(reminder.id()));
             break;
         }
     }
@@ -166,12 +155,13 @@ void ReminderList::editReminder(const QModelIndex &index)
     editDialog->loadReminderData(reminderData);
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject updatedData = editDialog->getReminderData();
-        updateReminderInModel(updatedData);
+        Reminder updatedReminder = Reminder::fromJson(updatedData);
+        updateReminderInModel(updatedReminder);
         if (reminderManager) {
-            Reminder updatedReminder = Reminder::fromJson(updatedData);
             int index = -1;
-            for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].name() == updatedReminder.name()) {
+            QVector<Reminder> allReminders = reminderManager->getReminders();
+            for (int i = 0; i < allReminders.size(); ++i) {
+                if (allReminders[i].id() == updatedReminder.id()) {
                     index = i;
                     break;
                 }
@@ -203,8 +193,9 @@ void ReminderList::deleteReminder(const QModelIndex &index)
         model->removeReminder(sourceIndex.row());
         if (reminderManager) {
             int index = -1;
-            for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].name() == reminder.name()) {
+            QVector<Reminder> allReminders = reminderManager->getReminders();
+            for (int i = 0; i < allReminders.size(); ++i) {
+                if (allReminders[i].id() == reminder.id()) {
                     index = i;
                     break;
                 }

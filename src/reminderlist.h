@@ -43,8 +43,8 @@ public slots:
 private:
     void setupConnections();
     void setupModel();
-    void addReminderToModel(const QJsonObject &reminder);
-    void updateReminderInModel(const QJsonObject &reminder);
+    void addReminderToModel(const Reminder &reminder);
+    void updateReminderInModel(const Reminder &reminder);
 
     Ui::ReminderList *ui;
     ReminderManager *reminderManager;
