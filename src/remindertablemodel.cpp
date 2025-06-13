@@ -19,7 +19,7 @@ int ReminderTableModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return 4; 
+    return 3;
 }
 
 QVariant ReminderTableModel::data(const QModelIndex &index, int role) const
@@ -40,8 +40,6 @@ QVariant ReminderTableModel::data(const QModelIndex &index, int role) const
             default: return "未知";
             }
         case 2:
-            return reminder.isEnabled() ? "启用" : "禁用";
-        case 3:
             return reminder.nextTrigger().toString("yyyy-MM-dd hh:mm:ss");
         }
     }
@@ -57,8 +55,7 @@ QVariant ReminderTableModel::headerData(int section, Qt::Orientation orientation
         switch (section) {
         case 0: return "名称";
         case 1: return "类型";
-        case 2: return "状态";
-        case 3: return "下次触发时间";
+        case 2: return "下次触发时间";
         }
     }
     return QVariant();
@@ -84,9 +81,6 @@ bool ReminderTableModel::setData(const QModelIndex &index, const QVariant &value
     case 0:
         reminder.setName(value.toString());
         break;
-    case 2:
-        reminder.setEnabled(value.toBool());
-        break;
     default:
         return false;
     }
@@ -101,7 +95,7 @@ Qt::ItemFlags ReminderTableModel::flags(const QModelIndex &index) const
         return Qt::NoItemFlags;
 
     Qt::ItemFlags flags = QAbstractTableModel::flags(index);
-    if (index.column() == 0 || index.column() == 2)
+    if (index.column() == 0)
         flags |= Qt::ItemIsEditable;
     return flags;
 }
@@ -163,15 +157,6 @@ QJsonArray ReminderTableModel::saveToJson() const
     return array;
 }
 
-void ReminderTableModel::toggleReminder(int row)
-{
-    if (row < 0 || row >= m_reminders.size())
-        return;
-
-    Reminder &reminder = m_reminders[row];
-    reminder.setEnabled(!reminder.isEnabled());
-    emit dataChanged(index(row, 2), index(row, 2));
-}
 
 void ReminderTableModel::search(const QString &text)
 {

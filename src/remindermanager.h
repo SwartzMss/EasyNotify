@@ -24,7 +24,6 @@ public:
     void updateReminder(int index, const Reminder &reminder);
     void deleteReminder(int index);
     QVector<Reminder> getReminders() const;
-    void toggleReminder(int index);
 
     void pauseAll();
     void resumeAll();

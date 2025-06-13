@@ -27,7 +27,6 @@ ReminderEdit::ReminderEdit(QWidget *parent)
     QDateTime now = QDateTime::currentDateTime();
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
-    reminderData["isEnabled"] = true;
     reminderData["type"] = static_cast<int>(ReminderType::OneTime);
     reminderData["nextTrigger"] = now.toString(Qt::ISODate);
     // 初始化控件显示
@@ -52,7 +51,6 @@ void ReminderEdit::reset()
     
     // 重置reminderData
     reminderData = QJsonObject();
-    reminderData["isEnabled"] = true;
     reminderData["type"] = static_cast<int>(ReminderType::OneTime);
     reminderData["nextTrigger"] = now.toString(Qt::ISODate);
     

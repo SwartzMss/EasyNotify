@@ -2,13 +2,6 @@
 #include <QUuid>
 #include "logger.h"
 
-Reminder::Reminder(const QString &name, Type type)
-    : m_name(name)
-    , m_type(type)
-    , m_isEnabled(true)
-{
-    LOG_INFO(QString("创建新提醒: 名称='%1', ID='%2'").arg(name).arg(m_id));
-}
 
 QJsonObject Reminder::toJson() const
 {
@@ -17,7 +10,6 @@ QJsonObject Reminder::toJson() const
     json["id"] = m_id;
     json["name"] = m_name;
     json["type"] = static_cast<int>(m_type);
-    json["isEnabled"] = m_isEnabled;
     json["nextTrigger"] = m_nextTrigger.toString(Qt::ISODate);
 
     LOG_INFO(QString("提醒序列化完成: ID='%1'").arg(m_id));
@@ -34,12 +26,10 @@ Reminder Reminder::fromJson(const QJsonObject &json)
     reminder.m_id = id;
     reminder.m_name = name;
     reminder.m_type = static_cast<Type>(json["type"].toInt());
-    reminder.m_isEnabled = json["isEnabled"].toBool();
     reminder.m_nextTrigger = QDateTime::fromString(json["nextTrigger"].toString(), Qt::ISODate);
 
-    LOG_INFO(QString("提醒反序列化完成: ID='%1', 类型=%2, 启用状态=%3")
+    LOG_INFO(QString("提醒反序列化完成: ID='%1', 类型=%2")
              .arg(id)
-             .arg(static_cast<int>(reminder.m_type))
-             .arg(reminder.m_isEnabled));
+             .arg(static_cast<int>(reminder.m_type)));
     return reminder;
 }

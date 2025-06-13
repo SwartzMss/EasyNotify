@@ -27,7 +27,6 @@ public:
     void addNewReminder();
     void editReminder(const QModelIndex &index);
     void deleteReminder(const QModelIndex &index);
-    void toggleReminder(const QModelIndex &index);
     void refreshList();
     void searchReminders(const QString &text);
     QJsonObject getReminderData(const QString &name) const;
