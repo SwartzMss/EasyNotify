@@ -107,7 +107,7 @@ QJsonArray ReminderList::getReminders() const
 void ReminderList::addNewReminder()
 {
     LOG_INFO("添加新提醒");
-    editDialog->reset(); 
+    editDialog->prepareNewReminder();
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject reminder = editDialog->getReminderData();
         if (reminderManager) {
@@ -163,7 +163,7 @@ void ReminderList::editReminder(const QModelIndex &index)
     LOG_INFO(QString("编辑提醒: 名称='%1'").arg(reminder.name()));
     
     QJsonObject reminderData = reminder.toJson();
-    editDialog->loadReminderData(reminderData);
+    editDialog->prepareEditReminder(reminderData);
     if (editDialog->exec() == QDialog::Accepted) {
         QJsonObject updatedData = editDialog->getReminderData();
         updateReminderInModel(updatedData);
