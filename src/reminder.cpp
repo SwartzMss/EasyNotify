@@ -1,5 +1,4 @@
 #include "reminder.h"
-#include <QJsonArray>
 #include <QUuid>
 #include "logger.h"
 
@@ -37,16 +36,6 @@ Reminder Reminder::fromJson(const QJsonObject &json)
     reminder.m_type = static_cast<Type>(json["type"].toInt());
     reminder.m_isEnabled = json["isEnabled"].toBool();
     reminder.m_nextTrigger = QDateTime::fromString(json["nextTrigger"].toString(), Qt::ISODate);
-
-    QJsonArray weekDaysArray = json["weekDays"].toArray();
-    for (const QJsonValue &value : weekDaysArray) {
-        reminder.m_weekDays.insert(value.toInt());
-    }
-
-    QJsonArray monthDaysArray = json["monthDays"].toArray();
-    for (const QJsonValue &value : monthDaysArray) {
-        reminder.m_monthDays.insert(value.toInt());
-    }
 
     LOG_INFO(QString("提醒反序列化完成: ID='%1', 类型=%2, 启用状态=%3")
              .arg(id)
