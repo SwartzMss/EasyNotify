@@ -1,5 +1,5 @@
 #include "reminderedit.h"
-#include "./ui_reminderedit.h"
+#include "ui_reminderedit.h"
 #include <QMessageBox>
 #include <QUuid>
 #include <QDateTime>
@@ -42,7 +42,8 @@ void ReminderEdit::prepareNewReminder()
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
 
-    reminderData.clear();
+    // QJsonObject does not have a clear() method, so assign a new empty object
+    reminderData = QJsonObject();
     reminderData["id"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
     reminderData["type"] = static_cast<int>(ReminderType::OneTime);
     reminderData["nextTrigger"] = now.toString(Qt::ISODate);

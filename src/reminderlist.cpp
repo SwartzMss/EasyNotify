@@ -1,5 +1,5 @@
 #include "reminderlist.h"
-#include "./ui_reminderlist.h"
+#include "ui_reminderlist.h"
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>
