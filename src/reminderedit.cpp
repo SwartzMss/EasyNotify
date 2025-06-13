@@ -21,16 +21,7 @@ ReminderEdit::ReminderEdit(QWidget *parent)
 {
     LOG_INFO("创建提醒编辑对话框");
     ui->setupUi(this);
-    setWindowTitle(tr("新增提醒"));
     setupConnections();
-    // 设置默认值
-    QDateTime now = QDateTime::currentDateTime();
-    ui->dateTimeEdit->setDateTime(now);
-    ui->timeEdit->setTime(now.time());
-    reminderData["type"] = static_cast<int>(ReminderType::OneTime);
-    reminderData["nextTrigger"] = now.toString(Qt::ISODate);
-    // 初始化控件显示
-    onTypeChanged(ui->typeCombo->currentIndex());
     LOG_INFO("提醒编辑对话框初始化完成");
 }
 
@@ -40,22 +31,24 @@ ReminderEdit::~ReminderEdit()
     delete ui;
 }
 
-void ReminderEdit::reset()
+void ReminderEdit::prepareNewReminder()
 {
-    // 重置所有控件到默认值
+    LOG_INFO("初始化新建提醒");
+    setWindowTitle(tr("新增提醒"));
+
     ui->nameEdit->clear();
     QDateTime now = QDateTime::currentDateTime();
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
-    
-    // 重置reminderData
-    reminderData = QJsonObject();
+
+    reminderData.clear();
+    reminderData["id"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
     reminderData["type"] = static_cast<int>(ReminderType::OneTime);
     reminderData["nextTrigger"] = now.toString(Qt::ISODate);
-    
+
     onTypeChanged(0);
-    LOG_INFO("重置提醒编辑对话框");
+    LOG_INFO("新建提醒准备完成");
 }
 
 void ReminderEdit::setupConnections()
@@ -70,22 +63,26 @@ void ReminderEdit::setupConnections()
             this, &ReminderEdit::onCancelClicked);
 }
 
-void ReminderEdit::loadReminderData(const QJsonObject &reminder)
+void ReminderEdit::prepareEditReminder(const QJsonObject &reminder)
 {
+    LOG_INFO("加载待编辑的提醒数据");
+    setWindowTitle(tr("编辑提醒"));
+
     reminderData = reminder;
-    QString id = reminder["id"].toString();
-    QString name = reminder["name"].toString();
-    LOG_INFO(QString("加载提醒数据: ID='%1', 名称='%2'").arg(id).arg(name));
-    
-    ui->nameEdit->setText(name);
-    // 设置类型
+    ui->nameEdit->setText(reminder["name"].toString());
+
     int type = reminder["type"].toInt();
     ui->typeCombo->setCurrentIndex(type);
-    // 设置时间
+
     QDateTime nextTrigger = QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate);
-    ui->dateTimeEdit->setDateTime(nextTrigger);
-    
-    LOG_INFO("提醒数据加载完成");
+    if (type == static_cast<int>(ReminderType::OneTime)) {
+        ui->dateTimeEdit->setDateTime(nextTrigger);
+    } else {
+        ui->timeEdit->setTime(nextTrigger.time());
+    }
+
+    onTypeChanged(type);
+    LOG_INFO("编辑提醒准备完成");
 }
 
 QJsonObject ReminderEdit::getReminderData() const
@@ -130,13 +127,6 @@ void ReminderEdit::onOkClicked()
     if (validateInput()) {
         QString name = ui->nameEdit->text().trimmed();
         reminderData["name"] = name;
-        
-        // 如果是新建提醒（没有ID），则生成新的ID
-        if (!reminderData.contains("id") || reminderData["id"].toString().isEmpty()) {
-            QString newId = QUuid::createUuid().toString(QUuid::WithoutBraces);
-            reminderData["id"] = newId;
-            LOG_INFO(QString("新建提醒，生成ID: %1").arg(newId));
-        }
         
         LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
                  .arg(reminderData["id"].toString())

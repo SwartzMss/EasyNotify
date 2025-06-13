@@ -19,9 +19,9 @@ public:
     explicit ReminderEdit(QWidget *parent = nullptr);
     ~ReminderEdit();
 
-    void loadReminderData(const QJsonObject &reminder);
+    void prepareEditReminder(const QJsonObject &reminder);
+    void prepareNewReminder();
     QJsonObject getReminderData() const;
-    void reset();
 
 private slots:
     void onTypeChanged(int index);
