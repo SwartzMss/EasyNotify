@@ -1,44 +1,48 @@
-# Build and package EasyNotify on Windows using MSVC and Qt
-
-name: Build
+name: Build EasyNotify
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: windows-latest
+    
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v3
-        with:
-          version: '6.8.2'
-          host: 'windows'
-          arch: 'win64_msvc2022_64'
-          target: 'desktop'
-
-      - name: Set up MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
-
-      - name: Configure project
-        run: qmake EasyNotify.pro
-
-      - name: Build project
-        run: nmake
-
-      - name: Deploy Qt dependencies
-        run: |
-          windeployqt release\\EasyNotify.exe
-
-      - name: Archive build
-        uses: actions/upload-artifact@v3
-        with:
-          name: EasyNotify
-          path: release
+    - uses: actions/checkout@v4
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version:      '6.8.2'
+        host:         'windows'
+        target:       'desktop'
+        arch:         'win64_msvc2022_64'
+        modules:      'qtcharts qtnetworkauth qtmultimedia'
+        install-deps: true
+        dir:          'C:/Qt'
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Configure
+      shell: cmd
+      run: |
+        set PATH=C:\Qt\6.8.2\msvc2022_64\bin;%PATH%
+        qmake
+        
+    - name: Build
+      shell: cmd
+      run: |
+        nmake
+        
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: EasyNotify
+        path: |
+          release/*.exe
+          release/*.dll
+        retention-days: 30 
