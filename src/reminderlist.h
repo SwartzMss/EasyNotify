@@ -44,8 +44,8 @@ private:
     void refreshList();
     void searchReminders(const QString &text);
     QJsonObject getReminderData(const QString &name) const;
-    void addReminderToModel(const QJsonObject &reminder);
-    void updateReminderInModel(const QJsonObject &reminder);
+    void addReminderToModel(const Reminder &reminder);
+    void updateReminderInModel(const Reminder &reminder);
 
     Ui::ReminderList *ui;
     ReminderManager *reminderManager;

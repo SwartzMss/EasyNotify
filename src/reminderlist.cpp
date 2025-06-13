@@ -109,57 +109,44 @@ void ReminderList::addNewReminder()
     LOG_INFO("添加新提醒");
     editDialog->prepareNewReminder();
     if (editDialog->exec() == QDialog::Accepted) {
-        QJsonObject reminder = editDialog->getReminderData();
+        Reminder reminder = editDialog->getReminder();
         if (reminderManager) {
-            Reminder reminderObj = Reminder::fromJson(reminder);
-            reminderManager->addReminder(reminderObj);
+            reminderManager->addReminder(reminder);
             addReminderToModel(reminder);
             reminderManager->saveReminders();
             LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
-                    .arg(reminderObj.name())
-                    .arg(reminderObj.id()));
+                    .arg(reminder.name())
+                    .arg(reminder.id()));
         }
     } else {
         LOG_INFO("取消添加新提醒");
     }
 }
 
-void ReminderList::addReminderToModel(const QJsonObject &reminder)
+void ReminderList::addReminderToModel(const Reminder &reminder)
 {
-    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder["name"].toString()));
-    Reminder newReminder;
-    newReminder.setName(reminder["name"].toString());
-    newReminder.setId(reminder["id"].toString());
-    newReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-    newReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
-    
-    model->addReminder(newReminder);
+    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder.name()));
+    model->addReminder(reminder);
     LOG_INFO("提醒已添加到模型");
 }
 
-void ReminderList::updateReminderInModel(const QJsonObject &reminder)
+void ReminderList::updateReminderInModel(const Reminder &reminder)
 {
-    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder["name"].toString()));
+    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder.name()));
     
     // 保存当前选择
     QModelIndex currentIndex = ui->tableView->currentIndex();
-    QString currentId = currentIndex.isValid() ? 
+    QString currentId = currentIndex.isValid() ?
         model->getReminder(proxyModel->mapToSource(currentIndex).row()).id() : QString();
     
     // 更新模型
     for (int i = 0; i < model->rowCount(); ++i) {
         Reminder existingReminder = model->getReminder(i);
-        if (existingReminder.id() == reminder["id"].toString()) {
-            Reminder updatedReminder;
-            updatedReminder.setName(reminder["name"].toString());
-            updatedReminder.setId(reminder["id"].toString());
-            updatedReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-            updatedReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
-            
-            model->updateReminder(i, updatedReminder);
+        if (existingReminder.id() == reminder.id()) {
+            model->updateReminder(i, reminder);
             LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2")
-                    .arg(updatedReminder.name())
-                    .arg(static_cast<int>(updatedReminder.type())));
+                    .arg(reminder.name())
+                    .arg(static_cast<int>(reminder.type())));
             break;
         }
     }
@@ -187,13 +174,11 @@ void ReminderList::editReminder(const QModelIndex &index)
     Reminder reminder = model->getReminder(sourceIndex.row());
     LOG_INFO(QString("编辑提醒: 名称='%1'").arg(reminder.name()));
     
-    QJsonObject reminderData = reminder.toJson();
-    editDialog->prepareEditReminder(reminderData);
+    editDialog->prepareEditReminder(reminder);
     if (editDialog->exec() == QDialog::Accepted) {
-        QJsonObject updatedData = editDialog->getReminderData();
-        updateReminderInModel(updatedData);
+        Reminder updatedReminder = editDialog->getReminder();
+        updateReminderInModel(updatedReminder);
         if (reminderManager) {
-            Reminder updatedReminder = Reminder::fromJson(updatedData);
             int index = -1;
             for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
                 if (reminderManager->getReminders()[i].id() == reminder.id()) {
