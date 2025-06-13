@@ -167,11 +167,6 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
 
 bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 {
-    if (!reminder.isEnabled()) {
-        LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 提醒已禁用，不触发")
-            .arg(reminder.id()));
-        return false;
-    }
     
     QDateTime currentTime = QDateTime::currentDateTime();
     QDateTime nextTrigger = reminder.nextTrigger();
@@ -208,7 +203,7 @@ void ReminderManager::showNotification(const Reminder &reminder)
     }
 
     QString message = tr("提醒: %1\n类型: %2\n时间: %3")
-        .arg(reminder.title())
+        .arg(reminder.name())
         .arg(typeStr)
         .arg(reminder.nextTrigger().toString("yyyy-MM-dd HH:mm:ss"));
 
@@ -231,12 +226,3 @@ QJsonArray ReminderManager::getRemindersJson() const
     return array;
 }
 
-void ReminderManager::toggleReminder(int index)
-{
-    if (index >= 0 && index < m_reminders.size()) {
-        Reminder &reminder = m_reminders[index];
-        reminder.setEnabled(!reminder.isEnabled());
-        saveReminders();
-        emit remindersChanged();
-    }
-}

@@ -31,9 +31,6 @@ public:
     void loadFromJson(const QList<Reminder> &reminders);
     QJsonArray saveToJson() const;
 
-    // 提醒状态管理
-    void toggleReminder(int row);
-
     // 搜索功能
     void search(const QString &text);
 

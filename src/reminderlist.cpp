@@ -19,8 +19,7 @@
 enum ColumnIndex {
     Name = 0,
     Type = 1,
-    Status = 2,
-    NextTrigger = 3
+    NextTrigger = 2
 };
 
 ReminderList::ReminderList(QWidget *parent)
@@ -131,7 +130,6 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
     Reminder newReminder;
     newReminder.setName(reminder["name"].toString());
     newReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-    newReminder.setEnabled(reminder["isEnabled"].toBool());
     newReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
     
     model->addReminder(newReminder);
@@ -147,14 +145,12 @@ void ReminderList::updateReminderInModel(const QJsonObject &reminder)
             Reminder updatedReminder;
             updatedReminder.setName(reminder["name"].toString());
             updatedReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
-            updatedReminder.setEnabled(reminder["isEnabled"].toBool());
             updatedReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
             
             model->updateReminder(i, updatedReminder);
-            LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2, 启用状态=%3")
+            LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2")
                     .arg(updatedReminder.name())
-                    .arg(static_cast<int>(updatedReminder.type()))
-                    .arg(updatedReminder.isEnabled()));
+                    .arg(static_cast<int>(updatedReminder.type())));
             break;
         }
     }
@@ -223,15 +219,6 @@ void ReminderList::deleteReminder(const QModelIndex &index)
     }
 }
 
-void ReminderList::toggleReminder(const QModelIndex &index)
-{
-    QModelIndex sourceIndex = proxyModel->mapToSource(index);
-    Reminder reminder = model->getReminder(sourceIndex.row());
-    LOG_INFO(QString("切换提醒状态: 名称='%1', 当前状态=%2")
-             .arg(reminder.name())
-             .arg(reminder.isEnabled()));
-    model->toggleReminder(sourceIndex.row());
-}
 
 void ReminderList::refreshList()
 {

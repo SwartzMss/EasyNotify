@@ -14,20 +14,16 @@ public:
     };
 
     Reminder() = default;
-    Reminder(const QString &name, Type type = Type::Once);
 
     // Getters
     QString name() const { return m_name; }
     Type type() const { return m_type; }
-    bool isEnabled() const { return m_isEnabled; }
     QDateTime nextTrigger() const { return m_nextTrigger; }
     QString id() const { return m_id; }
-    QString title() const { return m_name; }
 
     // Setters
     void setName(const QString &name) { m_name = name; }
     void setType(Type type) { m_type = type; }
-    void setEnabled(bool enabled) { m_isEnabled = enabled; }
     void setNextTrigger(const QDateTime &trigger) { m_nextTrigger = trigger; }
     void setId(const QString &id) { m_id = id; }
 
@@ -39,7 +35,6 @@ public:
     bool operator==(const Reminder &other) const {
         return m_name == other.m_name &&
                m_type == other.m_type &&
-               m_isEnabled == other.m_isEnabled &&
                m_nextTrigger == other.m_nextTrigger &&
                m_id == other.m_id;
     }
@@ -51,7 +46,6 @@ public:
 private:
     QString m_name;
     Type m_type = Type::Once;
-    bool m_isEnabled = true;
     QDateTime m_nextTrigger;
     QString m_id;
 };
