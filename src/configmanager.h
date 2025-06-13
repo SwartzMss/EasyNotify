@@ -23,14 +23,13 @@ public:
     QJsonArray getReminders() const;
     void setReminders(const QJsonArray &reminders);
 
-    void saveConfig();
-    void loadConfig();
-
 private:
     explicit ConfigManager(QObject *parent = nullptr);
     ~ConfigManager();
     void init();
     void initDefaultConfig();
+    void saveConfig();
+    void loadConfig();
     QString getConfigPath() const;
 
     QJsonObject config;

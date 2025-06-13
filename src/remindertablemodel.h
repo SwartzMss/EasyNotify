@@ -25,7 +25,6 @@ public:
     void updateReminder(int row, const Reminder &reminder);
     void removeReminder(int row);
     Reminder getReminder(int row) const;
-    QVector<Reminder> getAllReminders() const;
 
     // JSON序列化
     void loadFromJson(const QList<Reminder> &reminders);
@@ -36,6 +35,7 @@ public:
 
 private:
     void updateFilteredList();
+    QVector<Reminder> getAllReminders() const;
 
     QVector<Reminder> m_reminders;
     QVector<Reminder> m_filteredReminders;
