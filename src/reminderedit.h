@@ -40,8 +40,6 @@ private:
     QJsonObject reminderData;
     QDateTime nextTriggerTime;
 
-    static QStringList categories;
-    static const QString CATEGORIES_FILE;
 };
 
 #endif // REMINDEREDIT_H 

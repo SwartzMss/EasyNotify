@@ -221,16 +221,6 @@ void ReminderManager::showNotification(const Reminder &reminder)
     trayIcon->showMessage(tr("EasyNotify"), message, icon, duration);
 }
 
-void ReminderManager::updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger)
-{
-    for (Reminder &reminder : m_reminders) {
-        if (reminder.id() == id) {
-            reminder.setNextTrigger(nextTrigger);
-            saveReminders();
-            break;
-        }
-    }
-}
 
 QJsonArray ReminderManager::getRemindersJson() const
 {
