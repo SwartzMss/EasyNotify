@@ -129,6 +129,7 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
     LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder["name"].toString()));
     Reminder newReminder;
     newReminder.setName(reminder["name"].toString());
+    newReminder.setId(reminder["id"].toString());
     newReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
     newReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
     
@@ -139,11 +140,19 @@ void ReminderList::addReminderToModel(const QJsonObject &reminder)
 void ReminderList::updateReminderInModel(const QJsonObject &reminder)
 {
     LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder["name"].toString()));
+    
+    // 保存当前选择
+    QModelIndex currentIndex = ui->tableView->currentIndex();
+    QString currentId = currentIndex.isValid() ? 
+        model->getReminder(proxyModel->mapToSource(currentIndex).row()).id() : QString();
+    
+    // 更新模型
     for (int i = 0; i < model->rowCount(); ++i) {
         Reminder existingReminder = model->getReminder(i);
-        if (existingReminder.name() == reminder["name"].toString()) {
+        if (existingReminder.id() == reminder["id"].toString()) {
             Reminder updatedReminder;
             updatedReminder.setName(reminder["name"].toString());
+            updatedReminder.setId(reminder["id"].toString());
             updatedReminder.setType(static_cast<Reminder::Type>(reminder["type"].toInt()));
             updatedReminder.setNextTrigger(QDateTime::fromString(reminder["nextTrigger"].toString(), Qt::ISODate));
             
@@ -152,6 +161,22 @@ void ReminderList::updateReminderInModel(const QJsonObject &reminder)
                     .arg(updatedReminder.name())
                     .arg(static_cast<int>(updatedReminder.type())));
             break;
+        }
+    }
+    
+    // 重置代理模型
+    proxyModel->invalidate();
+    
+    // 恢复选择
+    if (!currentId.isEmpty()) {
+        for (int i = 0; i < model->rowCount(); ++i) {
+            if (model->getReminder(i).id() == currentId) {
+                QModelIndex newIndex = proxyModel->mapFromSource(model->index(i, 0));
+                if (newIndex.isValid()) {
+                    ui->tableView->setCurrentIndex(newIndex);
+                }
+                break;
+            }
         }
     }
 }
@@ -171,7 +196,7 @@ void ReminderList::editReminder(const QModelIndex &index)
             Reminder updatedReminder = Reminder::fromJson(updatedData);
             int index = -1;
             for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].name() == updatedReminder.name()) {
+                if (reminderManager->getReminders()[i].id() == reminder.id()) {
                     index = i;
                     break;
                 }
@@ -204,7 +229,7 @@ void ReminderList::deleteReminder(const QModelIndex &index)
         if (reminderManager) {
             int index = -1;
             for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].name() == reminder.name()) {
+                if (reminderManager->getReminders()[i].id() == reminder.id()) {
                     index = i;
                     break;
                 }

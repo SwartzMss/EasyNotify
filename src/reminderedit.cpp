@@ -132,7 +132,7 @@ void ReminderEdit::onOkClicked()
         LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
                  .arg(reminderData["id"].toString())
                  .arg(name)
-                 .arg(reminderData["type"].toString()));
+                 .arg(reminderData["type"].toInt()));
         accept();
     } else {
         LOG_WARNING("输入验证失败，无法保存提醒");
