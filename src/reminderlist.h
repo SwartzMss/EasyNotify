@@ -46,8 +46,6 @@ private:
     void setupModel();
     void addReminderToModel(const QJsonObject &reminder);
     void updateReminderInModel(const QJsonObject &reminder);
-    void loadReminders();
-    void saveReminders();
 
     Ui::ReminderList *ui;
     ReminderManager *reminderManager;

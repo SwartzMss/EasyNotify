@@ -7,7 +7,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
-#include <QMap>
 #include "NotificationPopup.h"
 #include <QVector>
 #include "reminder.h"
@@ -46,11 +45,7 @@ private:
     void calculateNextTrigger(Reminder &reminder);
     bool shouldTrigger(const Reminder &reminder) const;
     void showNotification(const Reminder &reminder);
-    void updateReminderNextTrigger(const QString &id, const QDateTime &nextTrigger);
-    void initializeReminders();
-
     QTimer *checkTimer;
-    QMap<QString, QJsonObject> reminders;
     bool isPaused;
 
     QVector<Reminder> m_reminders;
