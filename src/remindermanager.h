@@ -27,9 +27,7 @@ public:
 
     void pauseAll();
     void resumeAll();
-    QJsonArray getRemindersJson() const;
     void saveReminders();
-    void loadReminders();
 
 signals:
     void remindersChanged();
@@ -44,6 +42,8 @@ private:
     void calculateNextTrigger(Reminder &reminder);
     bool shouldTrigger(const Reminder &reminder) const;
     void showNotification(const Reminder &reminder);
+    QJsonArray getRemindersJson() const;
+    void loadReminders();
     QTimer *checkTimer;
     bool isPaused;
 

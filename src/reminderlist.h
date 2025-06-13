@@ -22,16 +22,9 @@ public:
     ~ReminderList();
 
     void setReminderManager(ReminderManager *manager);
-    void loadReminders(const QList<Reminder> &reminders);
-    QJsonArray getReminders() const;
-    void addNewReminder();
-    void editReminder(const QModelIndex &index);
-    void deleteReminder(const QModelIndex &index);
-    void refreshList();
-    void searchReminders(const QString &text);
-    QJsonObject getReminderData(const QString &name) const;
 
-public slots:
+
+private slots:
     void onReminderTriggered(const Reminder &reminder);
     void onAddClicked();
     void onEditClicked();
@@ -43,6 +36,14 @@ public slots:
 private:
     void setupConnections();
     void setupModel();
+    void loadReminders(const QList<Reminder> &reminders);
+    QJsonArray getReminders() const;
+    void addNewReminder();
+    void editReminder(const QModelIndex &index);
+    void deleteReminder(const QModelIndex &index);
+    void refreshList();
+    void searchReminders(const QString &text);
+    QJsonObject getReminderData(const QString &name) const;
     void addReminderToModel(const QJsonObject &reminder);
     void updateReminderInModel(const QJsonObject &reminder);
 
