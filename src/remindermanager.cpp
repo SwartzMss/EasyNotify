@@ -61,7 +61,6 @@ void ReminderManager::addReminder(const Reminder &reminder)
 {
     m_reminders.append(reminder);
     saveReminders();
-    emit remindersChanged();
 }
 
 void ReminderManager::updateReminder(int index, const Reminder &reminder)
@@ -69,7 +68,6 @@ void ReminderManager::updateReminder(int index, const Reminder &reminder)
     if (index >= 0 && index < m_reminders.size()) {
         m_reminders[index] = reminder;
         saveReminders();
-        emit remindersChanged();
     }
 }
 
@@ -78,7 +76,6 @@ void ReminderManager::deleteReminder(int index)
     if (index >= 0 && index < m_reminders.size()) {
         m_reminders.removeAt(index);
         saveReminders();
-        emit remindersChanged();
     }
 }
 

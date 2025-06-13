@@ -30,7 +30,6 @@ public:
     void saveReminders();
 
 signals:
-    void remindersChanged();
     void reminderTriggered(const Reminder &reminder);
 
 private slots:
