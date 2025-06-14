@@ -22,13 +22,14 @@ enum ColumnIndex {
     NextTrigger = 2
 };
 
-ReminderList::ReminderList(QWidget *parent)
+ReminderList::ReminderList(Mode mode, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ReminderList)
     , reminderManager(nullptr)
     , model(new ReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))
     , editDialog(new ReminderEdit(this))
+    , m_mode(mode)
 {
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
@@ -50,7 +51,16 @@ void ReminderList::setReminderManager(ReminderManager *manager)
     if (reminderManager) {
         connect(reminderManager, &ReminderManager::reminderTriggered,
                 this, &ReminderList::onReminderTriggered, Qt::AutoConnection);
-        loadReminders(reminderManager->getReminders());
+        QList<Reminder> filtered;
+        const QVector<Reminder> all = reminderManager->getReminders();
+        for (const Reminder &r : all) {
+            if (m_mode == Mode::Completed && r.completed()) {
+                filtered.append(r);
+            } else if (m_mode == Mode::Active && !r.completed()) {
+                filtered.append(r);
+            }
+        }
+        loadReminders(filtered);
         LOG_INFO("提醒管理器设置完成，已加载提醒列表");
     }
 }
@@ -68,8 +78,10 @@ void ReminderList::setupConnections()
             this, &ReminderList::onImportClicked);
     connect(ui->exportButton, &QPushButton::clicked,
             this, &ReminderList::onExportClicked);
-    connect(ui->tableView, &QTableView::doubleClicked,
-            this, &ReminderList::onEditClicked);
+    if (m_mode == Mode::Active) {
+        connect(ui->tableView, &QTableView::doubleClicked,
+                this, &ReminderList::onEditClicked);
+    }
     LOG_INFO("信号连接设置完成");
 }
 
@@ -271,6 +283,8 @@ void ReminderList::onAddClicked()
 
 void ReminderList::onEditClicked()
 {
+    if (m_mode == Mode::Completed)
+        return;
     QModelIndex currentIndex = ui->tableView->currentIndex();
     if (currentIndex.isValid()) {
         editReminder(currentIndex);

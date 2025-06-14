@@ -3,6 +3,7 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QVBoxLayout>
+#include <QTabWidget>
 #include <QCloseEvent>
 #include "configmanager.h"
 
@@ -26,6 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     
     // 连接提醒列表和提醒管理器
     reminderList->setReminderManager(reminderManager);
+    completedList->setReminderManager(reminderManager);
     
     // 创建系统托盘图标
     createTrayIcon();
@@ -56,9 +58,15 @@ void MainWindow::setupUI()
     // 创建主布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
-    // 创建提醒列表
-    reminderList = new ReminderList(this);
-    mainLayout->addWidget(reminderList);
+    tabWidget = new QTabWidget(centralWidget);
+
+    reminderList = new ReminderList(ReminderList::Mode::Active, tabWidget);
+    completedList = new ReminderList(ReminderList::Mode::Completed, tabWidget);
+
+    tabWidget->addTab(reminderList, tr("当前提醒"));
+    tabWidget->addTab(completedList, tr("已完成提醒"));
+
+    mainLayout->addWidget(tabWidget);
 
     centralWidget->setLayout(mainLayout);
 }
