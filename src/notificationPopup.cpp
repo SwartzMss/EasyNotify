@@ -8,6 +8,11 @@
 #include <QVBoxLayout>
 #include "ui_notificationPopup.h"
 #include <QScopedPointer>
+#include <QCursor>
+#include <QList>
+#include <QPointer>
+
+QList<QPointer<NotificationPopup>> NotificationPopup::s_popups;
 
 NotificationPopup::NotificationPopup(const QString &title,
                                      const QString &message,
@@ -58,6 +63,8 @@ NotificationPopup::NotificationPopup(const QString &title,
         border-radius: 10px;
       }
     )");
+
+    setAttribute(Qt::WA_DeleteOnClose);
 }
 
 void NotificationPopup::show()
@@ -70,11 +77,48 @@ void NotificationPopup::show()
 
     QRect avail = screen->availableGeometry();
 
-    int x = avail.x() + avail.width()  - width()  - 8;
-    int y = avail.y() + avail.height() - height() - 8;
+    const int margin = 8;
+    int index = s_popups.size();
+    int x = avail.x() + avail.width()  - width()  - margin;
+    int y = avail.y() + avail.height() - ((index + 1) * (height() + margin));
     move(x, y);
 
     setWindowOpacity(0);
     QWidget::show();
     fadeIn->start();
+
+    s_popups.append(this);
+}
+
+void NotificationPopup::closeEvent(QCloseEvent *event)
+{
+    QWidget::closeEvent(event);
+
+    int index = s_popups.indexOf(this);
+    if (index != -1)
+        s_popups.removeAt(index);
+
+    repositionPopups();
+}
+
+void NotificationPopup::repositionPopups()
+{
+    if (s_popups.isEmpty())
+        return;
+
+    const int margin = 8;
+    for (int i = 0; i < s_popups.size(); ++i) {
+        NotificationPopup *popup = s_popups.at(i);
+        if (!popup)
+            continue;
+
+        QPoint pos = popup->pos();
+        QScreen *screen = QGuiApplication::screenAt(pos);
+        if (!screen) screen = QGuiApplication::primaryScreen();
+
+        QRect avail = screen->availableGeometry();
+        int x = avail.x() + avail.width() - popup->width() - margin;
+        int y = avail.y() + avail.height() - ((i + 1) * (popup->height() + margin));
+        popup->move(x, y);
+    }
 }

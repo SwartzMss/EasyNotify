@@ -8,6 +8,9 @@
 #include <QPushButton>
 #include <QScopedPointer>
 #include "ui_notificationPopup.h"
+#include <QList>
+#include <QPointer>
+#include <QCloseEvent>
 
 class NotificationPopup : public QWidget {
     Q_OBJECT
@@ -20,7 +23,12 @@ public:
     
     void show();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
+    static QList<QPointer<NotificationPopup>> s_popups;
+    void repositionPopups();
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn, *fadeOut;
     QString m_message;
