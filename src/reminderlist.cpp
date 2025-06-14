@@ -83,9 +83,10 @@ void ReminderList::setupConnections()
                 this, &ReminderList::onEditClicked);
     } else {
         ui->addButton->setVisible(false);
-        ui->deleteButton->setVisible(false);
         ui->importButton->setVisible(false);
         ui->exportButton->setVisible(false);
+        connect(ui->deleteButton, &QPushButton::clicked,
+                this, &ReminderList::onDeleteClicked);
     }
     LOG_INFO("信号连接设置完成");
 }
@@ -278,6 +279,19 @@ QJsonObject ReminderList::getReminderData(const QString &name) const
 void ReminderList::onReminderTriggered(const Reminder &reminder)
 {
     LOG_INFO(QString("提醒触发: 名称='%1'").arg(reminder.name()));
+    if (!reminderManager)
+        return;
+
+    QList<Reminder> filtered;
+    const QVector<Reminder> all = reminderManager->getReminders();
+    for (const Reminder &r : all) {
+        if (m_mode == Mode::Completed && r.completed()) {
+            filtered.append(r);
+        } else if (m_mode == Mode::Active && !r.completed()) {
+            filtered.append(r);
+        }
+    }
+    loadReminders(filtered);
     refreshList();
 }
 
