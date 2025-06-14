@@ -3,10 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
-#include <QDateTime>
-#include <QJsonObject>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include "NotificationPopup.h"
 #include <QVector>
 #include "reminder.h"
