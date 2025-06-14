@@ -70,17 +70,22 @@ void ReminderList::setupConnections()
     LOG_INFO("设置信号连接");
     connect(ui->searchEdit, &QLineEdit::textChanged,
             this, &ReminderList::onSearchTextChanged);
-    connect(ui->addButton, &QPushButton::clicked,
-            this, &ReminderList::onAddClicked);
-    connect(ui->deleteButton, &QPushButton::clicked,
-            this, &ReminderList::onDeleteClicked);
-    connect(ui->importButton, &QPushButton::clicked,
-            this, &ReminderList::onImportClicked);
-    connect(ui->exportButton, &QPushButton::clicked,
-            this, &ReminderList::onExportClicked);
     if (m_mode == Mode::Active) {
+        connect(ui->addButton, &QPushButton::clicked,
+                this, &ReminderList::onAddClicked);
+        connect(ui->deleteButton, &QPushButton::clicked,
+                this, &ReminderList::onDeleteClicked);
+        connect(ui->importButton, &QPushButton::clicked,
+                this, &ReminderList::onImportClicked);
+        connect(ui->exportButton, &QPushButton::clicked,
+                this, &ReminderList::onExportClicked);
         connect(ui->tableView, &QTableView::doubleClicked,
                 this, &ReminderList::onEditClicked);
+    } else {
+        ui->addButton->setVisible(false);
+        ui->deleteButton->setVisible(false);
+        ui->importButton->setVisible(false);
+        ui->exportButton->setVisible(false);
     }
     LOG_INFO("信号连接设置完成");
 }

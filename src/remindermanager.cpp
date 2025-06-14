@@ -27,7 +27,7 @@ void ReminderManager::setupTimer()
 {
     LOG_INFO("设置定时器");
     connect(checkTimer, &QTimer::timeout, this, &ReminderManager::checkReminders);
-    checkTimer->start(5000); // 每秒检查一次
+    checkTimer->start(5000); // 每5秒检查一次
 }
 
 void ReminderManager::loadReminders()
