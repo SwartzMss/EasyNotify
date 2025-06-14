@@ -37,7 +37,8 @@ nmake
       "id": "uuid",
       "name": "示例提醒",
       "type": 0,
-      "nextTrigger": "2025-01-01T09:00:00"
+      "nextTrigger": "2025-01-01T09:00:00",
+      "completed": false
     }
   ]
 }

@@ -149,9 +149,9 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
     QDateTime nextTrigger;
 
     if (type == Reminder::Type::Once) {
-        // 一次性提醒触发后，将nextTrigger设置为空，防止重复触发
-        reminder.setNextTrigger(QDateTime());
-        LOG_INFO(QString("一次性提醒已触发，设置为空，不再触发"));
+        // 一次性提醒触发后，标记为已完成
+        reminder.setCompleted(true);
+        LOG_INFO(QString("一次性提醒已完成，标记 completed"));
         return;
     } else if (type == Reminder::Type::Daily) {
         nextTrigger = currentTime.addDays(1);
@@ -164,6 +164,11 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
 
 bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 {
+
+    if (reminder.completed()) {
+        LOG_DEBUG(QString("提醒 [%1] 已完成，跳过触发检查").arg(reminder.id()));
+        return false;
+    }
     
     QDateTime currentTime = QDateTime::currentDateTime();
     QDateTime nextTrigger = reminder.nextTrigger();
