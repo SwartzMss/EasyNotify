@@ -6,6 +6,7 @@
 #include <QMenu>
 #include <QAction>
 #include "reminderlist.h"
+#include <QTabWidget>
 #include "remindermanager.h"
 
 QT_BEGIN_NAMESPACE
@@ -34,6 +35,8 @@ private:
 
     Ui::MainWindow *ui;
     ReminderList *reminderList;
+    ReminderList *completedList;
+    QTabWidget *tabWidget;
     ReminderManager *reminderManager;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
