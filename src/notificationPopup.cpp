@@ -8,10 +8,12 @@
 #include "ui_notificationPopup.h"
 #include <QScopedPointer>
 #include <QStyle>
+#include <QGuiApplication>
+#include <QCursor>
 
 NotificationPopup::NotificationPopup(const QString &title,
                                      const QString &message,
-                                     Priority priority,
+                                     NotificationPopup::Priority priority,
                                      const QIcon &icon,
                                      int timeoutMs,
                                      QWidget *parent)
@@ -37,13 +39,13 @@ NotificationPopup::NotificationPopup(const QString &title,
     if (finalIcon.isNull()) {
         QStyle::StandardPixmap sp = QStyle::SP_MessageBoxInformation;
         switch (priority) {
-        case Priority::Low:
+        case NotificationPopup::Priority::Low:
             sp = QStyle::SP_MessageBoxInformation;
             break;
-        case Priority::Medium:
+        case NotificationPopup::Priority::Medium:
             sp = QStyle::SP_MessageBoxWarning;
             break;
-        case Priority::High:
+        case NotificationPopup::Priority::High:
             sp = QStyle::SP_MessageBoxCritical;
             break;
         }
@@ -84,7 +86,7 @@ NotificationPopup::NotificationPopup(const QString &title,
                                      const QIcon &icon,
                                      int timeoutMs,
                                      QWidget *parent)
-    : NotificationPopup(title, {}, Priority::Medium, icon, timeoutMs, parent)
+    : NotificationPopup(title, {}, NotificationPopup::Priority::Medium, icon, timeoutMs, parent)
 {
 }
 
