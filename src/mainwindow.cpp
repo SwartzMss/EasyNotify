@@ -9,7 +9,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , isPaused(true)
+    , isPaused(false)
 {
     setWindowFlags(
         Qt::Window                                   

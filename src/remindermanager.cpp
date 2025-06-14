@@ -111,7 +111,6 @@ void ReminderManager::saveReminders()
 void ReminderManager::checkReminders()
 {
     if (isPaused) {
-        LOG_DEBUG("提醒检查已暂停");
         return;
     }
 

@@ -134,10 +134,15 @@ void ReminderList::updateReminderInModel(const Reminder &reminder)
 {
     LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder.name()));
     
-    // 保存当前选择
+    // 保存当前选择的ID
+    QString currentId;
     QModelIndex currentIndex = ui->tableView->currentIndex();
-    QString currentId = currentIndex.isValid() ?
-        model->getReminder(proxyModel->mapToSource(currentIndex).row()).id() : QString();
+    if (currentIndex.isValid()) {
+        QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
+        if (sourceIndex.isValid()) {
+            currentId = model->getReminder(sourceIndex.row()).id();
+        }
+    }
     
     // 更新模型
     for (int i = 0; i < model->rowCount(); ++i) {
