@@ -141,6 +141,8 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
         // 一次性提醒触发后，标记为已完成
         reminder.setCompleted(true);
         LOG_INFO(QString("一次性提醒已完成，标记 completed"));
+        // 触发提醒更新信号
+        emit reminderTriggered(reminder);
         return;
     } else if (type == Reminder::Type::Daily) {
         nextTrigger = currentTime.addDays(1);
