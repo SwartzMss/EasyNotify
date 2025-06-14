@@ -10,35 +10,40 @@
 #include <QScopedPointer>
 
 NotificationPopup::NotificationPopup(const QString &title,
+                                     const QString &message,
                                      Priority priority,
                                      int timeoutMs,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
-    ui(new Ui::NotificationPopup)
+    ui(new Ui::NotificationPopup),
+    m_message(message),
+    m_priority(priority)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_StyledBackground);
     setAutoFillBackground(true);
 
-    // 设置标题
+    // set title and message
     ui->titleLabel->setText(title);
-    // 根据优先级设置图标
+    ui->messageLabel->setText(m_message.isEmpty() ? tr("Notification") : m_message);
+
+    // choose icon based on priority
     QStyle *style = QApplication::style();
     QIcon icon;
-    switch (priority) {
-    case Priority::Warning:
-        icon = style->standardIcon(QStyle::SP_MessageBoxWarning);
-        break;
-    case Priority::Critical:
-        icon = style->standardIcon(QStyle::SP_MessageBoxCritical);
-        break;
-    case Priority::Information:
-    default:
+    switch (m_priority) {
+    case Priority::Low:
         icon = style->standardIcon(QStyle::SP_MessageBoxInformation);
         break;
+    case Priority::High:
+        icon = style->standardIcon(QStyle::SP_MessageBoxCritical);
+        break;
+    case Priority::Medium:
+    default:
+        icon = style->standardIcon(QStyle::SP_MessageBoxWarning);
+        break;
     }
-    ui->iconLabel->setPixmap(icon.pixmap(24, 24));
+    ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     // 动画和定时器逻辑保持不变
