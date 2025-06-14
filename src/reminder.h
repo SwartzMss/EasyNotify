@@ -20,12 +20,14 @@ public:
     Type type() const { return m_type; }
     QDateTime nextTrigger() const { return m_nextTrigger; }
     QString id() const { return m_id; }
+    bool completed() const { return m_completed; }
 
     // Setters
     void setName(const QString &name) { m_name = name; }
     void setType(Type type) { m_type = type; }
     void setNextTrigger(const QDateTime &trigger) { m_nextTrigger = trigger; }
     void setId(const QString &id) { m_id = id; }
+    void setCompleted(bool completed) { m_completed = completed; }
 
     // JSON serialization
     QJsonObject toJson() const;
@@ -36,7 +38,8 @@ public:
         return m_name == other.m_name &&
                m_type == other.m_type &&
                m_nextTrigger == other.m_nextTrigger &&
-               m_id == other.m_id;
+               m_id == other.m_id &&
+               m_completed == other.m_completed;
     }
 
     bool operator!=(const Reminder &other) const {
@@ -48,6 +51,7 @@ private:
     Type m_type = Type::Once;
     QDateTime m_nextTrigger;
     QString m_id;
+    bool m_completed = false;
 };
 
 #endif // REMINDER_H
