@@ -183,9 +183,7 @@ bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 
 void ReminderManager::showNotification(const Reminder &reminder)
 {
-    NotificationPopup *popup = new NotificationPopup(
-        reminder.name(),
-        NotificationPopup::Priority::Information);
+    NotificationPopup *popup = new NotificationPopup(reminder.name());
     popup->show();
 }
 
