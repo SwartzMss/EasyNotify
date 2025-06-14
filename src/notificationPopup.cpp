@@ -2,6 +2,7 @@
 #include <QScreen>
 #include <QApplication>
 #include <QPushButton>
+#include <QStyle>
 #include "NotificationPopup.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -9,7 +10,7 @@
 #include <QScopedPointer>
 
 NotificationPopup::NotificationPopup(const QString &title,
-                                     const QIcon &icon,
+                                     Priority priority,
                                      int timeoutMs,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
@@ -22,6 +23,22 @@ NotificationPopup::NotificationPopup(const QString &title,
 
     // 设置标题
     ui->titleLabel->setText(title);
+    // 根据优先级设置图标
+    QStyle *style = QApplication::style();
+    QIcon icon;
+    switch (priority) {
+    case Priority::Warning:
+        icon = style->standardIcon(QStyle::SP_MessageBoxWarning);
+        break;
+    case Priority::Critical:
+        icon = style->standardIcon(QStyle::SP_MessageBoxCritical);
+        break;
+    case Priority::Information:
+    default:
+        icon = style->standardIcon(QStyle::SP_MessageBoxInformation);
+        break;
+    }
+    ui->iconLabel->setPixmap(icon.pixmap(24, 24));
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     // 动画和定时器逻辑保持不变
