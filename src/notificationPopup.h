@@ -16,7 +16,6 @@ public:
     NotificationPopup(const QString &title,
                       const QString &message = {},
                       Priority priority = Priority::Medium,
-                      int timeoutMs = 5000,
                       QWidget *parent = nullptr);
     
     void show();
@@ -24,7 +23,6 @@ public:
 private:
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn, *fadeOut;
-    QTimer *closeTimer;
     QString m_message;
     Priority m_priority;
 };

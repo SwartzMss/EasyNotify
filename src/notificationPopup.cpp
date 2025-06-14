@@ -12,7 +12,6 @@
 NotificationPopup::NotificationPopup(const QString &title,
                                      const QString &message,
                                      Priority priority,
-                                     int timeoutMs,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
     ui(new Ui::NotificationPopup),
@@ -46,34 +45,20 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
-    // 动画和定时器逻辑保持不变
+    
+    // 只保留淡入动画
     fadeIn  = new QPropertyAnimation(this, "windowOpacity", this);
     fadeIn ->setDuration(300);
     fadeIn ->setStartValue(0);
     fadeIn ->setEndValue(1);
-    fadeOut = new QPropertyAnimation(this, "windowOpacity", this);
-    fadeOut->setDuration(300);
-    fadeOut->setStartValue(1);
-    fadeOut->setEndValue(0);
-    connect(fadeOut, &QPropertyAnimation::finished, this, &NotificationPopup::deleteLater);
-    closeTimer = new QTimer(this);
-    closeTimer->setSingleShot(true);
-    closeTimer->setInterval(timeoutMs);
-    connect(closeTimer, &QTimer::timeout, this, [this]() {
-        fadeOut->start(QAbstractAnimation::DeleteWhenStopped);
-    });
-    if (timeoutMs > 0) {
-        closeTimer->start();
-    }
 
     setStyleSheet(R"(
       QWidget {
-        background: #FFD600;
+        background: #2C2C2C;
         border-radius: 10px;
       }
     )");
 }
-
 
 void NotificationPopup::show()
 {
@@ -92,5 +77,4 @@ void NotificationPopup::show()
     setWindowOpacity(0);
     QWidget::show();
     fadeIn->start();
-    closeTimer->start();
 }
