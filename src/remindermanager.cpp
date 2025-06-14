@@ -1,20 +1,10 @@
 #include "ReminderManager.h"
-#include <QDebug>
-#include <QJsonDocument>
 #include <QJsonArray>
-#include <QFile>
 #include <QIcon>
 #include "logger.h"
-#include <QJsonObject>
-#include <QDir>
-#include <QUuid>
 #include <QDateTime>
-#include <QApplication>
-#include <QScreen>
-#include <QCoreApplication>
 #include "configmanager.h"
 #include "reminder.h"
-#include <QSystemTrayIcon>
 #include <QTimer>
 
 ReminderManager::ReminderManager(QObject *parent)
@@ -191,31 +181,10 @@ bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 
 void ReminderManager::showNotification(const Reminder &reminder)
 {
-    QString typeStr;
-    switch (reminder.type()) {
-        case Reminder::Type::Once:
-            typeStr = tr("一次性");
-            break;
-        case Reminder::Type::Daily:
-            typeStr = tr("每日");
-            break;
-        default:
-            typeStr = tr("未知");
-            break;
-    }
-
-    QString message = tr("提醒: %1\n类型: %2\n时间: %3")
-        .arg(reminder.name())
-        .arg(typeStr)
-        .arg(reminder.nextTrigger().toString("yyyy-MM-dd HH:mm:ss"));
-
-    QSystemTrayIcon::MessageIcon icon = QSystemTrayIcon::Information;
-    int duration = 5000; // 显示5秒
-
-    QSystemTrayIcon *trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setIcon(QIcon(":/icons/icon.png"));
-    trayIcon->show();
-    trayIcon->showMessage(tr("EasyNotify"), message, icon, duration);
+    NotificationPopup *popup = new NotificationPopup(
+        reminder.name(),
+        QIcon(":/img/tray_icon.png"));
+    popup->show();
 }
 
 
