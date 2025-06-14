@@ -7,13 +7,18 @@
 #include <QVBoxLayout>
 #include "ui_notificationPopup.h"
 #include <QScopedPointer>
+#include <QStyle>
 
 NotificationPopup::NotificationPopup(const QString &title,
+                                     const QString &message,
+                                     Priority priority,
                                      const QIcon &icon,
                                      int timeoutMs,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
-    ui(new Ui::NotificationPopup)
+    ui(new Ui::NotificationPopup),
+    m_message(message),
+    m_priority(priority)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
@@ -22,6 +27,29 @@ NotificationPopup::NotificationPopup(const QString &title,
 
     // 设置标题
     ui->titleLabel->setText(title);
+    if (message.isEmpty()) {
+        ui->messageLabel->setText(tr("你有新的提醒"));
+    } else {
+        ui->messageLabel->setText(message);
+    }
+
+    QIcon finalIcon = icon;
+    if (finalIcon.isNull()) {
+        QStyle::StandardPixmap sp = QStyle::SP_MessageBoxInformation;
+        switch (priority) {
+        case Priority::Low:
+            sp = QStyle::SP_MessageBoxInformation;
+            break;
+        case Priority::Medium:
+            sp = QStyle::SP_MessageBoxWarning;
+            break;
+        case Priority::High:
+            sp = QStyle::SP_MessageBoxCritical;
+            break;
+        }
+        finalIcon = style()->standardIcon(sp);
+    }
+    ui->priorityLabel->setPixmap(finalIcon.pixmap(24, 24));
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     // 动画和定时器逻辑保持不变
@@ -50,6 +78,14 @@ NotificationPopup::NotificationPopup(const QString &title,
         border-radius: 10px;
       }
     )");
+}
+
+NotificationPopup::NotificationPopup(const QString &title,
+                                     const QIcon &icon,
+                                     int timeoutMs,
+                                     QWidget *parent)
+    : NotificationPopup(title, {}, Priority::Medium, icon, timeoutMs, parent)
+{
 }
 
 

@@ -12,8 +12,22 @@
 class NotificationPopup : public QWidget {
     Q_OBJECT
 public:
+
+    enum class Priority {
+        Low,
+        Medium,
+        High
+    };
+
     NotificationPopup(const QString &title,
+                      const QString &message = {},
+                      Priority priority = Priority::Medium,
                       const QIcon &icon = {},
+                      int timeoutMs = 5000,
+                      QWidget *parent = nullptr);
+
+    NotificationPopup(const QString &title,
+                      const QIcon &icon,
                       int timeoutMs = 5000,
                       QWidget *parent = nullptr);
     
@@ -23,4 +37,6 @@ private:
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn, *fadeOut;
     QTimer *closeTimer;
+    QString m_message;
+    Priority m_priority = Priority::Medium;
 };
