@@ -185,7 +185,7 @@ void ReminderManager::showNotification(const Reminder &reminder)
 {
     NotificationPopup *popup = new NotificationPopup(
         reminder.name(),
-        QIcon(":/img/tray_icon.png"));
+        NotificationPopup::Priority::Information);
     popup->show();
 }
 
