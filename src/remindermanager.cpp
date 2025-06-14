@@ -153,7 +153,6 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
 
 bool ReminderManager::shouldTrigger(const Reminder &reminder) const
 {
-
     if (reminder.completed()) {
         LOG_DEBUG(QString("提醒 [%1] 已完成，跳过触发检查").arg(reminder.id()));
         return false;
@@ -168,11 +167,15 @@ bool ReminderManager::shouldTrigger(const Reminder &reminder) const
         return false;
     }
     
-    bool shouldTrigger = nextTrigger <= currentTime;
-    LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 当前时间 = %2, 触发时间 = %3, 结果 = %4")
+    // 计算时间差（毫秒）
+    qint64 timeDiff = currentTime.msecsTo(nextTrigger);
+    bool shouldTrigger = timeDiff <= 0;
+    
+    LOG_DEBUG(QString("检查提醒 [%1] 是否触发: 当前时间 = %2, 触发时间 = %3, 时间差 = %4ms, 结果 = %5")
         .arg(reminder.id())
-        .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss"))
-        .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss"))
+        .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss.zzz"))
+        .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss.zzz"))
+        .arg(timeDiff)
         .arg(shouldTrigger ? "是" : "否"));
         
     return shouldTrigger;
