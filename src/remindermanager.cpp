@@ -1,4 +1,4 @@
-#include "ReminderManager.h"
+#include "remindermanager.h"
 #include <QJsonArray>
 #include <QIcon>
 #include "logger.h"
