@@ -20,7 +20,6 @@ public:
 
 private:
     Ui::CompletedReminderWindow *ui;
-    ReminderList *reminderList;
 };
 
 #endif // COMPLETEDREMINDERWINDOW_H

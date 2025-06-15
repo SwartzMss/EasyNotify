@@ -20,7 +20,6 @@ public:
 
 private:
     Ui::ActiveReminderWindow *ui;
-    ReminderList *reminderList;
 };
 
 #endif // ACTIVEREMINDERWINDOW_H

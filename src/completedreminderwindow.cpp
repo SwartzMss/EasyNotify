@@ -3,12 +3,9 @@
 
 CompletedReminderWindow::CompletedReminderWindow(QWidget *parent)
     : QWidget(parent),
-      ui(new Ui::CompletedReminderWindow),
-      reminderList(nullptr)
+      ui(new Ui::CompletedReminderWindow)
 {
     ui->setupUi(this);
-    reminderList = new ReminderList(ReminderList::Mode::Completed, this);
-    ui->verticalLayout->addWidget(reminderList);
 }
 
 CompletedReminderWindow::~CompletedReminderWindow()
@@ -18,6 +15,6 @@ CompletedReminderWindow::~CompletedReminderWindow()
 
 void CompletedReminderWindow::setReminderManager(ReminderManager *manager)
 {
-    if (reminderList)
-        reminderList->setReminderManager(manager);
+    if (ui->completedList)
+        ui->completedList->setReminderManager(manager);
 }
