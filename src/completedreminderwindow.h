@@ -2,7 +2,7 @@
 #define COMPLETEDREMINDERWINDOW_H
 
 #include <QWidget>
-#include "reminderlist.h"
+#include "completed_reminderlist.h"
 
 namespace Ui {
 class CompletedReminderWindow;

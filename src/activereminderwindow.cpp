@@ -19,7 +19,7 @@ ActiveReminderWindow::ActiveReminderWindow(QWidget *parent)
         connect(ui->activeList->importButton(), &QPushButton::clicked,
                 this, [this]() { ui->activeList->onImportClicked(); refreshReminders(); });
         connect(ui->activeList->exportButton(), &QPushButton::clicked,
-                ui->activeList, &ReminderList::onExportClicked);
+                ui->activeList, &ActiveReminderList::onExportClicked);
         connect(ui->activeList->tableView(), &QTableView::doubleClicked,
                 this, [this](const QModelIndex &) { ui->activeList->onEditClicked(); refreshReminders(); });
     }

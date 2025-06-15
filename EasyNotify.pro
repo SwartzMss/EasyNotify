@@ -13,6 +13,10 @@ SOURCES += \
     src/mainwindow.cpp \
     src/reminderlist.cpp \
     src/reminderedit.cpp \
+    src/active_reminderlist.cpp \
+    src/completed_reminderlist.cpp \
+    src/active_reminderedit.cpp \
+    src/completed_reminderedit.cpp \
     src/remindermanager.cpp \
     src/logger.cpp \
     src/notificationPopup.cpp \
@@ -20,6 +24,8 @@ SOURCES += \
     src/singleinstance.cpp \
     src/reminder.cpp   \
     src/remindertablemodel.cpp \
+    src/active_remindertablemodel.cpp \
+    src/completed_remindertablemodel.cpp \
     src/activereminderwindow.cpp \
     src/completedreminderwindow.cpp
 
@@ -27,6 +33,10 @@ HEADERS += \
     src/mainwindow.h \
     src/reminderlist.h \
     src/reminderedit.h \
+    src/active_reminderlist.h \
+    src/completed_reminderlist.h \
+    src/active_reminderedit.h \
+    src/completed_reminderedit.h \
     src/remindermanager.h \
     src/logger.h \
     src/notificationPopup.h \
@@ -34,6 +44,8 @@ HEADERS += \
     src/singleinstance.h \
     src/reminder.h \
     src/remindertablemodel.h \
+    src/active_remindertablemodel.h \
+    src/completed_remindertablemodel.h \
     src/activereminderwindow.h \
     src/completedreminderwindow.h
 
