@@ -18,20 +18,13 @@ class ReminderList : public QWidget
     Q_OBJECT
 
 public:
-    enum class Mode {
-        Active,
-        Completed
-    };
-
-    explicit ReminderList(Mode mode = Mode::Active, QWidget *parent = nullptr);
     explicit ReminderList(QWidget *parent = nullptr);
     ~ReminderList();
 
     void setReminderManager(ReminderManager *manager);
+    void updateList(const QList<Reminder> &reminders);
 
-
-private slots:
-    void onReminderTriggered(const Reminder &reminder);
+public slots:
     void onAddClicked();
     void onEditClicked();
     void onDeleteClicked();
@@ -59,7 +52,6 @@ private:
     QSortFilterProxyModel *proxyModel;
     ReminderEdit *editDialog;
     QString m_searchText;
-    Mode m_mode;
 };
 
 #endif // REMINDERLIST_H 
