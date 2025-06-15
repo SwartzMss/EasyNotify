@@ -348,14 +348,29 @@ void ReminderList::onImportClicked()
 
     QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
     if (doc.isArray()) {
-        QList<Reminder> reminders;
+        QList<Reminder> imported;
         for (const QJsonValue &value : doc.array()) {
-            reminders.append(Reminder::fromJson(value.toObject()));
+            Reminder reminder = Reminder::fromJson(value.toObject());
+            imported.append(reminder);
+            if (reminderManager) {
+                reminderManager->addReminder(reminder);
+            }
         }
-        LOG_INFO(QString("成功导入 %1 个提醒").arg(reminders.size()));
-        loadReminders(reminders);
+        LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
         if (reminderManager) {
             reminderManager->saveReminders();
+            QList<Reminder> filtered;
+            const QVector<Reminder> all = reminderManager->getReminders();
+            for (const Reminder &r : all) {
+                if (m_mode == Mode::Completed && r.completed()) {
+                    filtered.append(r);
+                } else if (m_mode == Mode::Active && !r.completed()) {
+                    filtered.append(r);
+                }
+            }
+            loadReminders(filtered);
+        } else {
+            loadReminders(imported);
         }
     } else {
         LOG_ERROR("导入文件格式错误");
