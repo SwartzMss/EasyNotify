@@ -18,8 +18,12 @@ public:
 
     void setReminderManager(ReminderManager *manager);
 
+private slots:
+    void refreshReminders();
+
 private:
     Ui::CompletedReminderWindow *ui;
+    ReminderManager *reminderManager;
 };
 
 #endif // COMPLETEDREMINDERWINDOW_H

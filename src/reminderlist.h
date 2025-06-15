@@ -8,6 +8,8 @@
 #include "reminderedit.h"
 #include "remindermanager.h"
 #include "remindertablemodel.h"
+#include <QPushButton>
+#include <QTableView>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class ReminderList; }
@@ -18,20 +20,19 @@ class ReminderList : public QWidget
     Q_OBJECT
 
 public:
-    enum class Mode {
-        Active,
-        Completed
-    };
-
-    explicit ReminderList(Mode mode = Mode::Active, QWidget *parent = nullptr);
     explicit ReminderList(QWidget *parent = nullptr);
     ~ReminderList();
 
     void setReminderManager(ReminderManager *manager);
+    void loadReminders(const QList<Reminder> &reminders);
+    QJsonArray getReminders() const;
+    QPushButton *addButton() const;
+    QPushButton *deleteButton() const;
+    QPushButton *importButton() const;
+    QPushButton *exportButton() const;
+    QTableView *tableView() const;
 
-
-private slots:
-    void onReminderTriggered(const Reminder &reminder);
+public slots:
     void onAddClicked();
     void onEditClicked();
     void onDeleteClicked();
@@ -42,8 +43,6 @@ private slots:
 private:
     void setupConnections();
     void setupModel();
-    void loadReminders(const QList<Reminder> &reminders);
-    QJsonArray getReminders() const;
     void addNewReminder();
     void editReminder(const QModelIndex &index);
     void deleteReminder(const QModelIndex &index);
@@ -59,7 +58,6 @@ private:
     QSortFilterProxyModel *proxyModel;
     ReminderEdit *editDialog;
     QString m_searchText;
-    Mode m_mode;
 };
 
 #endif // REMINDERLIST_H 

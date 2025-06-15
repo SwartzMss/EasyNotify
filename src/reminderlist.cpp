@@ -22,25 +22,19 @@ enum ColumnIndex {
     NextTrigger = 2
 };
 
-ReminderList::ReminderList(Mode mode, QWidget *parent)
+ReminderList::ReminderList(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ReminderList)
     , reminderManager(nullptr)
     , model(new ReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))
     , editDialog(new ReminderEdit(this))
-    , m_mode(mode)
 {
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
     setupModel();
     setupConnections();
     LOG_INFO("提醒列表界面初始化完成");
-}
-
-ReminderList::ReminderList(QWidget *parent)
-    : ReminderList(Mode::Active, parent)
-{
 }
 
 ReminderList::~ReminderList()
@@ -53,21 +47,6 @@ void ReminderList::setReminderManager(ReminderManager *manager)
 {
     LOG_INFO("设置提醒管理器");
     reminderManager = manager;
-    if (reminderManager) {
-        connect(reminderManager, &ReminderManager::reminderTriggered,
-                this, &ReminderList::onReminderTriggered, Qt::AutoConnection);
-        QList<Reminder> filtered;
-        const QVector<Reminder> all = reminderManager->getReminders();
-        for (const Reminder &r : all) {
-            if (m_mode == Mode::Completed && r.completed()) {
-                filtered.append(r);
-            } else if (m_mode == Mode::Active && !r.completed()) {
-                filtered.append(r);
-            }
-        }
-        loadReminders(filtered);
-        LOG_INFO("提醒管理器设置完成，已加载提醒列表");
-    }
 }
 
 void ReminderList::setupConnections()
@@ -75,24 +54,6 @@ void ReminderList::setupConnections()
     LOG_INFO("设置信号连接");
     connect(ui->searchEdit, &QLineEdit::textChanged,
             this, &ReminderList::onSearchTextChanged);
-    if (m_mode == Mode::Active) {
-        connect(ui->addButton, &QPushButton::clicked,
-                this, &ReminderList::onAddClicked);
-        connect(ui->deleteButton, &QPushButton::clicked,
-                this, &ReminderList::onDeleteClicked);
-        connect(ui->importButton, &QPushButton::clicked,
-                this, &ReminderList::onImportClicked);
-        connect(ui->exportButton, &QPushButton::clicked,
-                this, &ReminderList::onExportClicked);
-        connect(ui->tableView, &QTableView::doubleClicked,
-                this, &ReminderList::onEditClicked);
-    } else {
-        ui->addButton->setVisible(false);
-        ui->importButton->setVisible(false);
-        ui->exportButton->setVisible(false);
-        connect(ui->deleteButton, &QPushButton::clicked,
-                this, &ReminderList::onDeleteClicked);
-    }
     LOG_INFO("信号连接设置完成");
 }
 
@@ -281,24 +242,6 @@ QJsonObject ReminderList::getReminderData(const QString &name) const
     return QJsonObject();
 }
 
-void ReminderList::onReminderTriggered(const Reminder &reminder)
-{
-    LOG_INFO(QString("提醒触发: 名称='%1'").arg(reminder.name()));
-    if (!reminderManager)
-        return;
-
-    QList<Reminder> filtered;
-    const QVector<Reminder> all = reminderManager->getReminders();
-    for (const Reminder &r : all) {
-        if (m_mode == Mode::Completed && r.completed()) {
-            filtered.append(r);
-        } else if (m_mode == Mode::Active && !r.completed()) {
-            filtered.append(r);
-        }
-    }
-    loadReminders(filtered);
-    refreshList();
-}
 
 void ReminderList::onAddClicked()
 {
@@ -307,8 +250,6 @@ void ReminderList::onAddClicked()
 
 void ReminderList::onEditClicked()
 {
-    if (m_mode == Mode::Completed)
-        return;
     QModelIndex currentIndex = ui->tableView->currentIndex();
     if (currentIndex.isValid()) {
         editReminder(currentIndex);
@@ -359,19 +300,8 @@ void ReminderList::onImportClicked()
         LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
         if (reminderManager) {
             reminderManager->saveReminders();
-            QList<Reminder> filtered;
-            const QVector<Reminder> all = reminderManager->getReminders();
-            for (const Reminder &r : all) {
-                if (m_mode == Mode::Completed && r.completed()) {
-                    filtered.append(r);
-                } else if (m_mode == Mode::Active && !r.completed()) {
-                    filtered.append(r);
-                }
-            }
-            loadReminders(filtered);
-        } else {
-            loadReminders(imported);
         }
+        loadReminders(imported);
     } else {
         LOG_ERROR("导入文件格式错误");
         QMessageBox::warning(this, tr("错误"),
@@ -412,4 +342,29 @@ void ReminderList::onSearchTextChanged(const QString &text)
     LOG_INFO(QString("搜索文本变更: '%1'").arg(text));
     m_searchText = text;
     searchReminders(text);
-} 
+}
+
+QPushButton *ReminderList::addButton() const
+{
+    return ui->addButton;
+}
+
+QPushButton *ReminderList::deleteButton() const
+{
+    return ui->deleteButton;
+}
+
+QPushButton *ReminderList::importButton() const
+{
+    return ui->importButton;
+}
+
+QPushButton *ReminderList::exportButton() const
+{
+    return ui->exportButton;
+}
+
+QTableView *ReminderList::tableView() const
+{
+    return ui->tableView;
+}
