@@ -3,7 +3,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QStyle>
-#include "NotificationPopup.h"
+#include "notificationPopup.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include "ui_notificationPopup.h"
