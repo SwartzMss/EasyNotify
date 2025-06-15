@@ -2,14 +2,13 @@
 #include "ui_activereminderwindow.h"
 
 ActiveReminderWindow::ActiveReminderWindow(QWidget *parent)
-    : QMainWindow(parent),
+    : QWidget(parent),
       ui(new Ui::ActiveReminderWindow),
       reminderList(nullptr)
 {
     ui->setupUi(this);
-    reminderList = ui->activeList;
-    if (reminderList)
-        ; // placeholder to avoid unused variable warning
+    reminderList = new ReminderList(ReminderList::Mode::Active, this);
+    ui->verticalLayout->addWidget(reminderList);
 }
 
 ActiveReminderWindow::~ActiveReminderWindow()

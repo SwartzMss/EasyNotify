@@ -1,14 +1,14 @@
 #ifndef COMPLETEDREMINDERWINDOW_H
 #define COMPLETEDREMINDERWINDOW_H
 
-#include <QMainWindow>
+#include <QWidget>
 #include "reminderlist.h"
 
 namespace Ui {
 class CompletedReminderWindow;
 }
 
-class CompletedReminderWindow : public QMainWindow
+class CompletedReminderWindow : public QWidget
 {
     Q_OBJECT
 

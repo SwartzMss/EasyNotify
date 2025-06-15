@@ -2,14 +2,13 @@
 #include "ui_completedreminderwindow.h"
 
 CompletedReminderWindow::CompletedReminderWindow(QWidget *parent)
-    : QMainWindow(parent),
+    : QWidget(parent),
       ui(new Ui::CompletedReminderWindow),
       reminderList(nullptr)
 {
     ui->setupUi(this);
-    reminderList = ui->completedList;
-    if (reminderList)
-        ;
+    reminderList = new ReminderList(ReminderList::Mode::Completed, this);
+    ui->verticalLayout->addWidget(reminderList);
 }
 
 CompletedReminderWindow::~CompletedReminderWindow()

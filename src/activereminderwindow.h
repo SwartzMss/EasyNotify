@@ -1,14 +1,14 @@
 #ifndef ACTIVEREMINDERWINDOW_H
 #define ACTIVEREMINDERWINDOW_H
 
-#include <QMainWindow>
+#include <QWidget>
 #include "reminderlist.h"
 
 namespace Ui {
 class ActiveReminderWindow;
 }
 
-class ActiveReminderWindow : public QMainWindow
+class ActiveReminderWindow : public QWidget
 {
     Q_OBJECT
 

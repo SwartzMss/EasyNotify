@@ -53,19 +53,27 @@ void MainWindow::setupUI()
 {
     setWindowTitle(tr("EasyNotify"));
 
-    // 创建中央部件（占位）
+    // 创建中央部件
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    // 创建两个独立窗口
-    activeWindow = new ActiveReminderWindow();
-    completedWindow = new CompletedReminderWindow();
+    // 创建垂直布局
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
 
-    activeWindow->setWindowTitle(tr("当前提醒"));
-    completedWindow->setWindowTitle(tr("已完成提醒"));
+    // 创建标签页控件
+    QTabWidget *tabWidget = new QTabWidget(centralWidget);
+    mainLayout->addWidget(tabWidget);
 
-    activeWindow->show();
-    completedWindow->show();
+    // 创建两个提醒窗口
+    activeWindow = new ActiveReminderWindow(tabWidget);
+    completedWindow = new CompletedReminderWindow(tabWidget);
+
+    // 将窗口添加到标签页
+    tabWidget->addTab(activeWindow, tr("当前提醒"));
+    tabWidget->addTab(completedWindow, tr("已完成提醒"));
+
+    // 设置窗口大小
+    resize(800, 600);
 }
 
 void MainWindow::setupConnections()
