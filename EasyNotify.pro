@@ -11,8 +11,6 @@ CONFIG += c++17
 SOURCES += \
     src/main.cpp \
     src/mainwindow.cpp \
-    src/reminderlist.cpp \
-    src/reminderedit.cpp \
     src/active_reminderlist.cpp \
     src/completed_reminderlist.cpp \
     src/active_reminderedit.cpp \
@@ -23,7 +21,6 @@ SOURCES += \
     src/configmanager.cpp \
     src/singleinstance.cpp \
     src/reminder.cpp   \
-    src/remindertablemodel.cpp \
     src/active_remindertablemodel.cpp \
     src/completed_remindertablemodel.cpp \
     src/activereminderwindow.cpp \
@@ -31,8 +28,6 @@ SOURCES += \
 
 HEADERS += \
     src/mainwindow.h \
-    src/reminderlist.h \
-    src/reminderedit.h \
     src/active_reminderlist.h \
     src/completed_reminderlist.h \
     src/active_reminderedit.h \
@@ -43,7 +38,6 @@ HEADERS += \
     src/configmanager.h \
     src/singleinstance.h \
     src/reminder.h \
-    src/remindertablemodel.h \
     src/active_remindertablemodel.h \
     src/completed_remindertablemodel.h \
     src/activereminderwindow.h \
