@@ -24,6 +24,7 @@ public:
     };
 
     explicit ReminderList(Mode mode = Mode::Active, QWidget *parent = nullptr);
+    explicit ReminderList(QWidget *parent = nullptr);
     ~ReminderList();
 
     void setReminderManager(ReminderManager *manager);

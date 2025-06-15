@@ -38,6 +38,11 @@ ReminderList::ReminderList(Mode mode, QWidget *parent)
     LOG_INFO("提醒列表界面初始化完成");
 }
 
+ReminderList::ReminderList(QWidget *parent)
+    : ReminderList(Mode::Active, parent)
+{
+}
+
 ReminderList::~ReminderList()
 {
     LOG_INFO("销毁提醒列表界面");
