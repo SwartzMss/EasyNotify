@@ -7,11 +7,6 @@
 #include <QPushButton>
 #include "logger.h"
 
-// 提醒类型枚举
-enum class ReminderType {
-    OneTime = 0,
-    Daily = 1
-};
 
 ReminderEdit::ReminderEdit(QWidget *parent)
     : QDialog(parent)
@@ -153,15 +148,15 @@ QDateTime ReminderEdit::calculateNextTrigger() const
 {
     QDateTime now = QDateTime::currentDateTime();
     QDateTime nextTrigger;
-    ReminderType type = static_cast<ReminderType>(ui->typeCombo->currentIndex());
+    Reminder::Type type = static_cast<Reminder::Type>(ui->typeCombo->currentIndex());
 
     switch (type) {
-        case ReminderType::OneTime: {
+        case Reminder::Type::Once: {
             nextTrigger = ui->dateTimeEdit->dateTime();
             LOG_INFO(QString("计算一次性提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
             break;
         }
-        case ReminderType::Daily: {
+        case Reminder::Type::Daily: {
             QTime time = ui->timeEdit->time();
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
