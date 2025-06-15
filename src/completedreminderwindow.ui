@@ -14,7 +14,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="ReminderList" name="completedList" native="true"/>
+      <widget class="CompletedReminderList" name="completedList" native="true"/>
      </item>
     </layout>
    </item>
@@ -22,9 +22,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ReminderList</class>
+   <class>CompletedReminderList</class>
    <extends>QWidget</extends>
-   <header>reminderlist.h</header>
+   <header>completed_reminderlist.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

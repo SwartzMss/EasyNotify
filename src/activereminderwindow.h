@@ -2,7 +2,7 @@
 #define ACTIVEREMINDERWINDOW_H
 
 #include <QWidget>
-#include "reminderlist.h"
+#include "active_reminderlist.h"
 
 namespace Ui {
 class ActiveReminderWindow;
