@@ -3,12 +3,9 @@
 
 ActiveReminderWindow::ActiveReminderWindow(QWidget *parent)
     : QWidget(parent),
-      ui(new Ui::ActiveReminderWindow),
-      reminderList(nullptr)
+      ui(new Ui::ActiveReminderWindow)
 {
     ui->setupUi(this);
-    reminderList = new ReminderList(ReminderList::Mode::Active, this);
-    ui->verticalLayout->addWidget(reminderList);
 }
 
 ActiveReminderWindow::~ActiveReminderWindow()
@@ -18,6 +15,6 @@ ActiveReminderWindow::~ActiveReminderWindow()
 
 void ActiveReminderWindow::setReminderManager(ReminderManager *manager)
 {
-    if (reminderList)
-        reminderList->setReminderManager(manager);
+    if (ui->activeList)
+        ui->activeList->setReminderManager(manager);
 }
