@@ -2,8 +2,8 @@
 #include "ui_mainwindow.h"
 #include <QMessageBox>
 #include <QSettings>
-#include <QVBoxLayout>
-#include <QTabWidget>
+#include "activereminderwindow.h"
+#include "completedreminderwindow.h"
 #include <QCloseEvent>
 #include "configmanager.h"
 
@@ -21,13 +21,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     setupUI();
-    
+
     // 创建提醒管理器
     reminderManager = new ReminderManager(this);
-    
+
     // 连接提醒列表和提醒管理器
-    reminderList->setReminderManager(reminderManager);
-    completedList->setReminderManager(reminderManager);
+    activeWindow->setReminderManager(reminderManager);
+    completedWindow->setReminderManager(reminderManager);
     
     // 创建系统托盘图标
     createTrayIcon();
@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    delete activeWindow;
+    delete completedWindow;
     delete ui;
 }
 
@@ -51,24 +53,19 @@ void MainWindow::setupUI()
 {
     setWindowTitle(tr("EasyNotify"));
 
-    // 创建中央部件
+    // 创建中央部件（占位）
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    // 创建主布局
-    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    // 创建两个独立窗口
+    activeWindow = new ActiveReminderWindow();
+    completedWindow = new CompletedReminderWindow();
 
-    tabWidget = new QTabWidget(centralWidget);
+    activeWindow->setWindowTitle(tr("当前提醒"));
+    completedWindow->setWindowTitle(tr("已完成提醒"));
 
-    reminderList = new ReminderList(ReminderList::Mode::Active, tabWidget);
-    completedList = new ReminderList(ReminderList::Mode::Completed, tabWidget);
-
-    tabWidget->addTab(reminderList, tr("当前提醒"));
-    tabWidget->addTab(completedList, tr("已完成提醒"));
-
-    mainLayout->addWidget(tabWidget);
-
-    centralWidget->setLayout(mainLayout);
+    activeWindow->show();
+    completedWindow->show();
 }
 
 void MainWindow::setupConnections()
@@ -117,8 +114,10 @@ void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 void MainWindow::onShowMainWindow()
 {
     show();
-    activateWindow();
-    raise();
+    if (activeWindow)
+        activeWindow->show(), activeWindow->activateWindow(), activeWindow->raise();
+    if (completedWindow)
+        completedWindow->show(), completedWindow->activateWindow(), completedWindow->raise();
 }
 
 void MainWindow::onPauseReminders()
@@ -149,6 +148,10 @@ void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (trayIcon->isVisible()) {
         hide();
+        if (activeWindow)
+            activeWindow->hide();
+        if (completedWindow)
+            completedWindow->hide();
         event->ignore();
     } else {
         QMainWindow::closeEvent(event);

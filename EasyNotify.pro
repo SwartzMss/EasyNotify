@@ -19,7 +19,9 @@ SOURCES += \
     src/configmanager.cpp \
     src/singleinstance.cpp \
     src/reminder.cpp   \
-    src/remindertablemodel.cpp
+    src/remindertablemodel.cpp \
+    src/activereminderwindow.cpp \
+    src/completedreminderwindow.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -32,12 +34,16 @@ HEADERS += \
     src/singleinstance.h \\
     src/reminder.h \
     src/remindertablemodel.h
+    src/activereminderwindow.h \
+    src/completedreminderwindow.h
 
 FORMS += \
     src/mainwindow.ui \
     src/reminderlist.ui \
     src/reminderedit.ui \
     src/notificationPopup.ui
+    src/activereminderwindow.ui \
+    src/completedreminderwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
