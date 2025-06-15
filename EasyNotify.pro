@@ -31,9 +31,9 @@ HEADERS += \
     src/logger.h \
     src/notificationPopup.h \
     src/configmanager.h \
-    src/singleinstance.h \\
+    src/singleinstance.h \
     src/reminder.h \
-    src/remindertablemodel.h
+    src/remindertablemodel.h \
     src/activereminderwindow.h \
     src/completedreminderwindow.h
 
@@ -41,7 +41,7 @@ FORMS += \
     src/mainwindow.ui \
     src/reminderlist.ui \
     src/reminderedit.ui \
-    src/notificationPopup.ui
+    src/notificationPopup.ui \
     src/activereminderwindow.ui \
     src/completedreminderwindow.ui
 
