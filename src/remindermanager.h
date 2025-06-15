@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QJsonArray>
-#include "NotificationPopup.h"
+#include "notificationPopup.h"
 #include <QVector>
 #include "reminder.h"
 #include "configmanager.h"
