@@ -3,8 +3,6 @@
 
 #include <QWidget>
 #include <QSortFilterProxyModel>
-#include <QJsonObject>
-#include <QJsonArray>
 #include "remindermanager.h"
 #include "completed_remindertablemodel.h"
 #include <QPushButton>
