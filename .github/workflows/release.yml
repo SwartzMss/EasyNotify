@@ -1,0 +1,90 @@
+name: Release EasyNotify
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version:      '6.8.2'
+        host:         'windows'
+        target:       'desktop'
+        arch:         'win64_msvc2022_64'
+        modules:      'qtcharts qtnetworkauth qtmultimedia'
+        install-deps: true
+        dir:          'C:/Qt'
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Configure
+      shell: cmd
+      run: |
+        set PATH=C:\Qt\6.8.2\msvc2022_64\bin;%PATH%
+        qmake
+        
+    - name: Build
+      shell: cmd
+      run: |
+        nmake
+        
+    - name: Copy DLLs
+      shell: cmd
+      run: |
+        windeployqt --release --qmldir . release\EasyNotify.exe
+        
+        
+    - name: Compress Release
+      shell: cmd
+      run: |
+        powershell Compress-Archive -Path release\* -DestinationPath release.zip
+        
+    - name: Upload Release
+      uses: actions/upload-artifact@v4
+      with:
+        name: EasyNotify
+        path: release.zip
+        retention-days: 30 
+
+    - name: Get existing Release upload URL
+      id: get_release
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const tag = context.ref.startsWith("refs/tags/") ? context.ref.substring("refs/tags/".length) : context.ref;
+          core.info(`Using tag: ${tag}`);
+          const release = await github.rest.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: tag
+          });
+          const uploadUrl = release.data.upload_url; // 不要去掉 {?name,label}
+          core.info(`Found release with upload_url: ${uploadUrl}`);
+          return uploadUrl;
+
+    - name: Debug GITHUB_TOKEN
+      shell: powershell
+      run: |
+        if ($env:GITHUB_TOKEN) {
+          Write-Host "GITHUB_TOKEN is defined."
+        } else {
+          Write-Host "GITHUB_TOKEN is NOT defined."
+        }
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          release.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
