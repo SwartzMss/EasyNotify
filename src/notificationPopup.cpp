@@ -59,11 +59,11 @@ NotificationPopup::NotificationPopup(const QString &title,
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     
-    // 只保留淡入动画
-    fadeIn  = new QPropertyAnimation(this, "windowOpacity", this);
-    fadeIn ->setDuration(300);
-    fadeIn ->setStartValue(0);
-    fadeIn ->setEndValue(1);
+    // 淡入动画
+    fadeIn = new QPropertyAnimation(this, "windowOpacity", this);
+    fadeIn->setDuration(300);
+    fadeIn->setStartValue(0);
+    fadeIn->setEndValue(1);
 
     setStyleSheet(R"(
       QWidget {

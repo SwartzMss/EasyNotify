@@ -31,7 +31,7 @@ private:
     static QList<QPointer<NotificationPopup>> s_popups;
     void repositionPopups();
     QScopedPointer<Ui::NotificationPopup> ui;
-    QPropertyAnimation *fadeIn, *fadeOut;
+    QPropertyAnimation *fadeIn;
     QString m_message;
     Priority m_priority;
 };
