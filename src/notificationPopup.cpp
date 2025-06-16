@@ -30,7 +30,8 @@ NotificationPopup::NotificationPopup(const QString &title,
 
     // 设置标题图标和消息
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(20, 20));
-    ui->messageLabel->setText(title + (m_message.isEmpty() ? "" : "\n" + m_message));
+    ui->titleTextLabel->setText(title);
+    ui->messageLabel->setText(m_message);
 
     // 根据优先级选择图标
     QStyle *style = QApplication::style();

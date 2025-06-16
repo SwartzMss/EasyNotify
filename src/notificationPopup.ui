@@ -52,6 +52,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="titleTextLabel">
+        <property name="styleSheet">
+         <string>color: #E0E0E0; font-weight: bold; font-size: 14px;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
