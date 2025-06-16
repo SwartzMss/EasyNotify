@@ -15,12 +15,10 @@
 QList<QPointer<NotificationPopup>> NotificationPopup::s_popups;
 
 NotificationPopup::NotificationPopup(const QString &title,
-                                     const QString &message,
                                      Priority priority,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
     ui(new Ui::NotificationPopup),
-    m_message(message),
     m_priority(priority)
 {
     ui->setupUi(this);
@@ -36,8 +34,8 @@ NotificationPopup::NotificationPopup(const QString &title,
 
     // 设置标题图标和消息
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(32, 32));
-    ui->titleTextLabel->setText(title);
-    ui->messageLabel->setText(m_message);
+    ui->titleTextLabel->clear();
+    ui->messageLabel->setText(title);
 
     // 根据优先级选择图标
     QStyle *style = QApplication::style();
