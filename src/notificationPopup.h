@@ -18,7 +18,6 @@ class NotificationPopup : public QWidget {
 public:
     using Priority = Reminder::Priority;
     NotificationPopup(const QString &title,
-                      const QString &message = {},
                       Priority priority = Priority::Medium,
                       QWidget *parent = nullptr);
     
@@ -32,6 +31,5 @@ private:
     void repositionPopups();
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn;
-    QString m_message;
     Priority m_priority;
 };
