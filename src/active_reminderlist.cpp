@@ -18,7 +18,8 @@
 enum ColumnIndex {
     Name = 0,
     Type = 1,
-    NextTrigger = 2
+    PriorityCol = 2,
+    NextTrigger = 3
 };
 
 ActiveReminderList::ActiveReminderList(QWidget *parent)

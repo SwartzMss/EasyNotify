@@ -48,41 +48,67 @@
       </widget>
      </item>
      <item row="2" column="0">
+      <widget class="QLabel" name="priorityLabel">
+       <property name="text">
+        <string>优先级：</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="priorityCombo">
+       <item>
+        <property name="text">
+         <string>低</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>中</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>高</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="3" column="0">
       <widget class="QLabel" name="dateTimeLabel">
        <property name="text">
         <string>提醒时间：</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="3" column="1">
       <widget class="QDateTimeEdit" name="dateTimeEdit">
        <property name="displayFormat">
         <string>yyyy-MM-dd HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
+     <item row="4" column="0">
       <widget class="QLabel" name="timeLabel">
        <property name="text">
         <string>时间：</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="1">
+     <item row="4" column="1">
       <widget class="QTimeEdit" name="timeEdit">
        <property name="displayFormat">
         <string>HH:mm:ss</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="5" column="0">
       <widget class="QLabel" name="nextTriggerLabelTitle">
        <property name="text">
         <string>下次触发时间：</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="5" column="1">
       <widget class="QLabel" name="nextTriggerLabel">
        <property name="text">
         <string>--</string>

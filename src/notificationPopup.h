@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QScopedPointer>
 #include "ui_notificationPopup.h"
+#include "reminder.h"
 #include <QList>
 #include <QPointer>
 #include <QCloseEvent>
@@ -15,7 +16,7 @@
 class NotificationPopup : public QWidget {
     Q_OBJECT
 public:
-    enum Priority { Low, Medium, High };
+    using Priority = Reminder::Priority;
     NotificationPopup(const QString &title,
                       const QString &message = {},
                       Priority priority = Priority::Medium,
