@@ -18,8 +18,8 @@ public:
     ~ReminderManager();
 
     void addReminder(const Reminder &reminder);
-    void updateReminder(int index, const Reminder &reminder);
-    void deleteReminder(int index);
+    void updateReminder(const Reminder &reminder);
+    void deleteReminder(const Reminder &reminder);
     QVector<Reminder> getReminders() const;
 
     void pauseAll();
