@@ -3,5 +3,6 @@
     <qresource prefix="/">
         <file>img/tray_icon.png</file>
         <file>img/tray_icon_paused.png</file>
+        <file>img/tray_icon_active.png</file>
     </qresource>
 </RCC> 

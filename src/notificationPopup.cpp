@@ -28,11 +28,11 @@ NotificationPopup::NotificationPopup(const QString &title,
     setAttribute(Qt::WA_StyledBackground);
     setAutoFillBackground(true);
 
-    // set title and message
-    ui->titleLabel->setText(title);
-    ui->messageLabel->setText(m_message.isEmpty() ? tr("Notification") : m_message);
+    // 设置标题图标和消息
+    ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(20, 20));
+    ui->messageLabel->setText(title + (m_message.isEmpty() ? "" : "\n" + m_message));
 
-    // choose icon based on priority
+    // 根据优先级选择图标
     QStyle *style = QApplication::style();
     QIcon icon;
     switch (m_priority) {
@@ -48,6 +48,7 @@ NotificationPopup::NotificationPopup(const QString &title,
         break;
     }
     ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
+    
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     
@@ -65,6 +66,10 @@ NotificationPopup::NotificationPopup(const QString &title,
     )");
 
     setAttribute(Qt::WA_DeleteOnClose);
+
+    // 设置头部和内容区域不同背景色
+    ui->headerWidget->setStyleSheet("background: #353535; border-top-left-radius: 10px; border-top-right-radius: 10px;");
+    ui->contentWidget->setStyleSheet("background: #232323; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;");
 }
 
 void NotificationPopup::show()

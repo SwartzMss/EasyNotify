@@ -16,97 +16,104 @@
     <height>100</height>
    </size>
   </property>
-  <layout class="QVBoxLayout" name="mainLayout">
+  <layout class="QVBoxLayout" name="mainLayout" stretch="2,5">
    <property name="spacing">
-    <number>8</number>
+    <number>0</number>
    </property>
    <property name="leftMargin">
-    <number>12</number>
+    <number>0</number>
    </property>
    <property name="topMargin">
-    <number>12</number>
+    <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>12</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>12</number>
+    <number>5</number>
    </property>
    <item>
-    <layout class="QHBoxLayout" name="headerLayout">
-     <property name="spacing">
-      <number>8</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="titleLabel">
-       <property name="text">
-        <string>标题</string>
-       </property>
-       <property name="styleSheet">
-        <string>font-weight: bold; font-size: 14px; color: white;</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="closeButton">
-       <property name="styleSheet">
-        <string>QPushButton { color: #CCCCCC; background: transparent; border: none; font-size: 18px; } QPushButton:hover { color: #ff6666; }</string>
-       </property>
-       <property name="text">
-        <string>×</string>
-       </property>
-       <property name="fixedSize" stdset="0">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QWidget" name="headerWidget">
+     <layout class="QHBoxLayout" name="headerLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="titleLabel">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>48</width>
+          <height>48</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="closeButton">
+        <property name="styleSheet">
+         <string>QPushButton { color: #CCCCCC; background: transparent; border: none; font-size: 18px; } QPushButton:hover { color: #ff6666; }</string>
+        </property>
+        <property name="text">
+         <string>×</string>
+        </property>
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="contentLayout">
-     <property name="spacing">
-      <number>12</number>
-     </property>
-     <item>
-      <widget class="QLabel" name="priorityLabel">
-       <property name="fixedSize" stdset="0">
-        <size>
-         <width>24</width>
-         <height>24</height>
-        </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="messageLabel">
-       <property name="text">
-        <string>提醒内容</string>
-       </property>
-       <property name="styleSheet">
-        <string>color: #E0E0E0; font-size: 13px;</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QWidget" name="contentWidget">
+     <layout class="QHBoxLayout" name="contentLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="priorityLabel">
+        <property name="fixedSize" stdset="0">
+         <size>
+          <width>24</width>
+          <height>24</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="messageLabel">
+        <property name="styleSheet">
+         <string>color: #E0E0E0; font-size: 13px;</string>
+        </property>
+        <property name="text">
+         <string>提醒内容</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
