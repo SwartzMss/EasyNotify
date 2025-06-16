@@ -41,8 +41,13 @@ jobs:
       shell: cmd
       run: |
         windeployqt --release --qmldir . release\EasyNotify.exe
-        
-        
+
+    - name: Cleanup Release Directory
+      shell: powershell
+      run: |
+        Get-ChildItem -Path release -Recurse -Filter *.obj | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter moc_*.cpp | Remove-Item -Force -ErrorAction SilentlyContinue
+
     - name: Compress Release
       shell: cmd
       run: |
