@@ -19,7 +19,7 @@ int ActiveReminderTableModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return 3;
+    return 4;
 }
 
 QVariant ActiveReminderTableModel::data(const QModelIndex &index, int role) const
@@ -40,6 +40,13 @@ QVariant ActiveReminderTableModel::data(const QModelIndex &index, int role) cons
             default: return "未知";
             }
         case 2:
+            switch (reminder.priority()) {
+            case Reminder::Priority::Low: return "低";
+            case Reminder::Priority::High: return "高";
+            case Reminder::Priority::Medium:
+            default: return "中";
+            }
+        case 3:
             return reminder.nextTrigger().toString("yyyy-MM-dd hh:mm:ss");
         }
     }
@@ -55,7 +62,8 @@ QVariant ActiveReminderTableModel::headerData(int section, Qt::Orientation orien
         switch (section) {
         case 0: return "名称";
         case 1: return "类型";
-        case 2: return "下次触发时间";
+        case 2: return "优先级";
+        case 3: return "下次触发时间";
         }
     }
     return QVariant();

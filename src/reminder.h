@@ -12,6 +12,11 @@ public:
         Once,
         Daily
     };
+    enum class Priority {
+        Low,
+        Medium,
+        High
+    };
 
     Reminder() = default;
 
@@ -21,6 +26,7 @@ public:
     QDateTime nextTrigger() const { return m_nextTrigger; }
     QString id() const { return m_id; }
     bool completed() const { return m_completed; }
+    Priority priority() const { return m_priority; }
 
     // Setters
     void setName(const QString &name) { m_name = name; }
@@ -28,6 +34,7 @@ public:
     void setNextTrigger(const QDateTime &trigger) { m_nextTrigger = trigger; }
     void setId(const QString &id) { m_id = id; }
     void setCompleted(bool completed) { m_completed = completed; }
+    void setPriority(Priority p) { m_priority = p; }
 
     // JSON serialization
     QJsonObject toJson() const;
@@ -39,7 +46,8 @@ public:
                m_type == other.m_type &&
                m_nextTrigger == other.m_nextTrigger &&
                m_id == other.m_id &&
-               m_completed == other.m_completed;
+               m_completed == other.m_completed &&
+               m_priority == other.m_priority;
     }
 
     bool operator!=(const Reminder &other) const {
@@ -52,6 +60,7 @@ private:
     QDateTime m_nextTrigger;
     QString m_id;
     bool m_completed = false;
+    Priority m_priority = Priority::Medium;
 };
 
 #endif // REMINDER_H

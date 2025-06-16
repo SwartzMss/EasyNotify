@@ -10,6 +10,7 @@ QJsonObject Reminder::toJson() const
     json["id"] = m_id;
     json["name"] = m_name;
     json["type"] = static_cast<int>(m_type);
+    json["priority"] = static_cast<int>(m_priority);
     json["nextTrigger"] = m_nextTrigger.toString(Qt::ISODate);
     json["completed"] = m_completed;
 
@@ -27,6 +28,7 @@ Reminder Reminder::fromJson(const QJsonObject &json)
     reminder.m_id = id;
     reminder.m_name = name;
     reminder.m_type = static_cast<Type>(json["type"].toInt());
+    reminder.m_priority = static_cast<Priority>(json.contains("priority") ? json["priority"].toInt() : static_cast<int>(Priority::Medium));
     reminder.m_nextTrigger = QDateTime::fromString(json["nextTrigger"].toString(), Qt::ISODate);
     reminder.m_completed = json.contains("completed") ? json["completed"].toBool() : false;
 

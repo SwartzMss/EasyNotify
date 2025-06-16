@@ -34,11 +34,13 @@ void CompletedReminderEdit::prepareNewReminder()
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
+    ui->priorityCombo->setCurrentIndex(1);
 
     m_reminder = Reminder();
     m_reminder.setId(QUuid::createUuid().toString(QUuid::WithoutBraces));
     m_reminder.setType(Reminder::Type::Once);
     m_reminder.setNextTrigger(now);
+    m_reminder.setPriority(Reminder::Priority::Medium);
 
     onTypeChanged(0);
     LOG_INFO("新建提醒准备完成");
@@ -66,6 +68,7 @@ void CompletedReminderEdit::prepareEditReminder(const Reminder &reminder)
 
     int type = static_cast<int>(reminder.type());
     ui->typeCombo->setCurrentIndex(type);
+    ui->priorityCombo->setCurrentIndex(static_cast<int>(reminder.priority()));
 
     QDateTime nextTrigger = reminder.nextTrigger();
     ui->dateTimeEdit->setDateTime(nextTrigger);
@@ -117,6 +120,7 @@ void CompletedReminderEdit::onOkClicked()
     if (validateInput()) {
         QString name = ui->nameEdit->text().trimmed();
         m_reminder.setName(name);
+        m_reminder.setPriority(static_cast<Reminder::Priority>(ui->priorityCombo->currentIndex()));
         updateNextTriggerTime();
 
         LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
