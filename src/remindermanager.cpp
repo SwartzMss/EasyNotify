@@ -151,7 +151,7 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
         emit reminderTriggered(reminder);
         return;
     } else if (type == Reminder::Type::Daily) {
-        nextTrigger = currentTime.addDays(1);
+        nextTrigger = reminder.nextTrigger().addDays(1);
         LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
     }
 
