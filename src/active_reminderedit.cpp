@@ -81,6 +81,10 @@ void ActiveReminderEdit::prepareEditReminder(const Reminder &reminder)
 
 Reminder ActiveReminderEdit::getReminder() const
 {
+    // 如果提醒名称为空，返回一个空的提醒对象
+    if (m_reminder.name().isEmpty()) {
+        return Reminder();
+    }
     return m_reminder;
 }
 
@@ -117,20 +121,21 @@ void ActiveReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 void ActiveReminderEdit::onOkClicked()
 {
     LOG_INFO("点击确定按钮");
-    if (validateInput()) {
-        QString name = ui->nameEdit->text().trimmed();
-        m_reminder.setName(name);
-        m_reminder.setPriority(static_cast<Reminder::Priority>(ui->priorityCombo->currentIndex()));
-        updateNextTriggerTime();
-
-        LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
-                 .arg(m_reminder.id())
-                 .arg(name)
-                 .arg(static_cast<int>(m_reminder.type())));
-        accept();
-    } else {
+    if (!validateInput()) {
         LOG_WARNING("输入验证失败，无法保存提醒");
+        return;
     }
+
+    QString name = ui->nameEdit->text().trimmed();
+    m_reminder.setName(name);
+    m_reminder.setPriority(static_cast<Reminder::Priority>(ui->priorityCombo->currentIndex()));
+    updateNextTriggerTime();
+
+    LOG_INFO(QString("保存提醒: ID='%1', 名称='%2', 类型='%3'")
+             .arg(m_reminder.id())
+             .arg(name)
+             .arg(static_cast<int>(m_reminder.type())));
+    accept();
 }
 
 void ActiveReminderEdit::onCancelClicked()
@@ -174,11 +179,33 @@ QDateTime ActiveReminderEdit::calculateNextTrigger() const
 bool ActiveReminderEdit::validateInput() const
 {
     bool isValid = !ui->nameEdit->text().trimmed().isEmpty();
-    ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(isValid);
     if (!isValid) {
+        QMessageBox::warning(const_cast<ActiveReminderEdit*>(this),
+            tr("输入错误"),
+            tr("提醒名称不能为空！"));
         LOG_WARNING("提醒名称不能为空");
+        return false;
     }
-    return isValid;
+
+    // 检查一次性提醒的时间是否有效
+    if (ui->typeCombo->currentIndex() == 0) { // 一次性提醒
+        QDateTime selectedTime = ui->dateTimeEdit->dateTime();
+        QDateTime currentTime = QDateTime::currentDateTime();
+        
+        if (selectedTime <= currentTime) {
+            QMessageBox::warning(const_cast<ActiveReminderEdit*>(this),
+                tr("时间设置错误"),
+                tr("一次性提醒的时间必须晚于当前时间！\n\n当前时间：%1\n设置时间：%2")
+                    .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss"))
+                    .arg(selectedTime.toString("yyyy-MM-dd HH:mm:ss")));
+            LOG_WARNING(QString("一次性提醒时间无效: %1 <= %2")
+                .arg(selectedTime.toString("yyyy-MM-dd HH:mm:ss"))
+                .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void ActiveReminderEdit::updateNextTriggerTime()

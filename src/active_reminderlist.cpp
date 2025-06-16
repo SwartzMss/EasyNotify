@@ -94,12 +94,17 @@ void ActiveReminderList::addNewReminder()
     editDialog->prepareNewReminder();
     if (editDialog->exec() == QDialog::Accepted) {
         Reminder reminder = editDialog->getReminder();
-        if (reminderManager) {
-            reminderManager->addReminder(reminder);
-            addReminderToModel(reminder);
-            LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
-                    .arg(reminder.name())
-                    .arg(reminder.id()));
+        // 再次验证提醒数据
+        if (!reminder.name().isEmpty()) {
+            if (reminderManager) {
+                reminderManager->addReminder(reminder);
+                model->addReminder(reminder);
+                LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
+                        .arg(reminder.name())
+                        .arg(reminder.id()));
+            }
+        } else {
+            LOG_WARNING("提醒名称为空，取消添加");
         }
     } else {
         LOG_INFO("取消添加新提醒");
