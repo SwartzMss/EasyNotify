@@ -35,7 +35,7 @@ NotificationPopup::NotificationPopup(const QString &title,
     setGraphicsEffect(shadow);
 
     // 设置标题图标和消息
-    ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(20, 20));
+    ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(32, 32));
     ui->titleTextLabel->setText(title);
     ui->messageLabel->setText(m_message);
 
