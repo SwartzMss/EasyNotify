@@ -168,17 +168,8 @@ void CompletedReminderList::editReminder(const QModelIndex &index)
         Reminder updatedReminder = editDialog->getReminder();
         updateReminderInModel(updatedReminder);
         if (reminderManager) {
-            int index = -1;
-            for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].id() == reminder.id()) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index != -1) {
-                reminderManager->updateReminder(index, updatedReminder);
-                LOG_INFO(QString("提醒管理器更新成功: 名称='%1'").arg(updatedReminder.name()));
-            }
+            reminderManager->updateReminder(updatedReminder);
+            LOG_INFO(QString("提醒管理器更新成功: 名称='%1'").arg(updatedReminder.name()));
         }
     } else {
         LOG_INFO("取消编辑提醒");
@@ -201,17 +192,8 @@ void CompletedReminderList::deleteReminder(const QModelIndex &index)
     if (reply == QMessageBox::Yes) {
         model->removeReminder(sourceIndex.row());
         if (reminderManager) {
-            int index = -1;
-            for (int i = 0; i < reminderManager->getReminders().size(); ++i) {
-                if (reminderManager->getReminders()[i].id() == reminder.id()) {
-                    index = i;
-                    break;
-                }
-            }
-            if (index != -1) {
-                reminderManager->deleteReminder(index);
-                LOG_INFO(QString("提醒删除成功: 名称='%1'").arg(reminder.name()));
-            }
+            reminderManager->deleteReminder(reminder);
+            LOG_INFO(QString("提醒删除成功: 名称='%1'").arg(reminder.name()));
         }
     } else {
         LOG_INFO("取消删除提醒");

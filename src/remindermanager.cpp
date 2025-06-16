@@ -53,19 +53,25 @@ void ReminderManager::addReminder(const Reminder &reminder)
     saveReminders();
 }
 
-void ReminderManager::updateReminder(int index, const Reminder &reminder)
+void ReminderManager::updateReminder(const Reminder &reminder)
 {
-    if (index >= 0 && index < m_reminders.size()) {
-        m_reminders[index] = reminder;
-        saveReminders();
+    for (int i = 0; i < m_reminders.size(); ++i) {
+        if (m_reminders[i].id() == reminder.id()) {
+            m_reminders[i] = reminder;
+            saveReminders();
+            break;
+        }
     }
 }
 
-void ReminderManager::deleteReminder(int index)
+void ReminderManager::deleteReminder(const Reminder &reminder)
 {
-    if (index >= 0 && index < m_reminders.size()) {
-        m_reminders.removeAt(index);
-        saveReminders();
+    for (int i = 0; i < m_reminders.size(); ++i) {
+        if (m_reminders[i].id() == reminder.id()) {
+            m_reminders.removeAt(i);
+            saveReminders();
+            break;
+        }
     }
 }
 
