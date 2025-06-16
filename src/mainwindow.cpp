@@ -91,7 +91,7 @@ void MainWindow::setupConnections()
 void MainWindow::createTrayIcon()
 {
     trayIcon = new QSystemTrayIcon(this);
-    trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
+    trayIcon->setIcon(QIcon(isPaused ? ":/img/tray_icon_paused.png" : ":/img/tray_icon.png"));
     trayIcon->setToolTip(tr("EasyNotify"));
     trayIcon->show();
 }
@@ -134,9 +134,11 @@ void MainWindow::onPauseReminders()
     if (isPaused) {
         pauseAction->setText(tr("恢复提醒"));
         reminderManager->pauseAll();
+        trayIcon->setIcon(QIcon(":/img/tray_icon_paused.png"));
     } else {
         pauseAction->setText(tr("暂停提醒"));
         reminderManager->resumeAll();
+        trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
     }
     ConfigManager::instance().setPaused(isPaused);
 }

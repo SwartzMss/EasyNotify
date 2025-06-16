@@ -2,5 +2,6 @@
 <RCC version="1.0">
     <qresource prefix="/">
         <file>img/tray_icon.png</file>
+        <file>img/tray_icon_paused.png</file>
     </qresource>
 </RCC> 
