@@ -1,5 +1,5 @@
 #include "completed_reminderlist.h"
-#include "ui_reminderlist.h"
+#include "ui_completed_reminderlist.h"
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>
@@ -24,7 +24,7 @@ enum ColumnIndex {
 
 CompletedReminderList::CompletedReminderList(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::ReminderList)
+    , ui(new Ui::CompletedReminderList)
     , reminderManager(nullptr)
     , model(new CompletedReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))

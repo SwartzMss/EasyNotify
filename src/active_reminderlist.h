@@ -12,7 +12,7 @@
 #include <QTableView>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class ReminderList; }
+namespace Ui { class ActiveReminderList; }
 QT_END_NAMESPACE
 
 class ActiveReminderList : public QWidget
@@ -52,7 +52,7 @@ private:
     void addReminderToModel(const Reminder &reminder);
     void updateReminderInModel(const Reminder &reminder);
 
-    Ui::ReminderList *ui;
+    Ui::ActiveReminderList *ui;
     ReminderManager *reminderManager;
     ActiveReminderTableModel *model;
     QSortFilterProxyModel *proxyModel;
