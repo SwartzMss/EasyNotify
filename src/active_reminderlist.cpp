@@ -1,5 +1,5 @@
 #include "active_reminderlist.h"
-#include "ui_reminderlist.h"
+#include "ui_active_reminderlist.h"
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QJsonDocument>
@@ -24,7 +24,7 @@ enum ColumnIndex {
 
 ActiveReminderList::ActiveReminderList(QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::ReminderList)
+    , ui(new Ui::ActiveReminderList)
     , reminderManager(nullptr)
     , model(new ActiveReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))

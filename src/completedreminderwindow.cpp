@@ -12,9 +12,6 @@ CompletedReminderWindow::CompletedReminderWindow(QWidget *parent)
     ui->setupUi(this);
 
     if (ui->completedList) {
-        ui->completedList->addButton()->setVisible(false);
-        ui->completedList->importButton()->setVisible(false);
-        ui->completedList->exportButton()->setVisible(false);
         connect(ui->completedList->deleteButton(), &QPushButton::clicked,
                 this, [this]() { ui->completedList->onDeleteClicked(); refreshReminders(); });
     }

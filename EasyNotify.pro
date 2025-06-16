@@ -45,7 +45,8 @@ HEADERS += \
 
 FORMS += \
     src/mainwindow.ui \
-    src/reminderlist.ui \
+    src/active_reminderlist.ui \
+    src/completed_reminderlist.ui \
     src/reminderedit.ui \
     src/notificationPopup.ui \
     src/activereminderwindow.ui \
