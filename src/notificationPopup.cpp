@@ -28,6 +28,12 @@ NotificationPopup::NotificationPopup(const QString &title,
     setAttribute(Qt::WA_StyledBackground);
     setAutoFillBackground(true);
 
+    // Slight shadow to lift the popup off the screen
+    auto *shadow = new QGraphicsDropShadowEffect(this);
+    shadow->setBlurRadius(12);
+    shadow->setOffset(0, 2);
+    setGraphicsEffect(shadow);
+
     // 设置标题图标和消息
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(32, 32));
     ui->titleTextLabel->setText(title);
@@ -53,11 +59,11 @@ NotificationPopup::NotificationPopup(const QString &title,
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
     
-    // 只保留淡入动画
-    fadeIn  = new QPropertyAnimation(this, "windowOpacity", this);
-    fadeIn ->setDuration(300);
-    fadeIn ->setStartValue(0);
-    fadeIn ->setEndValue(1);
+    // 淡入动画
+    fadeIn = new QPropertyAnimation(this, "windowOpacity", this);
+    fadeIn->setDuration(300);
+    fadeIn->setStartValue(0);
+    fadeIn->setEndValue(1);
 
     setStyleSheet(R"(
       QWidget {
