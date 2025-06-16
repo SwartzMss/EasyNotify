@@ -4,7 +4,6 @@
 #include <QMessageBox>
 #include <QJsonDocument>
 #include <QJsonArray>
-#include <QJsonObject>
 #include <QFile>
 #include <QDateTime>
 #include <QFileDialog>
@@ -210,17 +209,6 @@ void ActiveReminderList::searchReminders(const QString &text)
 {
     LOG_INFO(QString("搜索提醒: '%1'").arg(text));
     model->search(text);
-}
-
-QJsonObject ActiveReminderList::getReminderData(const QString &name) const
-{
-    for (int i = 0; i < model->rowCount(); ++i) {
-        Reminder reminder = model->getReminder(i);
-        if (reminder.name() == name) {
-            return reminder.toJson();
-        }
-    }
-    return QJsonObject();
 }
 
 

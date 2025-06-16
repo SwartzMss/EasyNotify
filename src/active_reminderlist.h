@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QSortFilterProxyModel>
-#include <QJsonObject>
 #include <QJsonArray>
 #include "active_reminderedit.h"
 #include "remindermanager.h"
@@ -48,7 +47,6 @@ private:
     void deleteReminder(const QModelIndex &index);
     void refreshList();
     void searchReminders(const QString &text);
-    QJsonObject getReminderData(const QString &name) const;
     void addReminderToModel(const Reminder &reminder);
     void updateReminderInModel(const Reminder &reminder);
 
