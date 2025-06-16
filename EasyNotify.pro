@@ -14,7 +14,6 @@ SOURCES += \
     src/active_reminderlist.cpp \
     src/completed_reminderlist.cpp \
     src/active_reminderedit.cpp \
-    src/completed_reminderedit.cpp \
     src/remindermanager.cpp \
     src/logger.cpp \
     src/notificationPopup.cpp \
@@ -31,7 +30,6 @@ HEADERS += \
     src/active_reminderlist.h \
     src/completed_reminderlist.h \
     src/active_reminderedit.h \
-    src/completed_reminderedit.h \
     src/remindermanager.h \
     src/logger.h \
     src/notificationPopup.h \
