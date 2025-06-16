@@ -30,7 +30,8 @@ NotificationPopup::NotificationPopup(const QString &title,
 
     // 设置标题图标和消息
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(32, 32));
-    ui->messageLabel->setText(title + (m_message.isEmpty() ? "" : "\n" + m_message));
+    ui->titleTextLabel->setText(title);
+    ui->messageLabel->setText(m_message);
 
     // 根据优先级选择图标
     QStyle *style = QApplication::style();
@@ -68,8 +69,17 @@ NotificationPopup::NotificationPopup(const QString &title,
     setAttribute(Qt::WA_DeleteOnClose);
 
     // 设置头部和内容区域不同背景色
-    ui->headerWidget->setStyleSheet("background: #353535; border-top-left-radius: 10px; border-top-right-radius: 10px;");
-    ui->contentWidget->setStyleSheet("background: #232323; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;");
+    // 头部采用稍浅的强调色，并在底部加入边框与内容区域区分
+    ui->headerWidget->setStyleSheet(
+        "background: #3A3F44;"
+        " border-top-left-radius: 10px;"
+        " border-top-right-radius: 10px;"
+        " border-bottom: 1px solid #232323;");
+    // 内容区域保持较暗背景色
+    ui->contentWidget->setStyleSheet(
+        "background: #232323;"
+        " border-bottom-left-radius: 10px;"
+        " border-bottom-right-radius: 10px;");
 }
 
 void NotificationPopup::show()
