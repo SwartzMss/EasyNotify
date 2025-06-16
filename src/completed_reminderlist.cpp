@@ -57,7 +57,7 @@ void CompletedReminderList::setupModel()
     // 设置表格视图
     ui->tableView->setModel(proxyModel);
     ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tableView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableView->verticalHeader()->hide();
@@ -111,9 +111,31 @@ void CompletedReminderList::searchReminders(const QString &text)
 
 void CompletedReminderList::onDeleteClicked()
 {
-    QModelIndex currentIndex = ui->tableView->currentIndex();
-    if (currentIndex.isValid()) {
-        deleteReminder(currentIndex);
+    QModelIndexList selectedIndexes = ui->tableView->selectionModel()->selectedRows();
+    if (selectedIndexes.isEmpty()) {
+        return;
+    }
+
+    QMessageBox::StandardButton reply = QMessageBox::question(
+        this,
+        tr("确认删除"),
+        tr("确定要删除选中的 %1 个提醒吗？").arg(selectedIndexes.size()),
+        QMessageBox::Yes | QMessageBox::No
+    );
+
+    if (reply == QMessageBox::Yes) {
+        // 从后往前删除，避免索引变化
+        std::sort(selectedIndexes.begin(), selectedIndexes.end(), 
+                 [](const QModelIndex &a, const QModelIndex &b) { return a.row() > b.row(); });
+        
+        for (const QModelIndex &index : selectedIndexes) {
+            QModelIndex sourceIndex = proxyModel->mapToSource(index);
+            Reminder reminder = model->getReminder(sourceIndex.row());
+            model->removeReminder(sourceIndex.row());
+            if (reminderManager) {
+                reminderManager->deleteReminder(reminder);
+            }
+        }
     }
 }
 

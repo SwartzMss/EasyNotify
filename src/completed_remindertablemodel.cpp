@@ -63,7 +63,7 @@ QVariant CompletedReminderTableModel::headerData(int section, Qt::Orientation or
         case 0: return "名称";
         case 1: return "类型";
         case 2: return "优先级";
-        case 3: return "下次触发时间";
+        case 3: return "完成时间";
         }
     }
     return QVariant();
