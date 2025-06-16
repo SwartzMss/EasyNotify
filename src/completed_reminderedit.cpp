@@ -68,11 +68,8 @@ void CompletedReminderEdit::prepareEditReminder(const Reminder &reminder)
     ui->typeCombo->setCurrentIndex(type);
 
     QDateTime nextTrigger = reminder.nextTrigger();
-    if (reminder.type() == Reminder::Type::Once) {
-        ui->dateTimeEdit->setDateTime(nextTrigger);
-    } else {
-        ui->timeEdit->setTime(nextTrigger.time());
-    }
+    ui->dateTimeEdit->setDateTime(nextTrigger);
+    ui->timeEdit->setTime(nextTrigger.time());
 
     onTypeChanged(type);
     LOG_INFO("编辑提醒准备完成");
