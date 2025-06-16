@@ -97,7 +97,6 @@ void ActiveReminderList::addNewReminder()
         if (reminderManager) {
             reminderManager->addReminder(reminder);
             addReminderToModel(reminder);
-            reminderManager->saveReminders();
             LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
                     .arg(reminder.name())
                     .arg(reminder.id()));
@@ -280,9 +279,6 @@ void ActiveReminderList::onImportClicked()
             }
         }
         LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
-        if (reminderManager) {
-            reminderManager->saveReminders();
-        }
         loadReminders(imported);
     } else {
         LOG_ERROR("导入文件格式错误");
