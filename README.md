@@ -1,5 +1,8 @@
 # EasyNotify
 
+[![Build Status](https://github.com/SwartzMss/EasyNotify/actions/workflows/build.yml/badge.svg)](https://github.com/SwartzMss/EasyNotify/actions/workflows/build.yml)
+[![Release Status](https://github.com/SwartzMss/EasyNotify/actions/workflows/release.yml/badge.svg)](https://github.com/SwartzMss/EasyNotify/actions/workflows/release.yml)
+
 EasyNotify 是一款使用 Qt 编写的 Windows 桌面提醒工具，程序在系统托盘常驻，可在右下角以自定义弹窗方式显示提醒信息。
 
 ## 功能特性
