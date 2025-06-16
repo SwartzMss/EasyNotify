@@ -2,19 +2,8 @@
 #include "ui_completed_reminderlist.h"
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <QJsonObject>
-#include <QFile>
-#include <QDateTime>
-#include <QFileDialog>
 #include "remindermanager.h"
 #include "logger.h"
-#include "completed_reminderedit.h"
-#include <QMenu>
-#include <QAction>
-#include <QContextMenuEvent>
-#include <QCoreApplication>
 
 enum ColumnIndex {
     Name = 0,
@@ -28,7 +17,6 @@ CompletedReminderList::CompletedReminderList(QWidget *parent)
     , reminderManager(nullptr)
     , model(new CompletedReminderTableModel(this))
     , proxyModel(new QSortFilterProxyModel(this))
-    , editDialog(new CompletedReminderEdit(this))
 {
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
@@ -83,99 +71,6 @@ void CompletedReminderList::loadReminders(const QList<Reminder> &reminders)
     model->loadFromJson(reminders);
 }
 
-QJsonArray CompletedReminderList::getReminders() const
-{
-    return model->saveToJson();
-}
-
-void CompletedReminderList::addNewReminder()
-{
-    LOG_INFO("添加新提醒");
-    editDialog->prepareNewReminder();
-    if (editDialog->exec() == QDialog::Accepted) {
-        Reminder reminder = editDialog->getReminder();
-        if (reminderManager) {
-            reminderManager->addReminder(reminder);
-            addReminderToModel(reminder);
-            reminderManager->saveReminders();
-            LOG_INFO(QString("新提醒添加成功: 名称='%1', ID='%2'")
-                    .arg(reminder.name())
-                    .arg(reminder.id()));
-        }
-    } else {
-        LOG_INFO("取消添加新提醒");
-    }
-}
-
-void CompletedReminderList::addReminderToModel(const Reminder &reminder)
-{
-    LOG_INFO(QString("添加提醒到模型: 名称='%1'").arg(reminder.name()));
-    model->addReminder(reminder);
-    LOG_INFO("提醒已添加到模型");
-}
-
-void CompletedReminderList::updateReminderInModel(const Reminder &reminder)
-{
-    LOG_INFO(QString("更新提醒: 名称='%1'").arg(reminder.name()));
-    
-    // 保存当前选择的ID
-    QString currentId;
-    QModelIndex currentIndex = ui->tableView->currentIndex();
-    if (currentIndex.isValid()) {
-        QModelIndex sourceIndex = proxyModel->mapToSource(currentIndex);
-        if (sourceIndex.isValid()) {
-            currentId = model->getReminder(sourceIndex.row()).id();
-        }
-    }
-    
-    // 更新模型
-    for (int i = 0; i < model->rowCount(); ++i) {
-        Reminder existingReminder = model->getReminder(i);
-        if (existingReminder.id() == reminder.id()) {
-            model->updateReminder(i, reminder);
-            LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2")
-                    .arg(reminder.name())
-                    .arg(static_cast<int>(reminder.type())));
-            break;
-        }
-    }
-    
-    // 重置代理模型
-    proxyModel->invalidate();
-    
-    // 恢复选择
-    if (!currentId.isEmpty()) {
-        for (int i = 0; i < model->rowCount(); ++i) {
-            if (model->getReminder(i).id() == currentId) {
-                QModelIndex newIndex = proxyModel->mapFromSource(model->index(i, 0));
-                if (newIndex.isValid()) {
-                    ui->tableView->setCurrentIndex(newIndex);
-                }
-                break;
-            }
-        }
-    }
-}
-
-void CompletedReminderList::editReminder(const QModelIndex &index)
-{
-    QModelIndex sourceIndex = proxyModel->mapToSource(index);
-    Reminder reminder = model->getReminder(sourceIndex.row());
-    LOG_INFO(QString("编辑提醒: 名称='%1'").arg(reminder.name()));
-    
-    editDialog->prepareEditReminder(reminder);
-    if (editDialog->exec() == QDialog::Accepted) {
-        Reminder updatedReminder = editDialog->getReminder();
-        updateReminderInModel(updatedReminder);
-        if (reminderManager) {
-            reminderManager->updateReminder(updatedReminder);
-            LOG_INFO(QString("提醒管理器更新成功: 名称='%1'").arg(updatedReminder.name()));
-        }
-    } else {
-        LOG_INFO("取消编辑提醒");
-    }
-}
-
 void CompletedReminderList::deleteReminder(const QModelIndex &index)
 {
     QModelIndex sourceIndex = proxyModel->mapToSource(index);
@@ -213,110 +108,12 @@ void CompletedReminderList::searchReminders(const QString &text)
     model->search(text);
 }
 
-QJsonObject CompletedReminderList::getReminderData(const QString &name) const
-{
-    for (int i = 0; i < model->rowCount(); ++i) {
-        Reminder reminder = model->getReminder(i);
-        if (reminder.name() == name) {
-            return reminder.toJson();
-        }
-    }
-    return QJsonObject();
-}
-
-
-void CompletedReminderList::onAddClicked()
-{
-    addNewReminder();
-}
-
-void CompletedReminderList::onEditClicked()
-{
-    QModelIndex currentIndex = ui->tableView->currentIndex();
-    if (currentIndex.isValid()) {
-        editReminder(currentIndex);
-    }
-}
-
 void CompletedReminderList::onDeleteClicked()
 {
     QModelIndex currentIndex = ui->tableView->currentIndex();
     if (currentIndex.isValid()) {
         deleteReminder(currentIndex);
     }
-}
-
-void CompletedReminderList::onImportClicked()
-{
-    LOG_INFO("开始导入提醒");
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("导入提醒"), "",
-        tr("JSON文件 (*.json);;所有文件 (*)"));
-
-    if (fileName.isEmpty()) {
-        LOG_INFO("取消导入提醒");
-        return;
-    }
-
-    LOG_INFO(QString("从文件导入提醒: %1").arg(fileName));
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly)) {
-        LOG_ERROR(QString("无法打开文件: %1, 错误: %2")
-                 .arg(fileName)
-                 .arg(file.errorString()));
-        QMessageBox::warning(this, tr("错误"),
-            tr("无法打开文件 %1:\n%2").arg(fileName).arg(file.errorString()));
-        return;
-    }
-
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
-    if (doc.isArray()) {
-        QList<Reminder> imported;
-        for (const QJsonValue &value : doc.array()) {
-            Reminder reminder = Reminder::fromJson(value.toObject());
-            imported.append(reminder);
-            if (reminderManager) {
-                reminderManager->addReminder(reminder);
-            }
-        }
-        LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
-        if (reminderManager) {
-            reminderManager->saveReminders();
-        }
-        loadReminders(imported);
-    } else {
-        LOG_ERROR("导入文件格式错误");
-        QMessageBox::warning(this, tr("错误"),
-            tr("文件格式错误"));
-    }
-}
-
-void CompletedReminderList::onExportClicked()
-{
-    LOG_INFO("开始导出提醒");
-    QString fileName = QFileDialog::getSaveFileName(this,
-        tr("导出提醒"), "",
-        tr("JSON文件 (*.json);;所有文件 (*)"));
-
-    if (fileName.isEmpty()) {
-        LOG_INFO("取消导出提醒");
-        return;
-    }
-
-    LOG_INFO(QString("导出提醒到文件: %1").arg(fileName));
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) {
-        LOG_ERROR(QString("无法保存文件: %1, 错误: %2")
-                 .arg(fileName)
-                 .arg(file.errorString()));
-        QMessageBox::warning(this, tr("错误"),
-            tr("无法保存文件 %1:\n%2").arg(fileName).arg(file.errorString()));
-        return;
-    }
-
-    QJsonDocument doc(getReminders());
-    file.write(doc.toJson());
-    LOG_INFO(QString("成功导出 %1 个提醒").arg(doc.array().size()));
 }
 
 void CompletedReminderList::onSearchTextChanged(const QString &text)
@@ -326,24 +123,9 @@ void CompletedReminderList::onSearchTextChanged(const QString &text)
     searchReminders(text);
 }
 
-QPushButton *CompletedReminderList::addButton() const
-{
-    return ui->addButton;
-}
-
 QPushButton *CompletedReminderList::deleteButton() const
 {
     return ui->deleteButton;
-}
-
-QPushButton *CompletedReminderList::importButton() const
-{
-    return ui->importButton;
-}
-
-QPushButton *CompletedReminderList::exportButton() const
-{
-    return ui->exportButton;
 }
 
 QTableView *CompletedReminderList::tableView() const
