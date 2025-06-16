@@ -28,6 +28,12 @@ NotificationPopup::NotificationPopup(const QString &title,
     setAttribute(Qt::WA_StyledBackground);
     setAutoFillBackground(true);
 
+    // Slight shadow to lift the popup off the screen
+    auto *shadow = new QGraphicsDropShadowEffect(this);
+    shadow->setBlurRadius(12);
+    shadow->setOffset(0, 2);
+    setGraphicsEffect(shadow);
+
     // 设置标题图标和消息
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(20, 20));
     ui->messageLabel->setText(title + (m_message.isEmpty() ? "" : "\n" + m_message));
