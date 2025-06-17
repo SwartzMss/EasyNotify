@@ -144,10 +144,8 @@ void MainWindow::onShowMainWindow()
 {
     LOG_DEBUG("显示主界面");
     show();
-    if (activeWindow)
-        activeWindow->show(), activeWindow->activateWindow(), activeWindow->raise();
-    if (completedWindow)
-        completedWindow->show(), completedWindow->activateWindow(), completedWindow->raise();
+    activateWindow();
+    raise();
 }
 
 void MainWindow::onPauseReminders()
@@ -201,10 +199,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     if (trayIcon->isVisible()) {
         LOG_DEBUG("托盘图标可见，隐藏窗口");
         hide();
-        if (activeWindow)
-            activeWindow->hide();
-        if (completedWindow)
-            completedWindow->hide();
         event->ignore();
     } else {
         LOG_DEBUG("托盘图标不可见，正常关闭窗口");
