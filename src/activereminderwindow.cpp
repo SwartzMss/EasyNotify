@@ -21,7 +21,14 @@ ActiveReminderWindow::ActiveReminderWindow(QWidget *parent)
         connect(ui->activeList->exportButton(), &QPushButton::clicked,
                 ui->activeList, &ActiveReminderList::onExportClicked);
         connect(ui->activeList->tableView(), &QTableView::doubleClicked,
-                this, [this](const QModelIndex &) { ui->activeList->onEditClicked(); refreshReminders(); });
+                this, [this](const QModelIndex &) {
+                    ui->activeList->onEditClicked();
+                    // 刷新列表需要在事件处理完成后再执行，
+                    // 否则在双击事件链中重置模型可能导致崩溃
+                    QMetaObject::invokeMethod(this,
+                                            &ActiveReminderWindow::refreshReminders,
+                                            Qt::QueuedConnection);
+                });
     }
 }
 
