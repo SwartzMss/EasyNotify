@@ -2,6 +2,7 @@
 #define COMPLETEDREMINDERWINDOW_H
 
 #include <QWidget>
+#include <QShowEvent>
 #include "completed_reminderlist.h"
 
 namespace Ui {
@@ -20,6 +21,9 @@ public:
 
 private slots:
     void refreshReminders();
+
+protected:
+    void showEvent(QShowEvent *event) override;
 
 private:
     Ui::CompletedReminderWindow *ui;

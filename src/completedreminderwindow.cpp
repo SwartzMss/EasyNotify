@@ -3,6 +3,7 @@
 #include <QPushButton>
 #include <QTableView>
 #include <QModelIndex>
+#include <QShowEvent>
 
 CompletedReminderWindow::CompletedReminderWindow(QWidget *parent)
     : QWidget(parent)
@@ -45,4 +46,10 @@ void CompletedReminderWindow::refreshReminders()
             filtered.append(r);
     }
     ui->completedList->loadReminders(filtered);
+}
+
+void CompletedReminderWindow::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    refreshReminders();
 }
