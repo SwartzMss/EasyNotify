@@ -26,10 +26,14 @@ public:
 protected:
     void closeEvent(QCloseEvent *event) override;
 
+private slots:
+    void startFadeOut();
+
 private:
     static QList<QPointer<NotificationPopup>> s_popups;
     void repositionPopups();
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn;
+    QPropertyAnimation *fadeOut;
     Priority m_priority;
 };

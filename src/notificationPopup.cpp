@@ -55,13 +55,20 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui->priorityLabel->setPixmap(icon.pixmap(20, 20));
     
     // 关闭按钮
-    connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
+    connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::startFadeOut);
     
     // 淡入动画
     fadeIn = new QPropertyAnimation(this, "windowOpacity", this);
     fadeIn->setDuration(300);
     fadeIn->setStartValue(0);
     fadeIn->setEndValue(1);
+
+    // 淡出动画
+    fadeOut = new QPropertyAnimation(this, "windowOpacity", this);
+    fadeOut->setDuration(300);
+    fadeOut->setStartValue(1);
+    fadeOut->setEndValue(0);
+    connect(fadeOut, &QPropertyAnimation::finished, this, &NotificationPopup::close);
 
     setStyleSheet(R"(
       QWidget {
@@ -142,4 +149,9 @@ void NotificationPopup::repositionPopups()
         int y = avail.y() + avail.height() - ((i + 1) * (popup->height() + margin));
         popup->move(x, y);
     }
+}
+
+void NotificationPopup::startFadeOut()
+{
+    fadeOut->start();
 }
