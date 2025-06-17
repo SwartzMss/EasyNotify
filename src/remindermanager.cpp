@@ -6,20 +6,33 @@
 #include "configmanager.h"
 #include "reminder.h"
 #include <QTimer>
+#include <QMetaType>
 
 ReminderManager::ReminderManager(QObject *parent)
-    : QObject(parent)
+    : QObject(nullptr)
     , checkTimer(new QTimer(this))
     , isPaused(false)
+    , workerThread(new QThread)
 {
+    Q_UNUSED(parent);
+    qRegisterMetaType<Reminder>("Reminder");
     LOG_INFO("ReminderManager 初始化");
     setupTimer();
     loadReminders();
+    moveToThread(workerThread);
+    connect(workerThread, &QThread::started, checkTimer, qOverload<>(&QTimer::start));
+    workerThread->start();
 }
 
 ReminderManager::~ReminderManager()
 {
     LOG_INFO("ReminderManager 析构");
+    if (workerThread) {
+        workerThread->quit();
+        workerThread->wait();
+        delete workerThread;
+        workerThread = nullptr;
+    }
     saveReminders();
 }
 
@@ -27,7 +40,7 @@ void ReminderManager::setupTimer()
 {
     LOG_INFO("设置定时器");
     connect(checkTimer, &QTimer::timeout, this, &ReminderManager::checkReminders);
-    checkTimer->start(5000); // 每5秒检查一次
+    checkTimer->setInterval(5000); // 每5秒检查一次
 }
 
 void ReminderManager::loadReminders()
@@ -49,12 +62,14 @@ void ReminderManager::loadReminders()
 
 void ReminderManager::addReminder(const Reminder &reminder)
 {
+    QMutexLocker locker(&mutex);
     m_reminders.append(reminder);
     saveReminders();
 }
 
 void ReminderManager::updateReminder(const Reminder &reminder)
 {
+    QMutexLocker locker(&mutex);
     for (int i = 0; i < m_reminders.size(); ++i) {
         if (m_reminders[i].id() == reminder.id()) {
             m_reminders[i] = reminder;
@@ -66,6 +81,7 @@ void ReminderManager::updateReminder(const Reminder &reminder)
 
 void ReminderManager::deleteReminder(const Reminder &reminder)
 {
+    QMutexLocker locker(&mutex);
     for (int i = 0; i < m_reminders.size(); ++i) {
         if (m_reminders[i].id() == reminder.id()) {
             m_reminders.removeAt(i);
@@ -78,6 +94,7 @@ void ReminderManager::deleteReminder(const Reminder &reminder)
 void ReminderManager::pauseAll()
 {
     LOG_INFO("暂停所有提醒");
+    QMutexLocker locker(&mutex);
     isPaused = true;
     ConfigManager::instance().setPaused(true);
 }
@@ -85,18 +102,21 @@ void ReminderManager::pauseAll()
 void ReminderManager::resumeAll()
 {
     LOG_INFO("恢复所有提醒");
+    QMutexLocker locker(&mutex);
     isPaused = false;
     ConfigManager::instance().setPaused(false);
 }
 
 QVector<Reminder> ReminderManager::getReminders() const
 {
+    QMutexLocker locker(&mutex);
     return m_reminders;
 }
 
 void ReminderManager::saveReminders()
 {
     LOG_INFO("保存提醒数据");
+    QMutexLocker locker(&mutex);
     QJsonArray array;
     for (const Reminder &reminder : m_reminders) {
         array.append(reminder.toJson());
@@ -106,6 +126,7 @@ void ReminderManager::saveReminders()
 
 void ReminderManager::checkReminders()
 {
+    QMutexLocker locker(&mutex);
     if (isPaused) {
         return;
     }
@@ -124,17 +145,11 @@ void ReminderManager::checkReminders()
             
         if (shouldTrigger(reminder)) {
             LOG_INFO(QString("触发提醒 [%1]").arg(id));
-            showNotification(reminder);
+            emit reminderTriggered(reminder);
             calculateNextTrigger(reminder);
             saveReminders();
         }
     }
-}
-
-void ReminderManager::onReminderTriggered(const Reminder &reminder)
-{
-    LOG_INFO(QString("提醒已触发: %1").arg(reminder.id()));
-    emit reminderTriggered(reminder);
 }
 
 void ReminderManager::calculateNextTrigger(Reminder &reminder)
@@ -187,12 +202,6 @@ bool ReminderManager::shouldTrigger(const Reminder &reminder) const
         .arg(shouldTrigger ? "是" : "否"));
         
     return shouldTrigger;
-}
-
-void ReminderManager::showNotification(const Reminder &reminder)
-{
-    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority());
-    popup->show();
 }
 
 

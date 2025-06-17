@@ -8,6 +8,8 @@
 #include <QVector>
 #include "reminder.h"
 #include "configmanager.h"
+#include <QThread>
+#include <QMutex>
 
 class ReminderManager : public QObject
 {
@@ -31,18 +33,17 @@ signals:
 
 private slots:
     void checkReminders();
-    void onReminderTriggered(const Reminder &reminder);
 
 private:
     void setupTimer();
     void calculateNextTrigger(Reminder &reminder);
     bool shouldTrigger(const Reminder &reminder) const;
-    void showNotification(const Reminder &reminder);
     QJsonArray getRemindersJson() const;
     void loadReminders();
     QTimer *checkTimer;
     bool isPaused;
-
+    QThread *workerThread;
+    mutable QMutex mutex;
     QVector<Reminder> m_reminders;
 };
 

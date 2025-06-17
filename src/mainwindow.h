@@ -8,6 +8,7 @@
 #include "activereminderwindow.h"
 #include "completedreminderwindow.h"
 #include "remindermanager.h"
+#include "notificationPopup.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,6 +28,7 @@ private slots:
     void onPauseReminders();
     void onToggleAutoStart();
     void onQuit();
+    void displayNotification(const Reminder &reminder);
 
 private:
     void setupUI();
