@@ -24,8 +24,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupUI();
 
-    // 创建提醒管理器
-    reminderManager = new ReminderManager(this);
+    // 创建提醒管理器(运行于工作线程)
+    reminderManager = new ReminderManager();
+    connect(reminderManager, &ReminderManager::reminderTriggered,
+            this, &MainWindow::displayNotification);
 
     // 连接提醒列表和提醒管理器
     activeWindow->setReminderManager(reminderManager);
@@ -48,9 +50,16 @@ MainWindow::MainWindow(QWidget *parent)
     }
 }
 
+void MainWindow::displayNotification(const Reminder &reminder)
+{
+    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority());
+    popup->show();
+}
+
 MainWindow::~MainWindow()
 {
     LOG_INFO("MainWindow 析构");
+    delete reminderManager;
     delete activeWindow;
     delete completedWindow;
     delete ui;

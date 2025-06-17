@@ -63,4 +63,6 @@ private:
     Priority m_priority = Priority::Medium;
 };
 
+Q_DECLARE_METATYPE(Reminder)
+
 #endif // REMINDER_H
