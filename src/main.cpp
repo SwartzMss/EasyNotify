@@ -21,16 +21,19 @@ QString getDumpFilePath() {
 
 // 崩溃处理函数
 LONG WINAPI TopLevelExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo) {
-	static bool isHandling = false;
-	if (isHandling) {
-		return EXCEPTION_CONTINUE_SEARCH;
-	}
-	isHandling = true;
+        static bool isHandling = false;
+        if (isHandling) {
+                return EXCEPTION_CONTINUE_SEARCH;
+        }
+        isHandling = true;
 
-	try {
-		QString dumpPath = getDumpFilePath();
-		HANDLE hFile = CreateFileW(
-			dumpPath.toStdWString().c_str(),
+        // 记录捕获到未处理异常
+        LOG_ERROR("捕获到未处理异常");
+
+        try {
+                QString dumpPath = getDumpFilePath();
+                HANDLE hFile = CreateFileW(
+                        dumpPath.toStdWString().c_str(),
 			GENERIC_WRITE,
 			0,
 			NULL,
@@ -39,26 +42,31 @@ LONG WINAPI TopLevelExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo) {
 			NULL
 		);
 
-		if (hFile != INVALID_HANDLE_VALUE) {
-			MINIDUMP_EXCEPTION_INFORMATION exInfo;
-			exInfo.ExceptionPointers = pExceptionInfo;
-			exInfo.ThreadId = GetCurrentThreadId();
-			exInfo.ClientPointers = TRUE;
+                if (hFile != INVALID_HANDLE_VALUE) {
+                        MINIDUMP_EXCEPTION_INFORMATION exInfo;
+                        exInfo.ExceptionPointers = pExceptionInfo;
+                        exInfo.ThreadId = GetCurrentThreadId();
+                        exInfo.ClientPointers = TRUE;
 
 			// 创建完整的内存转储
-			MiniDumpWriteDump(
-				GetCurrentProcess(),
-				GetCurrentProcessId(),
-				hFile,
-				static_cast<MINIDUMP_TYPE>(MiniDumpNormal | MiniDumpWithFullMemory | MiniDumpWithHandleData),
-				&exInfo,
-				NULL,
-				NULL
-			);
+                        BOOL dumpResult = MiniDumpWriteDump(
+                                GetCurrentProcess(),
+                                GetCurrentProcessId(),
+                                hFile,
+                                static_cast<MINIDUMP_TYPE>(MiniDumpNormal | MiniDumpWithFullMemory | MiniDumpWithHandleData),
+                                &exInfo,
+                                NULL,
+                                NULL
+                        );
 
-			CloseHandle(hFile);
+                        if (!dumpResult) {
+                                DWORD err = GetLastError();
+                                LOG_ERROR(QString("写入转储文件失败(%1): %2").arg(err).arg(dumpPath));
+                        }
 
-			// 记录崩溃信息到日志
+                        CloseHandle(hFile);
+
+                        // 记录崩溃信息到日志
 			LOG_ERROR(QString("程序崩溃，转储文件已保存到: %1").arg(dumpPath));
 			LOG_ERROR(QString("异常代码: 0x%1").arg(pExceptionInfo->ExceptionRecord->ExceptionCode, 8, 16, QChar('0')));
 			LOG_ERROR(QString("异常地址: 0x%1").arg((quintptr)pExceptionInfo->ExceptionRecord->ExceptionAddress, 8, 16, QChar('0')));
@@ -120,12 +128,15 @@ LONG WINAPI TopLevelExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo) {
 
 			// 清理符号处理器
 			SymCleanup(process);
-		}
-	}
-	catch (...) {
-		// 如果转储过程中发生异常，至少记录一下
-		LOG_INFO("程序崩溃，但无法创建转储文件");
-	}
+                } else {
+                        DWORD err = GetLastError();
+                        LOG_ERROR(QString("无法创建转储文件(%1): %2").arg(err).arg(dumpPath));
+                }
+        }
+        catch (...) {
+                // 如果转储过程中发生异常，至少记录一下
+                LOG_INFO("程序崩溃，但无法创建转储文件");
+        }
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
