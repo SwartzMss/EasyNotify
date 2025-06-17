@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , isPaused(false)
+    , autoStartEnabled(false)
 {
     setWindowFlags(
         Qt::Window                                   
@@ -37,9 +38,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 加载配置
     isPaused = ConfigManager::instance().isPaused();
+    autoStartEnabled = ConfigManager::instance().isAutoStart();
     if (isPaused) {
         pauseAction->setText(tr("恢复提醒"));
         reminderManager->pauseAll();
+    }
+    if (autoStartEnabled) {
+        autoStartAction->setText(tr("取消开机启动"));
     }
 }
 
@@ -86,6 +91,8 @@ void MainWindow::setupConnections()
             this, &MainWindow::onShowMainWindow);
     connect(pauseAction, &QAction::triggered,
             this, &MainWindow::onPauseReminders);
+    connect(autoStartAction, &QAction::triggered,
+            this, &MainWindow::onToggleAutoStart);
     connect(quitAction, &QAction::triggered,
             this, &MainWindow::onQuit);
 }
@@ -101,14 +108,16 @@ void MainWindow::createTrayIcon()
 void MainWindow::createActions()
 {
     trayIconMenu = new QMenu(this);
-    
+
     showAction = new QAction(tr("显示主界面"), this);
     pauseAction = new QAction(tr("暂停提醒"), this);
+    autoStartAction = new QAction(tr("开机启动"), this);
     quitAction = new QAction(tr("退出"), this);
-    
+
     trayIconMenu->addAction(showAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(pauseAction);
+    trayIconMenu->addAction(autoStartAction);
     trayIconMenu->addAction(quitAction);
     
     trayIcon->setContextMenu(trayIconMenu);
@@ -147,6 +156,19 @@ void MainWindow::onPauseReminders()
     }
     ConfigManager::instance().setPaused(isPaused);
     LOG_INFO(QString("提醒已%1").arg(isPaused ? "暂停" : "恢复"));
+}
+
+void MainWindow::onToggleAutoStart()
+{
+    LOG_DEBUG("切换开机启动状态");
+    autoStartEnabled = !autoStartEnabled;
+    if (autoStartEnabled) {
+        autoStartAction->setText(tr("取消开机启动"));
+    } else {
+        autoStartAction->setText(tr("开机启动"));
+    }
+    ConfigManager::instance().setAutoStart(autoStartEnabled);
+    LOG_INFO(QString("开机启动已%1").arg(autoStartEnabled ? "启用" : "禁用"));
 }
 
 void MainWindow::onQuit()

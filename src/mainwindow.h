@@ -25,6 +25,7 @@ private slots:
     void onTrayIconActivated(QSystemTrayIcon::ActivationReason reason);
     void onShowMainWindow();
     void onPauseReminders();
+    void onToggleAutoStart();
     void onQuit();
 
 private:
@@ -41,8 +42,10 @@ private:
     QMenu *trayIconMenu;
     QAction *showAction;
     QAction *pauseAction;
+    QAction *autoStartAction;
     QAction *quitAction;
     bool isPaused;
+    bool autoStartEnabled;
 
 protected:
     void closeEvent(QCloseEvent *event) override;

@@ -20,6 +20,8 @@ public:
     // 提醒相关配置
     bool isPaused() const;
     void setPaused(bool paused);
+    bool isAutoStart() const;
+    void setAutoStart(bool autoStart);
     QJsonArray getReminders() const;
     void setReminders(const QJsonArray &reminders);
 
@@ -36,6 +38,7 @@ private:
     static const QString CONFIG_FILE;
     static const QString REMINDERS_KEY;
     static const QString PAUSED_KEY;
+    static const QString AUTO_START_KEY;
 };
 
 #endif // CONFIGMANAGER_H 

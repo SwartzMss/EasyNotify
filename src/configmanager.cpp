@@ -1,9 +1,11 @@
 #include "configmanager.h"
 #include "logger.h"
+#include <QSettings>
 
 const QString ConfigManager::CONFIG_FILE = "config.json";
 const QString ConfigManager::REMINDERS_KEY = "reminders";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
+const QString ConfigManager::AUTO_START_KEY = "autoStart";
 
 ConfigManager& ConfigManager::instance()
 {
@@ -47,6 +49,29 @@ void ConfigManager::setPaused(bool paused)
 {
     LOG_INFO(QString("设置暂停状态: %1").arg(paused));
     config[PAUSED_KEY] = paused;
+    saveConfig();
+}
+
+bool ConfigManager::isAutoStart() const
+{
+    bool autoStart = config[AUTO_START_KEY].toBool();
+    LOG_INFO(QString("获取开机启动状态: %1").arg(autoStart));
+    return autoStart;
+}
+
+void ConfigManager::setAutoStart(bool autoStart)
+{
+    LOG_INFO(QString("设置开机启动: %1").arg(autoStart));
+    config[AUTO_START_KEY] = autoStart;
+#ifdef Q_OS_WIN
+    QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    if (autoStart) {
+        QString appPath = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+        settings.setValue(QCoreApplication::applicationName(), appPath);
+    } else {
+        settings.remove(QCoreApplication::applicationName());
+    }
+#endif
     saveConfig();
 }
 
@@ -121,6 +146,7 @@ void ConfigManager::initDefaultConfig()
     LOG_INFO("初始化默认配置");
     config = QJsonObject();
     config[PAUSED_KEY] = false;
+    config[AUTO_START_KEY] = false;
     config[REMINDERS_KEY] = QJsonArray();
     saveConfig();
-} 
+}
