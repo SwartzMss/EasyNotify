@@ -9,7 +9,7 @@
 #include "reminder.h"
 #include "configmanager.h"
 #include <QThread>
-#include <QMutex>
+#include <QRecursiveMutex>
 
 class ReminderManager : public QObject
 {
@@ -43,7 +43,7 @@ private:
     QTimer *checkTimer;
     bool isPaused;
     QThread *workerThread;
-    mutable QMutex mutex;
+    mutable QRecursiveMutex mutex;
     QVector<Reminder> m_reminders;
 };
 
