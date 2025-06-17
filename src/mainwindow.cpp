@@ -6,6 +6,7 @@
 #include "completedreminderwindow.h"
 #include <QCloseEvent>
 #include "configmanager.h"
+#include "logger.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -44,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    LOG_INFO("MainWindow 析构");
     delete activeWindow;
     delete completedWindow;
     delete ui;
@@ -114,6 +116,7 @@ void MainWindow::createActions()
 
 void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
+    LOG_DEBUG(QString("托盘图标激活，原因: %1").arg(reason));
     if (reason == QSystemTrayIcon::DoubleClick) {
         onShowMainWindow();
     }
@@ -121,6 +124,7 @@ void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::onShowMainWindow()
 {
+    LOG_DEBUG("显示主界面");
     show();
     if (activeWindow)
         activeWindow->show(), activeWindow->activateWindow(), activeWindow->raise();
@@ -130,6 +134,7 @@ void MainWindow::onShowMainWindow()
 
 void MainWindow::onPauseReminders()
 {
+    LOG_DEBUG("切换提醒暂停状态");
     isPaused = !isPaused;
     if (isPaused) {
         pauseAction->setText(tr("恢复提醒"));
@@ -141,22 +146,29 @@ void MainWindow::onPauseReminders()
         trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
     }
     ConfigManager::instance().setPaused(isPaused);
+    LOG_INFO(QString("提醒已%1").arg(isPaused ? "暂停" : "恢复"));
 }
 
 void MainWindow::onQuit()
 {
+    LOG_INFO("用户选择退出");
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, tr("确认退出"),
                                 tr("确定要退出程序吗？"),
                                 QMessageBox::Yes | QMessageBox::No);
     if (reply == QMessageBox::Yes) {
+        LOG_INFO("用户确认退出");
         QApplication::quit();
+    } else {
+        LOG_INFO("用户取消退出");
     }
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
+    LOG_DEBUG("closeEvent 触发");
     if (trayIcon->isVisible()) {
+        LOG_DEBUG("托盘图标可见，隐藏窗口");
         hide();
         if (activeWindow)
             activeWindow->hide();
@@ -164,6 +176,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
             completedWindow->hide();
         event->ignore();
     } else {
+        LOG_DEBUG("托盘图标不可见，正常关闭窗口");
         QMainWindow::closeEvent(event);
     }
 }
