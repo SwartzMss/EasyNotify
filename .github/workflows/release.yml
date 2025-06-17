@@ -46,7 +46,14 @@ jobs:
       shell: powershell
       run: |
         Get-ChildItem -Path release -Recurse -Filter *.obj | Remove-Item -Force -ErrorAction SilentlyContinue
-        Get-ChildItem -Path release -Recurse -Filter moc_*.cpp | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.cpp | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.h | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.qrc | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.qml | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.ui | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.qm | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.qmldir | Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path release -Recurse -Filter *.qmltypes | Remove-Item -Force -ErrorAction SilentlyContinue
 
     - name: Compress Release
       shell: cmd

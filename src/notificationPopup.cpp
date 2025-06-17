@@ -33,7 +33,7 @@ NotificationPopup::NotificationPopup(const QString &title,
     setGraphicsEffect(shadow);
 
     // 设置标题图标和消息
-    ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(32, 32));
+    ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(24, 24));
     ui->titleTextLabel->clear();
     ui->messageLabel->setText(title);
 
@@ -52,7 +52,7 @@ NotificationPopup::NotificationPopup(const QString &title,
         icon = style->standardIcon(QStyle::SP_MessageBoxWarning);
         break;
     }
-    ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
+    ui->priorityLabel->setPixmap(icon.pixmap(20, 20));
     
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::close);
@@ -84,6 +84,8 @@ NotificationPopup::NotificationPopup(const QString &title,
         "background: #232323;"
         " border-bottom-left-radius: 10px;"
         " border-bottom-right-radius: 10px;");
+    
+    setFixedSize(250, 100);
 }
 
 void NotificationPopup::show()

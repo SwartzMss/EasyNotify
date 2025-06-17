@@ -124,16 +124,27 @@ void CompletedReminderList::onDeleteClicked()
     );
 
     if (reply == QMessageBox::Yes) {
-        // 从后往前删除，避免索引变化
-        std::sort(selectedIndexes.begin(), selectedIndexes.end(), 
-                 [](const QModelIndex &a, const QModelIndex &b) { return a.row() > b.row(); });
-        
+        // 先收集所有要删除的提醒
+        QList<QPair<int, Reminder>> toDelete;
         for (const QModelIndex &index : selectedIndexes) {
             QModelIndex sourceIndex = proxyModel->mapToSource(index);
-            Reminder reminder = model->getReminder(sourceIndex.row());
-            model->removeReminder(sourceIndex.row());
+            if (sourceIndex.isValid()) {
+                Reminder reminder = model->getReminder(sourceIndex.row());
+                toDelete.append({sourceIndex.row(), reminder});
+            }
+        }
+
+        // 按行号从大到小排序，这样删除时不会影响其他行的索引
+        std::sort(toDelete.begin(), toDelete.end(),
+                 [](const QPair<int, Reminder> &a, const QPair<int, Reminder> &b) {
+                     return a.first > b.first;
+                 });
+
+        // 执行删除操作
+        for (const auto &pair : toDelete) {
+            model->removeReminder(pair.first);
             if (reminderManager) {
-                reminderManager->deleteReminder(reminder);
+                reminderManager->deleteReminder(pair.second);
             }
         }
     }

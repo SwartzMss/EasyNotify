@@ -64,6 +64,7 @@ void ActiveReminderList::setupModel()
     proxyModel->setSourceModel(model);
     proxyModel->setFilterKeyColumn(-1); // 设置为-1表示搜索所有列
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive); // 不区分大小写
+    proxyModel->setDynamicSortFilter(true); // 启用动态过滤
 
     // 设置表格视图
     ui->tableView->setModel(proxyModel);
@@ -74,6 +75,19 @@ void ActiveReminderList::setupModel()
     ui->tableView->verticalHeader()->hide();
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setShowGrid(false);
+    ui->tableView->setMouseTracking(true); // 启用鼠标追踪
+    
+    // 确保在模型重置时清除选择
+    connect(model, &QAbstractItemModel::modelReset, this, [this]() {
+        ui->tableView->clearSelection();
+        ui->tableView->setCurrentIndex(QModelIndex());
+    });
+    
+    // 确保在布局改变时更新视图
+    connect(model, &QAbstractItemModel::layoutChanged, this, [this]() {
+        ui->tableView->viewport()->update();
+    });
+    
     LOG_INFO("数据模型设置完成");
 }
 
@@ -132,33 +146,44 @@ void ActiveReminderList::updateReminderInModel(const Reminder &reminder)
         }
     }
     
+    // 更新模型前先暂停选择模型的信号
+    ui->tableView->selectionModel()->blockSignals(true);
+    
     // 更新模型
     for (int i = 0; i < model->rowCount(); ++i) {
         Reminder existingReminder = model->getReminder(i);
         if (existingReminder.id() == reminder.id()) {
+            // 在更新数据之前先清除选择
+            ui->tableView->clearSelection();
+            
             model->updateReminder(i, reminder);
             LOG_INFO(QString("提醒更新成功: 名称='%1', 类型=%2")
                     .arg(reminder.name())
                     .arg(static_cast<int>(reminder.type())));
+            
+            // 发出数据改变信号，而不是重置整个模型
+            QModelIndex topLeft = model->index(i, 0);
+            QModelIndex bottomRight = model->index(i, model->columnCount() - 1);
+            emit model->dataChanged(topLeft, bottomRight);
+            
+            // 恢复选择
+            if (!currentId.isEmpty()) {
+                QModelIndex newSourceIndex = model->index(i, 0);
+                QModelIndex newProxyIndex = proxyModel->mapFromSource(newSourceIndex);
+                if (newProxyIndex.isValid()) {
+                    ui->tableView->setCurrentIndex(newProxyIndex);
+                    ui->tableView->selectionModel()->select(
+                        newProxyIndex,
+                        QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows
+                    );
+                }
+            }
             break;
         }
     }
     
-    // 重置代理模型
-    proxyModel->invalidate();
-    
-    // 恢复选择
-    if (!currentId.isEmpty()) {
-        for (int i = 0; i < model->rowCount(); ++i) {
-            if (model->getReminder(i).id() == currentId) {
-                QModelIndex newIndex = proxyModel->mapFromSource(model->index(i, 0));
-                if (newIndex.isValid()) {
-                    ui->tableView->setCurrentIndex(newIndex);
-                }
-                break;
-            }
-        }
-    }
+    // 恢复选择模型的信号
+    ui->tableView->selectionModel()->blockSignals(false);
 }
 
 void ActiveReminderList::editReminder(const QModelIndex &index)
@@ -226,9 +251,17 @@ void ActiveReminderList::onAddClicked()
 void ActiveReminderList::onEditClicked()
 {
     QModelIndex currentIndex = ui->tableView->currentIndex();
-    if (currentIndex.isValid()) {
-        editReminder(currentIndex);
+    if (!currentIndex.isValid()) {
+        return;
     }
+    
+    // 在编辑之前暂时禁用双击
+    ui->tableView->setEnabled(false);
+    
+    editReminder(currentIndex);
+    
+    // 编辑完成后重新启用
+    ui->tableView->setEnabled(true);
 }
 
 void ActiveReminderList::onDeleteClicked()
