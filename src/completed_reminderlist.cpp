@@ -134,6 +134,9 @@ void CompletedReminderList::onDeleteClicked()
             }
         }
 
+        // 在删除前清空选区，避免模型更新过程中访问无效索引
+        ui->tableView->clearSelection();
+
         // 按行号从大到小排序，这样删除时不会影响其他行的索引
         std::sort(toDelete.begin(), toDelete.end(),
                  [](const QPair<int, Reminder> &a, const QPair<int, Reminder> &b) {
