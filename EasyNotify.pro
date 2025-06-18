@@ -24,7 +24,6 @@ SOURCES += \
     src/completed_remindertablemodel.cpp \
     src/activereminderwindow.cpp \
     src/completedreminderwindow.cpp
-    src/trayiconbouncer.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -41,7 +40,6 @@ HEADERS += \
     src/completed_remindertablemodel.h \
     src/activereminderwindow.h \
     src/completedreminderwindow.h
-    src/trayiconbouncer.h
 
 FORMS += \
     src/mainwindow.ui \
