@@ -7,6 +7,7 @@
 #include <QCloseEvent>
 #include "configmanager.h"
 #include "logger.h"
+#include "trayiconbouncer.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
     , isPaused(false)
     , autoStartEnabled(false)
     , soundEnabled(true)
+    , trayBouncer(nullptr)
 {
     setWindowFlags(
         Qt::Window                                   
@@ -36,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
     
     // 创建系统托盘图标
     createTrayIcon();
+    trayBouncer = new TrayIconBouncer(trayIcon, this);
     createActions();
     setupConnections();
 
@@ -62,6 +65,7 @@ void MainWindow::displayNotification(const Reminder &reminder)
     if (isPaused) {
         trayIcon->showMessage(tr("EasyNotify"), reminder.name(),
                               QSystemTrayIcon::Information, 3000);
+        trayBouncer->start();
     } else {
         NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled);
         popup->show();
@@ -71,6 +75,7 @@ void MainWindow::displayNotification(const Reminder &reminder)
 MainWindow::~MainWindow()
 {
     LOG_INFO("MainWindow 析构");
+    delete trayBouncer;
     delete reminderManager;
     delete activeWindow;
     delete completedWindow;
@@ -151,6 +156,7 @@ void MainWindow::createActions()
 void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     LOG_DEBUG(QString("托盘图标激活，原因: %1").arg(reason));
+    trayBouncer->stop();
     if (reason == QSystemTrayIcon::DoubleClick) {
         onShowMainWindow();
     }
@@ -159,6 +165,7 @@ void MainWindow::onTrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 void MainWindow::onShowMainWindow()
 {
     LOG_DEBUG("显示主界面");
+    trayBouncer->stop();
     show();
     activateWindow();
     raise();
@@ -176,6 +183,7 @@ void MainWindow::onPauseReminders()
         pauseAction->setText(tr("开启勿扰模式"));
         reminderManager->resumeAll();
         trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
+        trayBouncer->stop();
     }
     ConfigManager::instance().setPaused(isPaused);
     LOG_INFO(QString("勿扰模式已%1").arg(isPaused ? "开启" : "关闭"));
