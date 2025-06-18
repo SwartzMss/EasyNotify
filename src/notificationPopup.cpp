@@ -16,10 +16,13 @@ QList<QPointer<NotificationPopup>> NotificationPopup::s_popups;
 
 NotificationPopup::NotificationPopup(const QString &title,
                                      Priority priority,
+                                     bool soundEnabled,
                                      QWidget *parent)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
     ui(new Ui::NotificationPopup),
-    m_priority(priority)
+    m_priority(priority),
+    soundEffect(new QSoundEffect(this)),
+    m_soundEnabled(soundEnabled)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
@@ -93,6 +96,8 @@ NotificationPopup::NotificationPopup(const QString &title,
         " border-bottom-right-radius: 10px;");
     
     setFixedSize(250, 100);
+
+    soundEffect->setSource(QUrl(QStringLiteral("qrc:/sound/notify.wav")));
 }
 
 void NotificationPopup::show()
@@ -114,6 +119,9 @@ void NotificationPopup::show()
     setWindowOpacity(0);
     QWidget::show();
     fadeIn->start();
+
+    if (m_soundEnabled)
+        soundEffect->play();
 
     s_popups.append(this);
 }

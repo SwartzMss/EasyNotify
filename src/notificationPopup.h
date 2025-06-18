@@ -12,6 +12,7 @@
 #include <QList>
 #include <QPointer>
 #include <QCloseEvent>
+#include <QSoundEffect>
 
 class NotificationPopup : public QWidget {
     Q_OBJECT
@@ -19,6 +20,7 @@ public:
     using Priority = Reminder::Priority;
     NotificationPopup(const QString &title,
                       Priority priority = Priority::Medium,
+                      bool soundEnabled = true,
                       QWidget *parent = nullptr);
     
     void show();
@@ -36,4 +38,6 @@ private:
     QPropertyAnimation *fadeIn;
     QPropertyAnimation *fadeOut;
     Priority m_priority;
+    QSoundEffect *soundEffect;
+    bool m_soundEnabled;
 };

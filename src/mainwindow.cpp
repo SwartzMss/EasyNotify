@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
     , isPaused(false)
     , autoStartEnabled(false)
+    , soundEnabled(true)
 {
     setWindowFlags(
         Qt::Window                                   
@@ -41,12 +42,18 @@ MainWindow::MainWindow(QWidget *parent)
     // 加载配置
     isPaused = ConfigManager::instance().isPaused();
     autoStartEnabled = ConfigManager::instance().isAutoStart();
+    soundEnabled = ConfigManager::instance().isSoundEnabled();
     if (isPaused) {
         pauseAction->setText(tr("关闭勿扰模式"));
         reminderManager->pauseAll();
     }
     if (autoStartEnabled) {
         autoStartAction->setText(tr("取消开机启动"));
+    }
+    if (soundEnabled) {
+        soundAction->setText(tr("关闭声音提醒"));
+    } else {
+        soundAction->setText(tr("开启声音提醒"));
     }
 }
 
@@ -56,7 +63,7 @@ void MainWindow::displayNotification(const Reminder &reminder)
         trayIcon->showMessage(tr("EasyNotify"), reminder.name(),
                               QSystemTrayIcon::Information, 3000);
     } else {
-        NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority());
+        NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled);
         popup->show();
     }
 }
@@ -107,6 +114,8 @@ void MainWindow::setupConnections()
             this, &MainWindow::onPauseReminders);
     connect(autoStartAction, &QAction::triggered,
             this, &MainWindow::onToggleAutoStart);
+    connect(soundAction, &QAction::triggered,
+            this, &MainWindow::onToggleSound);
     connect(quitAction, &QAction::triggered,
             this, &MainWindow::onQuit);
 }
@@ -126,12 +135,14 @@ void MainWindow::createActions()
     showAction = new QAction(tr("显示主界面"), this);
     pauseAction = new QAction(tr("开启勿扰模式"), this);
     autoStartAction = new QAction(tr("开机启动"), this);
+    soundAction = new QAction(tr("关闭声音提醒"), this);
     quitAction = new QAction(tr("退出"), this);
 
     trayIconMenu->addAction(showAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(pauseAction);
     trayIconMenu->addAction(autoStartAction);
+    trayIconMenu->addAction(soundAction);
     trayIconMenu->addAction(quitAction);
     
     trayIcon->setContextMenu(trayIconMenu);
@@ -181,6 +192,19 @@ void MainWindow::onToggleAutoStart()
     }
     ConfigManager::instance().setAutoStart(autoStartEnabled);
     LOG_INFO(QString("开机启动已%1").arg(autoStartEnabled ? "启用" : "禁用"));
+}
+
+void MainWindow::onToggleSound()
+{
+    LOG_DEBUG("切换声音提醒状态");
+    soundEnabled = !soundEnabled;
+    if (soundEnabled) {
+        soundAction->setText(tr("关闭声音提醒"));
+    } else {
+        soundAction->setText(tr("开启声音提醒"));
+    }
+    ConfigManager::instance().setSoundEnabled(soundEnabled);
+    LOG_INFO(QString("声音提醒已%1").arg(soundEnabled ? "开启" : "关闭"));
 }
 
 void MainWindow::onQuit()

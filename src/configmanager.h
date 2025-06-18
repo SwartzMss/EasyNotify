@@ -22,6 +22,8 @@ public:
     void setPaused(bool paused);
     bool isAutoStart() const;
     void setAutoStart(bool autoStart);
+    bool isSoundEnabled() const;
+    void setSoundEnabled(bool enabled);
     QJsonArray getReminders() const;
     void setReminders(const QJsonArray &reminders);
 
@@ -39,6 +41,7 @@ private:
     static const QString REMINDERS_KEY;
     static const QString PAUSED_KEY;
     static const QString AUTO_START_KEY;
+    static const QString SOUND_ENABLED_KEY;
 };
 
 #endif // CONFIGMANAGER_H 
