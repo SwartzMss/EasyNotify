@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
     isPaused = ConfigManager::instance().isPaused();
     autoStartEnabled = ConfigManager::instance().isAutoStart();
     if (isPaused) {
-        pauseAction->setText(tr("恢复提醒"));
+        pauseAction->setText(tr("关闭勿扰模式"));
         reminderManager->pauseAll();
     }
     if (autoStartEnabled) {
@@ -52,8 +52,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::displayNotification(const Reminder &reminder)
 {
-    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority());
-    popup->show();
+    if (isPaused) {
+        trayIcon->showMessage(tr("EasyNotify"), reminder.name(),
+                              QSystemTrayIcon::Information, 3000);
+    } else {
+        NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority());
+        popup->show();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -119,7 +124,7 @@ void MainWindow::createActions()
     trayIconMenu = new QMenu(this);
 
     showAction = new QAction(tr("显示主界面"), this);
-    pauseAction = new QAction(tr("暂停提醒"), this);
+    pauseAction = new QAction(tr("开启勿扰模式"), this);
     autoStartAction = new QAction(tr("开机启动"), this);
     quitAction = new QAction(tr("退出"), this);
 
@@ -153,16 +158,16 @@ void MainWindow::onPauseReminders()
     LOG_DEBUG("切换提醒暂停状态");
     isPaused = !isPaused;
     if (isPaused) {
-        pauseAction->setText(tr("恢复提醒"));
+        pauseAction->setText(tr("关闭勿扰模式"));
         reminderManager->pauseAll();
         trayIcon->setIcon(QIcon(":/img/tray_icon_paused.png"));
     } else {
-        pauseAction->setText(tr("暂停提醒"));
+        pauseAction->setText(tr("开启勿扰模式"));
         reminderManager->resumeAll();
         trayIcon->setIcon(QIcon(":/img/tray_icon.png"));
     }
     ConfigManager::instance().setPaused(isPaused);
-    LOG_INFO(QString("提醒已%1").arg(isPaused ? "暂停" : "恢复"));
+    LOG_INFO(QString("勿扰模式已%1").arg(isPaused ? "开启" : "关闭"));
 }
 
 void MainWindow::onToggleAutoStart()
