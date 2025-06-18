@@ -24,6 +24,7 @@ public:
     void addReminder(const Reminder &reminder);
     void updateReminder(int row, const Reminder &reminder);
     void removeReminder(int row);
+    void removeReminders(const QList<QPair<int, Reminder>> &reminders);
     Reminder getReminder(int row) const;
 
     // JSON序列化

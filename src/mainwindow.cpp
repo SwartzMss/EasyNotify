@@ -11,7 +11,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
-    , isPaused(false)
+    , isPaused( ConfigManager::instance().isPaused())
     , autoStartEnabled(false)
     , soundEnabled(true)
 {
@@ -40,7 +40,6 @@ MainWindow::MainWindow(QWidget *parent)
     setupConnections();
 
     // 加载配置
-    isPaused = ConfigManager::instance().isPaused();
     autoStartEnabled = ConfigManager::instance().isAutoStart();
     soundEnabled = ConfigManager::instance().isSoundEnabled();
     if (isPaused) {

@@ -1,6 +1,7 @@
 #include "completed_remindertablemodel.h"
 #include <QJsonArray>
 #include <QJsonObject>
+#include <algorithm>
 
 CompletedReminderTableModel::CompletedReminderTableModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -133,6 +134,33 @@ void CompletedReminderTableModel::removeReminder(int row)
 
     beginRemoveRows(QModelIndex(), row, row);
     m_reminders.removeAt(row);
+    endRemoveRows();
+    updateFilteredList();
+}
+
+void CompletedReminderTableModel::removeReminders(const QList<QPair<int, Reminder>> &reminders)
+{
+    if (reminders.isEmpty()) {
+        return;
+    }
+
+    // 按行号从大到小排序，这样删除时不会影响其他行的索引
+    QList<int> rowsToRemove;
+    for (const auto &pair : reminders) {
+        rowsToRemove.append(pair.first);
+    }
+    std::sort(rowsToRemove.begin(), rowsToRemove.end(), std::greater<int>());
+
+    // 一次性通知视图将要删除多行
+    beginRemoveRows(QModelIndex(), rowsToRemove.last(), rowsToRemove.first());
+    
+    // 从大到小删除，这样不会影响前面的索引
+    for (int row : rowsToRemove) {
+        if (row >= 0 && row < m_reminders.size()) {
+            m_reminders.removeAt(row);
+        }
+    }
+    
     endRemoveRows();
     updateFilteredList();
 }
