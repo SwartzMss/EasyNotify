@@ -1,6 +1,7 @@
 #include "configmanager.h"
 #include "logger.h"
 #include <QSettings>
+#include <QSet>
 
 const QString ConfigManager::CONFIG_FILE = "config.json";
 const QString ConfigManager::REMINDERS_KEY = "reminders";
@@ -93,14 +94,17 @@ void ConfigManager::setSoundEnabled(bool enabled)
 QJsonArray ConfigManager::getReminders() const
 {
     QJsonArray reminders = config[REMINDERS_KEY].toArray();
+    deduplicate(reminders);
     LOG_INFO(QString("获取提醒列表，共 %1 个提醒").arg(reminders.size()));
     return reminders;
 }
 
 void ConfigManager::setReminders(const QJsonArray &reminders)
 {
-    LOG_INFO(QString("设置提醒列表，共 %1 个提醒").arg(reminders.size()));
-    config[REMINDERS_KEY] = reminders;
+    QJsonArray unique = reminders;
+    deduplicate(unique);
+    LOG_INFO(QString("设置提醒列表，共 %1 个提醒").arg(unique.size()));
+    config[REMINDERS_KEY] = unique;
     saveConfig();
 }
 
@@ -156,6 +160,13 @@ void ConfigManager::loadConfig()
         LOG_INFO("配置文件不存在，创建默认配置");
         initDefaultConfig();
     }
+
+    if (config.contains(REMINDERS_KEY) && config[REMINDERS_KEY].isArray()) {
+        QJsonArray reminders = config[REMINDERS_KEY].toArray();
+        deduplicate(reminders);
+        config[REMINDERS_KEY] = reminders;
+        saveConfig();
+    }
 }
 
 void ConfigManager::initDefaultConfig()
@@ -167,4 +178,23 @@ void ConfigManager::initDefaultConfig()
     config[SOUND_ENABLED_KEY] = true;
     config[REMINDERS_KEY] = QJsonArray();
     saveConfig();
+}
+
+void ConfigManager::deduplicate(QJsonArray &reminders)
+{
+    QSet<QString> ids;
+    QJsonArray unique;
+    for (const QJsonValue &val : reminders) {
+        if (!val.isObject())
+            continue;
+        QJsonObject obj = val.toObject();
+        QString id = obj.value("id").toString();
+        if (ids.contains(id)) {
+            LOG_WARNING(QString("发现重复的提醒 ID: %1，已移除").arg(id));
+            continue;
+        }
+        ids.insert(id);
+        unique.append(obj);
+    }
+    reminders = unique;
 }

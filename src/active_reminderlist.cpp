@@ -14,6 +14,7 @@
 #include <QAction>
 #include <QContextMenuEvent>
 #include <QCoreApplication>
+#include <QSet>
 
 enum ColumnIndex {
     Name = 0,
@@ -307,15 +308,29 @@ void ActiveReminderList::onImportClicked()
 
     if (doc.isArray()) {
         QList<Reminder> imported;
+        QSet<QString> ids;
+        if (reminderManager) {
+            const QVector<Reminder> existing = reminderManager->getReminders();
+            for (const Reminder &r : existing)
+                ids.insert(r.id());
+        }
         for (const QJsonValue &value : doc.array()) {
+            if (!value.isObject())
+                continue;
             Reminder reminder = Reminder::fromJson(value.toObject());
+            if (ids.contains(reminder.id())) {
+                LOG_WARNING(QString("跳过重复的提醒 ID: %1").arg(reminder.id()));
+                continue;
+            }
+            ids.insert(reminder.id());
             imported.append(reminder);
             if (reminderManager) {
                 reminderManager->addReminder(reminder);
             }
         }
         LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
-        loadReminders(imported);
+        if (!imported.isEmpty())
+            loadReminders(imported);
     } else {
         LOG_ERROR("导入文件格式错误");
         QMessageBox::warning(this, tr("错误"),

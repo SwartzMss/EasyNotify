@@ -63,6 +63,12 @@ void ReminderManager::loadReminders()
 void ReminderManager::addReminder(const Reminder &reminder)
 {
     QMutexLocker locker(&mutex);
+    for (const Reminder &r : m_reminders) {
+        if (r.id() == reminder.id()) {
+            LOG_WARNING(QString("尝试添加重复的提醒 ID: %1").arg(reminder.id()));
+            return;
+        }
+    }
     m_reminders.append(reminder);
     saveReminders();
 }
