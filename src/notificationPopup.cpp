@@ -97,7 +97,7 @@ NotificationPopup::NotificationPopup(const QString &title,
     
     setFixedSize(250, 100);
 
-    soundEffect->setSource(QUrl(QStringLiteral(":/sound/Ding.wav")));
+    soundEffect->setSource(QUrl(QStringLiteral("qrc:/sound/Ding.wav")));
 }
 
 void NotificationPopup::show()
