@@ -295,7 +295,16 @@ void ActiveReminderList::onImportClicked()
         return;
     }
 
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    QByteArray data = file.readAll();
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+    if (parseError.error != QJsonParseError::NoError) {
+        LOG_ERROR(QString("JSON 解析失败: %1").arg(parseError.errorString()));
+        QMessageBox::warning(this, tr("错误"),
+            tr("无法解析文件 %1:\n%2").arg(fileName).arg(parseError.errorString()));
+        return;
+    }
+
     if (doc.isArray()) {
         QList<Reminder> imported;
         for (const QJsonValue &value : doc.array()) {
@@ -325,6 +334,9 @@ void ActiveReminderList::onExportClicked()
         LOG_INFO("取消导出提醒");
         return;
     }
+
+    if (!fileName.endsWith(".json", Qt::CaseInsensitive))
+        fileName += ".json";
 
     LOG_INFO(QString("导出提醒到文件: %1").arg(fileName));
     QFile file(fileName);
