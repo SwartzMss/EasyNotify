@@ -6,6 +6,7 @@ const QString ConfigManager::CONFIG_FILE = "config.json";
 const QString ConfigManager::REMINDERS_KEY = "reminders";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
+const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
 
 ConfigManager& ConfigManager::instance()
 {
@@ -59,6 +60,13 @@ bool ConfigManager::isAutoStart() const
     return autoStart;
 }
 
+bool ConfigManager::isSoundEnabled() const
+{
+    bool enabled = config[SOUND_ENABLED_KEY].toBool(true);
+    LOG_INFO(QString("获取声音提醒状态: %1").arg(enabled));
+    return enabled;
+}
+
 void ConfigManager::setAutoStart(bool autoStart)
 {
     LOG_INFO(QString("设置开机启动: %1").arg(autoStart));
@@ -72,6 +80,13 @@ void ConfigManager::setAutoStart(bool autoStart)
         settings.remove(QCoreApplication::applicationName());
     }
 #endif
+    saveConfig();
+}
+
+void ConfigManager::setSoundEnabled(bool enabled)
+{
+    LOG_INFO(QString("设置声音提醒: %1").arg(enabled));
+    config[SOUND_ENABLED_KEY] = enabled;
     saveConfig();
 }
 
@@ -126,6 +141,8 @@ void ConfigManager::loadConfig()
             if (doc.isObject()) {
                 config = doc.object();
                 LOG_INFO(QString("配置加载成功，数据大小: %1 字节").arg(data.size()));
+                if (!config.contains(SOUND_ENABLED_KEY))
+                    config[SOUND_ENABLED_KEY] = true;
             } else {
                 LOG_ERROR(QString("配置文件格式错误，数据大小: %1 字节").arg(data.size()));
                 initDefaultConfig();
@@ -147,6 +164,7 @@ void ConfigManager::initDefaultConfig()
     config = QJsonObject();
     config[PAUSED_KEY] = false;
     config[AUTO_START_KEY] = false;
+    config[SOUND_ENABLED_KEY] = true;
     config[REMINDERS_KEY] = QJsonArray();
     saveConfig();
 }

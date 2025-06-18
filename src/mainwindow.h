@@ -27,6 +27,7 @@ private slots:
     void onShowMainWindow();
     void onPauseReminders();
     void onToggleAutoStart();
+    void onToggleSound();
     void onQuit();
     void displayNotification(const Reminder &reminder);
 
@@ -45,9 +46,11 @@ private:
     QAction *showAction;
     QAction *pauseAction;
     QAction *autoStartAction;
+    QAction *soundAction;
     QAction *quitAction;
     bool isPaused;
     bool autoStartEnabled;
+    bool soundEnabled;
 
 protected:
     void closeEvent(QCloseEvent *event) override;
