@@ -133,6 +133,9 @@ void ReminderManager::saveReminders()
 void ReminderManager::checkReminders()
 {
     QMutexLocker locker(&mutex);
+    if (isPaused) {
+        return;
+    }
 
     QDateTime currentTime = QDateTime::currentDateTime();
     LOG_DEBUG(QString("检查提醒，当前时间: %1").arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));

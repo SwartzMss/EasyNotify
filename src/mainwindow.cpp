@@ -59,13 +59,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::displayNotification(const Reminder &reminder)
 {
-    if (isPaused) {
-        trayIcon->showMessage(tr("EasyNotify"), reminder.name(),
-                              QSystemTrayIcon::Information, 3000);
-    } else {
-        NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled);
-        popup->show();
-    }
+    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled);
+    popup->show();
 }
 
 MainWindow::~MainWindow()
