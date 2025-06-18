@@ -147,6 +147,7 @@ int main(int argc, char *argv[])
 	SetUnhandledExceptionFilter(TopLevelExceptionHandler);
 
 	QApplication a(argc, argv);
+	a.setQuitOnLastWindowClosed(false);
 	
 	// 设置应用程序信息
 	QApplication::setApplicationName("EasyNotify");
