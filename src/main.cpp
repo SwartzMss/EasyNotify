@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <psapi.h>
 #include <QFileInfo>
+#include <QFile>
 
 // 设置崩溃转储文件的保存路径
 QString getDumpFilePath() {
@@ -141,6 +142,45 @@ LONG WINAPI TopLevelExceptionHandler(EXCEPTION_POINTERS* pExceptionInfo) {
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
+bool checkWavFormat(const QString &filePath) {
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly)) {
+        LOG_ERROR(QString("无法打开文件: %1").arg(filePath));
+        return false;
+    }
+    QByteArray header = file.read(44);
+    if (header.size() < 44) {
+        LOG_ERROR("文件太小，不是有效的wav文件");
+        return false;
+    }
+    if (header.mid(0, 4) != "RIFF" || header.mid(8, 4) != "WAVE") {
+        LOG_ERROR("不是有效的WAV文件");
+        return false;
+    }
+    quint16 audioFormat = *reinterpret_cast<const quint16*>(header.mid(20, 2).constData());
+    if (audioFormat != 1) {
+        LOG_ERROR("不是PCM格式");
+        return false;
+    }
+    quint16 numChannels = *reinterpret_cast<const quint16*>(header.mid(22, 2).constData());
+    if (numChannels != 1 && numChannels != 2) {
+        LOG_ERROR("声道数不是1或2");
+        return false;
+    }
+    quint32 sampleRate = *reinterpret_cast<const quint32*>(header.mid(24, 4).constData());
+    if (sampleRate != 44100 && sampleRate != 22050) {
+        LOG_ERROR("采样率不是44100或22050");
+        return false;
+    }
+    quint16 bitsPerSample = *reinterpret_cast<const quint16*>(header.mid(34, 2).constData());
+    if (bitsPerSample != 16) {
+        LOG_ERROR("不是16bit采样");
+        return false;
+    }
+    LOG_INFO(QString("WAV格式正确: PCM %1bit %2Hz %3声道").arg(bitsPerSample).arg(sampleRate).arg(numChannels));
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
 	// 设置异常处理
@@ -158,6 +198,9 @@ int main(int argc, char *argv[])
 	// 初始化日志系统
 	Logger::instance();
 	LOG_INFO("应用程序启动");
+
+	// 检查WAV文件格式
+	checkWavFormat(QCoreApplication::applicationDirPath() + "/sound/Ding.wav");
 
 	// 检查是否已经有实例在运行
 	if (SingleInstance::instance().isRunning()) {
