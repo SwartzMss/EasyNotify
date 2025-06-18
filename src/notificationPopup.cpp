@@ -97,7 +97,7 @@ NotificationPopup::NotificationPopup(const QString &title,
     
     setFixedSize(250, 100);
 
-    soundEffect->setSource(QUrl(QStringLiteral("qrc:/sound/notify.wav")));
+    soundEffect->setSource(QUrl(QStringLiteral(":/sound/Ding.wav")));
 }
 
 void NotificationPopup::show()
@@ -121,7 +121,11 @@ void NotificationPopup::show()
     fadeIn->start();
 
     if (m_soundEnabled)
+    {
+        LOG_INFO("play sound");
         soundEffect->play();
+    }
+
 
     s_popups.append(this);
 }
