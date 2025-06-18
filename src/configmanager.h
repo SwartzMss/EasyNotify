@@ -34,6 +34,7 @@ private:
     void initDefaultConfig();
     void saveConfig();
     void loadConfig();
+    static void deduplicate(QJsonArray &reminders);
     QString getConfigPath() const;
 
     QJsonObject config;
