@@ -9,6 +9,7 @@
 #include "completedreminderwindow.h"
 #include "remindermanager.h"
 #include "notificationPopup.h"
+#include "trayiconbouncer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -42,6 +43,7 @@ private:
     CompletedReminderWindow *completedWindow;
     ReminderManager *reminderManager;
     QSystemTrayIcon *trayIcon;
+    TrayIconBouncer *trayBouncer;
     QMenu *trayIconMenu;
     QAction *showAction;
     QAction *pauseAction;
