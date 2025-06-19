@@ -8,7 +8,6 @@
 #include <QVBoxLayout>
 #include "ui_notificationPopup.h"
 #include <QScopedPointer>
-#include <QCursor>
 #include <QList>
 #include <QPointer>
 
@@ -104,9 +103,8 @@ void NotificationPopup::show()
 {
     adjustSize();
 
-    QPoint cursorPos = QCursor::pos();
-    QScreen *screen = QGuiApplication::screenAt(cursorPos);
-    if (!screen) screen = QGuiApplication::primaryScreen();
+    // Always show popup on the primary screen instead of the cursor screen
+    QScreen *screen = QGuiApplication::primaryScreen();
 
     QRect avail = screen->availableGeometry();
 
@@ -152,9 +150,8 @@ void NotificationPopup::repositionPopups()
         if (!popup)
             continue;
 
-        QPoint pos = popup->pos();
-        QScreen *screen = QGuiApplication::screenAt(pos);
-        if (!screen) screen = QGuiApplication::primaryScreen();
+        // Keep popups anchored to the primary screen
+        QScreen *screen = QGuiApplication::primaryScreen();
 
         QRect avail = screen->availableGeometry();
         int x = avail.x() + avail.width() - popup->width() - margin;
