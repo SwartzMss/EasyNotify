@@ -26,6 +26,8 @@ public:
     void setSoundEnabled(bool enabled);
     int remotePort() const;
     void setRemotePort(int port);
+    QString remoteUrl() const;
+    void setRemoteUrl(const QString &url);
     QJsonArray getReminders() const;
     void setReminders(const QJsonArray &reminders);
 
@@ -46,6 +48,7 @@ private:
     static const QString AUTO_START_KEY;
     static const QString SOUND_ENABLED_KEY;
     static const QString PORT_KEY;
+    static const QString URL_KEY;
 };
 
 #endif // CONFIGMANAGER_H 

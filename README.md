@@ -36,7 +36,7 @@ nmake
 ```json
 {
   "isPaused": false,
-  "remotePort": 12345,
+  "remoteUrl": "tcp://example.com:12345",
  "reminders": [
     {
       "id": "uuid",
@@ -54,14 +54,9 @@ nmake
 
 ## 远程触发
 
-程序会在 `remotePort` 指定的端口上监听 TCP 连接（默认为 `12345`）。
-向该端口发送文本或 JSON 消息即可在桌面弹出提醒，例如：
-
-```bash
-echo "自定义提醒" | nc localhost 12345
-```
-
-消息内容会作为弹窗正文显示。
+程序启动后会根据 `remoteUrl` 配置通过 TCP 主动连接到远程服务，
+从该连接接收文本或 JSON 消息并在桌面弹出提醒。例如服务端发送一条
+字符串即可在桌面看到通知。
 
 ## 许可证
 
