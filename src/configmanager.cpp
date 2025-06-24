@@ -8,6 +8,7 @@ const QString ConfigManager::REMINDERS_KEY = "reminders";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
 const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
+const QString ConfigManager::PORT_KEY = "remotePort";
 
 ConfigManager& ConfigManager::instance()
 {
@@ -68,6 +69,13 @@ bool ConfigManager::isSoundEnabled() const
     return enabled;
 }
 
+int ConfigManager::remotePort() const
+{
+    int port = config[PORT_KEY].toInt(12345);
+    LOG_INFO(QString("获取远程端口: %1").arg(port));
+    return port;
+}
+
 void ConfigManager::setAutoStart(bool autoStart)
 {
     LOG_INFO(QString("设置开机启动: %1").arg(autoStart));
@@ -88,6 +96,13 @@ void ConfigManager::setSoundEnabled(bool enabled)
 {
     LOG_INFO(QString("设置声音提醒: %1").arg(enabled));
     config[SOUND_ENABLED_KEY] = enabled;
+    saveConfig();
+}
+
+void ConfigManager::setRemotePort(int port)
+{
+    LOG_INFO(QString("设置远程端口: %1").arg(port));
+    config[PORT_KEY] = port;
     saveConfig();
 }
 
@@ -147,6 +162,8 @@ void ConfigManager::loadConfig()
                 LOG_INFO(QString("配置加载成功，数据大小: %1 字节").arg(data.size()));
                 if (!config.contains(SOUND_ENABLED_KEY))
                     config[SOUND_ENABLED_KEY] = true;
+                if (!config.contains(PORT_KEY))
+                    config[PORT_KEY] = 12345;
             } else {
                 LOG_ERROR(QString("配置文件格式错误，数据大小: %1 字节").arg(data.size()));
                 initDefaultConfig();
@@ -176,6 +193,7 @@ void ConfigManager::initDefaultConfig()
     config[PAUSED_KEY] = false;
     config[AUTO_START_KEY] = false;
     config[SOUND_ENABLED_KEY] = true;
+    config[PORT_KEY] = 12345;
     config[REMINDERS_KEY] = QJsonArray();
     saveConfig();
 }

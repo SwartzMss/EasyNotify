@@ -36,7 +36,8 @@ nmake
 ```json
 {
   "isPaused": false,
-  "reminders": [
+  "remotePort": 12345,
+ "reminders": [
     {
       "id": "uuid",
       "name": "示例提醒",
@@ -45,11 +46,22 @@ nmake
       "nextTrigger": "2025-01-01T09:00:00",
       "completed": false
     }
-  ]
+ ]
 }
 ```
 
 其中 `type` 字段为 `0` 表示一次性提醒，`1` 表示每日提醒。`priority` 字段的取值为 `0`（低）、`1`（中）、`2`（高）。
+
+## 远程触发
+
+程序会在 `remotePort` 指定的端口上监听 TCP 连接（默认为 `12345`）。
+向该端口发送文本或 JSON 消息即可在桌面弹出提醒，例如：
+
+```bash
+echo "自定义提醒" | nc localhost 12345
+```
+
+消息内容会作为弹窗正文显示。
 
 ## 许可证
 

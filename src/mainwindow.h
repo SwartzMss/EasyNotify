@@ -9,6 +9,7 @@
 #include "completedreminderwindow.h"
 #include "remindermanager.h"
 #include "notificationPopup.h"
+#include "remoteserver.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,6 +31,7 @@ private slots:
     void onToggleSound();
     void onQuit();
     void displayNotification(const Reminder &reminder);
+    void onRemoteMessage(const QString &message);
 
 private:
     void setupUI();
@@ -41,6 +43,7 @@ private:
     ActiveReminderWindow *activeWindow;
     CompletedReminderWindow *completedWindow;
     ReminderManager *reminderManager;
+    RemoteServer *remoteServer;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     QAction *showAction;
