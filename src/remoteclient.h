@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTcpSocket>
+#include <QUrl>
 
 class RemoteClient : public QObject
 {
