@@ -9,7 +9,7 @@
 #include "completedreminderwindow.h"
 #include "remindermanager.h"
 #include "notificationPopup.h"
-#include "remoteserver.h"
+#include "remoteclient.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -43,7 +43,7 @@ private:
     ActiveReminderWindow *activeWindow;
     CompletedReminderWindow *completedWindow;
     ReminderManager *reminderManager;
-    RemoteServer *remoteServer;
+    RemoteClient *remoteClient;
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
     QAction *showAction;
