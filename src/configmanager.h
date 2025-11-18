@@ -24,8 +24,6 @@ public:
     void setAutoStart(bool autoStart);
     bool isSoundEnabled() const;
     void setSoundEnabled(bool enabled);
-    QString theme() const;
-    void setTheme(const QString &themeKey);
     int remotePort() const;
     void setRemotePort(int port);
     QString remoteUrl() const;
@@ -49,7 +47,6 @@ private:
     static const QString PAUSED_KEY;
     static const QString AUTO_START_KEY;
     static const QString SOUND_ENABLED_KEY;
-    static const QString THEME_KEY;
     static const QString PORT_KEY;
     static const QString URL_KEY;
 };

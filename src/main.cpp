@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "logger.h"
 #include "singleinstance.h"
-#include "configmanager.h"
-#include "thememanager.h"
 #include <QApplication>
 #include <QDir>
 #include <QDateTime>
@@ -200,11 +198,6 @@ int main(int argc, char *argv[])
 	// 初始化日志系统
 	Logger::instance();
 	LOG_INFO("应用程序启动");
-
-	// 应用用户上次选择的主题
-	ThemeManager &themeManager = ThemeManager::instance();
-	const QString savedTheme = ConfigManager::instance().theme();
-	themeManager.applyTheme(themeManager.themeFromKey(savedTheme));
 
 	// 检查WAV文件格式
 	checkWavFormat(":/sound/Ding.wav");
