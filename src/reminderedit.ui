@@ -14,11 +14,17 @@
    <string>编辑提醒</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
-   <property name="contentsMargins">
-    <left>16</left>
-    <top>16</top>
-    <right>16</right>
-    <bottom>16</bottom>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>16</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>16</number>
    </property>
    <item>
     <widget class="QFrame" name="bodyFrame">
@@ -35,11 +41,17 @@
       <property name="spacing">
        <number>12</number>
       </property>
-      <property name="contentsMargins">
-       <left>16</left>
-       <top>16</top>
-       <right>16</right>
-       <bottom>16</bottom>
+      <property name="leftMargin">
+       <number>16</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>16</number>
+      </property>
+      <property name="bottomMargin">
+       <number>16</number>
       </property>
       <item>
        <widget class="QLabel" name="sectionTitle">
