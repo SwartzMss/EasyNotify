@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>300</width>
-    <height>200</height>
+    <width>320</width>
+    <height>260</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -112,7 +112,7 @@
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>工作日提醒会自动跳过双休日、法定节假日以及调休补班。</string>
+        <string>工作日提醒会自动跳过周末及法定节假日调休。</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
