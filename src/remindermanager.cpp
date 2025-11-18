@@ -7,6 +7,7 @@
 #include "reminder.h"
 #include <QTimer>
 #include <QMetaType>
+#include "workdaycalendar.h"
 
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(nullptr)
@@ -172,6 +173,23 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
     } else if (type == Reminder::Type::Daily) {
         nextTrigger = reminder.nextTrigger().addDays(1);
         LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+    } else if (type == Reminder::Type::Workday) {
+        const bool hasValidTrigger = reminder.nextTrigger().isValid();
+        QDate baseDate = hasValidTrigger
+            ? reminder.nextTrigger().date().addDays(1)
+            : QDate::currentDate();
+        if (!baseDate.isValid()) {
+            baseDate = QDate::currentDate();
+        }
+        WorkdayCalendar &calendar = WorkdayCalendar::instance();
+        const QDate nextDate = calendar.nextWorkday(baseDate, true);
+        const QTime triggerTime = hasValidTrigger ? reminder.nextTrigger().time() : QTime::currentTime();
+        if (nextDate.isValid()) {
+            nextTrigger = QDateTime(nextDate, triggerTime);
+        } else {
+            nextTrigger = QDateTime(baseDate, triggerTime);
+        }
+        LOG_INFO(QString("工作日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
     }
 
     reminder.setNextTrigger(nextTrigger);
@@ -217,4 +235,3 @@ QJsonArray ReminderManager::getRemindersJson() const
     }
     return array;
 }
-

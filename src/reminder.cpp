@@ -2,6 +2,28 @@
 #include <QUuid>
 #include "logger.h"
 
+namespace {
+Reminder::Type typeFromInt(int value)
+{
+    switch (value) {
+    case 0: return Reminder::Type::Once;
+    case 1: return Reminder::Type::Daily;
+    case 2: return Reminder::Type::Workday;
+    default: return Reminder::Type::Once;
+    }
+}
+
+Reminder::Priority priorityFromInt(int value)
+{
+    switch (value) {
+    case 0: return Reminder::Priority::Low;
+    case 2: return Reminder::Priority::High;
+    case 1:
+    default: return Reminder::Priority::Medium;
+    }
+}
+}
+
 
 QJsonObject Reminder::toJson() const
 {
@@ -27,8 +49,10 @@ Reminder Reminder::fromJson(const QJsonObject &json)
     Reminder reminder;
     reminder.m_id = id;
     reminder.m_name = name;
-    reminder.m_type = static_cast<Type>(json["type"].toInt());
-    reminder.m_priority = static_cast<Priority>(json.contains("priority") ? json["priority"].toInt() : static_cast<int>(Priority::Medium));
+    reminder.m_type = typeFromInt(json["type"].toInt());
+    reminder.m_priority = json.contains("priority")
+        ? priorityFromInt(json["priority"].toInt())
+        : Priority::Medium;
     reminder.m_nextTrigger = QDateTime::fromString(json["nextTrigger"].toString(), Qt::ISODate);
     reminder.m_completed = json.contains("completed") ? json["completed"].toBool() : false;
 

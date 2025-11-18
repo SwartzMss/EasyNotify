@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QPushButton>
 #include "logger.h"
+#include "workdaycalendar.h"
 
 
 ActiveReminderEdit::ActiveReminderEdit(QWidget *parent)
@@ -52,6 +53,8 @@ void ActiveReminderEdit::setupConnections()
             this, &ActiveReminderEdit::onTypeChanged);
     connect(ui->dateTimeEdit, &QDateTimeEdit::dateTimeChanged,
             this, &ActiveReminderEdit::onDateTimeChanged);
+    connect(ui->timeEdit, &QTimeEdit::timeChanged,
+            this, &ActiveReminderEdit::onTimeChanged);
     connect(ui->buttonBox, &QDialogButtonBox::accepted,
             this, &ActiveReminderEdit::onOkClicked);
     connect(ui->buttonBox, &QDialogButtonBox::rejected,
@@ -96,6 +99,7 @@ void ActiveReminderEdit::onTypeChanged(int index)
     ui->timeEdit->hide();
     ui->dateTimeLabel->hide();
     ui->timeLabel->hide();
+    ui->workdayHintLabel->hide();
 
     switch (index) {
         case 0: // 一次性
@@ -108,6 +112,12 @@ void ActiveReminderEdit::onTypeChanged(int index)
             ui->timeLabel->show();
             m_reminder.setType(Reminder::Type::Daily);
             break;
+        case 2: // 工作日
+            ui->timeEdit->show();
+            ui->timeLabel->show();
+            ui->workdayHintLabel->show();
+            m_reminder.setType(Reminder::Type::Workday);
+            break;
     }
     updateNextTriggerTime();
 }
@@ -115,6 +125,12 @@ void ActiveReminderEdit::onTypeChanged(int index)
 void ActiveReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 {
     LOG_INFO(QString("日期时间变更为: %1").arg(dateTime.toString("yyyy-MM-dd HH:mm:ss")));
+    updateNextTriggerTime();
+}
+
+void ActiveReminderEdit::onTimeChanged(const QTime &time)
+{
+    LOG_INFO(QString("时间变更为: %1").arg(time.toString("HH:mm:ss")));
     updateNextTriggerTime();
 }
 
@@ -169,6 +185,22 @@ QDateTime ActiveReminderEdit::calculateNextTrigger() const
                 nextTrigger = nextTrigger.addDays(1);
             }
             LOG_INFO(QString("计算每日提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+            break;
+        }
+        case Reminder::Type::Workday: {
+            QTime time = ui->timeEdit->time();
+            QDateTime candidate(now.date(), time);
+            if (candidate <= now) {
+                candidate = candidate.addDays(1);
+            }
+            WorkdayCalendar &calendar = WorkdayCalendar::instance();
+            const QDate nextDate = calendar.nextWorkday(candidate.date(), true);
+            if (nextDate.isValid()) {
+                nextTrigger = QDateTime(nextDate, time);
+            } else {
+                nextTrigger = candidate;
+            }
+            LOG_INFO(QString("计算工作日提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
             break;
         }
     }

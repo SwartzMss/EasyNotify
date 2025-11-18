@@ -34,7 +34,7 @@
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="typeCombo">
+     <widget class="QComboBox" name="typeCombo">
        <item>
         <property name="text">
          <string>一次性</string>
@@ -43,6 +43,11 @@
        <item>
         <property name="text">
          <string>每天</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>工作日</string>
         </property>
        </item>
       </widget>
@@ -101,14 +106,27 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="0">
+     <item row="5" column="0" colspan="2">
+      <widget class="QLabel" name="workdayHintLabel">
+       <property name="visible">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>工作日提醒会自动跳过双休日、法定节假日以及调休补班。</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
       <widget class="QLabel" name="nextTriggerLabelTitle">
        <property name="text">
         <string>下次触发时间：</string>
        </property>
       </widget>
      </item>
-     <item row="5" column="1">
+     <item row="6" column="1">
       <widget class="QLabel" name="nextTriggerLabel">
        <property name="text">
         <string>--</string>

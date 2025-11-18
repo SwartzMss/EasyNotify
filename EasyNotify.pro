@@ -24,7 +24,8 @@ SOURCES += \
     src/completed_remindertablemodel.cpp \
     src/activereminderwindow.cpp \
     src/completedreminderwindow.cpp \
-    src/remoteclient.cpp
+    src/remoteclient.cpp \
+    src/workdaycalendar.cpp
 
 HEADERS += \
     src/mainwindow.h \
@@ -41,7 +42,8 @@ HEADERS += \
     src/completed_remindertablemodel.h \
     src/activereminderwindow.h \
     src/completedreminderwindow.h \
-    src/remoteclient.h
+    src/remoteclient.h \
+    src/workdaycalendar.h
 
 FORMS += \
     src/mainwindow.ui \

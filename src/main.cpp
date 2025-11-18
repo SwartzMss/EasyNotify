@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
 	LOG_INFO("应用程序启动");
 
 	// 检查WAV文件格式
-	checkWavFormat(QCoreApplication::applicationDirPath() + "/sound/Ding.wav");
+	checkWavFormat(":/sound/Ding.wav");
 
 	// 检查是否已经有实例在运行
 	if (SingleInstance::instance().isRunning()) {

@@ -38,6 +38,7 @@ QVariant CompletedReminderTableModel::data(const QModelIndex &index, int role) c
             switch (reminder.type()) {
             case Reminder::Type::Once: return "一次性";
             case Reminder::Type::Daily: return "每天";
+            case Reminder::Type::Workday: return "工作日";
             default: return "未知";
             }
         case 2:
