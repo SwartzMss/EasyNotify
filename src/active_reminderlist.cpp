@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDateTime>
 #include <QFileDialog>
+#include <QCursor>
 #include "remindermanager.h"
 #include "logger.h"
 #include "active_reminderedit.h"
@@ -34,6 +35,7 @@ ActiveReminderList::ActiveReminderList(QWidget *parent)
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
     setupModel();
+    applyWidgetStyles();
     setupConnections();
     LOG_INFO("提醒列表界面初始化完成");
 }
@@ -90,6 +92,73 @@ void ActiveReminderList::setupModel()
     });
     
     LOG_INFO("数据模型设置完成");
+}
+
+void ActiveReminderList::applyWidgetStyles()
+{
+    ui->searchEdit->setClearButtonEnabled(true);
+    ui->searchEdit->setStyleSheet(QStringLiteral(
+        "QLineEdit {"
+        "    border: 1px solid #d5deef;"
+        "    border-radius: 18px;"
+        "    padding: 6px 30px 6px 12px;"
+        "    background-color: #ffffff;"
+        "}"
+        "QLineEdit:focus {"
+        "    border-color: #2563eb;"
+        "    background-color: #ffffff;"
+        "}"
+    ));
+
+    const auto styleButton = [](QPushButton *button,
+                                const QString &bg,
+                                const QString &fg,
+                                const QString &border,
+                                const QString &hoverBg)
+    {
+        if (!button)
+            return;
+        button->setCursor(Qt::PointingHandCursor);
+        button->setStyleSheet(QStringLiteral(
+            "QPushButton {"
+            "    background-color: %1;"
+            "    color: %2;"
+            "    border: 1px solid %3;"
+            "    border-radius: 6px;"
+            "    padding: 6px 16px;"
+            "}"
+            "QPushButton:hover {"
+            "    background-color: %4;"
+            "}"
+        ).arg(bg, fg, border, hoverBg));
+    };
+
+    styleButton(ui->addButton, "#2563eb", "#ffffff", "#1d4ed8", "#1d4ed8");
+    styleButton(ui->deleteButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
+    styleButton(ui->importButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
+    styleButton(ui->exportButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
+
+    ui->tableView->setAlternatingRowColors(true);
+    ui->tableView->setStyleSheet(QStringLiteral(
+        "QTableView {"
+        "    border: 1px solid #e0e6f4;"
+        "    border-radius: 12px;"
+        "    background-color: #ffffff;"
+        "    gridline-color: transparent;"
+        "    selection-background-color: #e3f2ff;"
+        "    selection-color: #111827;"
+        "}"
+        "QTableView::item {"
+        "    padding: 6px;"
+        "}"
+        "QHeaderView::section {"
+        "    background-color: #f5f7fb;"
+        "    border: none;"
+        "    padding: 8px 4px;"
+        "    font-weight: 600;"
+        "    color: #1f2937;"
+        "}"
+    ));
 }
 
 void ActiveReminderList::loadReminders(const QList<Reminder> &reminders)

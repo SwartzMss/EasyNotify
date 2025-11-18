@@ -1,6 +1,7 @@
 #include "active_remindertablemodel.h"
 #include <QJsonArray>
 #include <QJsonObject>
+#include "priorityiconprovider.h"
 
 ActiveReminderTableModel::ActiveReminderTableModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -50,6 +51,15 @@ QVariant ActiveReminderTableModel::data(const QModelIndex &index, int role) cons
         case 3:
             return reminder.nextTrigger().toString("yyyy-MM-dd hh:mm:ss");
         }
+    }
+    if (role == Qt::DecorationRole && index.column() == 2) {
+        return PriorityIconProvider::icon(reminder.priority());
+    }
+    if (role == Qt::ForegroundRole && index.column() == 2) {
+        return PriorityIconProvider::color(reminder.priority());
+    }
+    if (role == Qt::TextAlignmentRole && index.column() == 2) {
+        return Qt::AlignCenter;
     }
     return QVariant();
 }

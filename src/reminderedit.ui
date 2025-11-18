@@ -14,126 +14,185 @@
    <string>编辑提醒</string>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
+   <property name="contentsMargins">
+    <left>16</left>
+    <top>16</top>
+    <right>16</right>
+    <bottom>16</bottom>
+   </property>
    <item>
-    <layout class="QFormLayout" name="formLayout">
-     <item row="0" column="0">
-      <widget class="QLabel" name="nameLabel">
-       <property name="text">
-        <string>任务名称：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QLineEdit" name="nameEdit"/>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="typeLabel">
-       <property name="text">
-        <string>提醒类型：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-     <widget class="QComboBox" name="typeCombo">
-       <item>
+    <widget class="QFrame" name="bodyFrame">
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QFrame#bodyFrame{background-color:#ffffff;border:1px solid #e1e7f5;border-radius:12px;}</string>
+     </property>
+     <layout class="QVBoxLayout" name="bodyLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="contentsMargins">
+       <left>16</left>
+       <top>16</top>
+       <right>16</right>
+       <bottom>16</bottom>
+      </property>
+      <item>
+       <widget class="QLabel" name="sectionTitle">
         <property name="text">
-         <string>一次性</string>
+         <string>提醒信息</string>
         </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>每天</string>
+        <property name="styleSheet">
+         <string notr="true">font-size:14px;font-weight:600;color:#1f2937;</string>
         </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>工作日</string>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayout">
+        <property name="formAlignment">
+         <set>Qt::AlignLeft|Qt::AlignTop</set>
         </property>
-       </item>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="priorityLabel">
-       <property name="text">
-        <string>优先级：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QComboBox" name="priorityCombo">
-       <item>
-        <property name="text">
-         <string>低</string>
+        <property name="horizontalSpacing">
+         <number>12</number>
         </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>中</string>
+        <property name="verticalSpacing">
+         <number>10</number>
         </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>高</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="dateTimeLabel">
-       <property name="text">
-        <string>提醒时间：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QDateTimeEdit" name="dateTimeEdit">
-       <property name="displayFormat">
-        <string>yyyy-MM-dd HH:mm:ss</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="timeLabel">
-       <property name="text">
-        <string>时间：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QTimeEdit" name="timeEdit">
-       <property name="displayFormat">
-        <string>HH:mm:ss</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="0" colspan="2">
-      <widget class="QLabel" name="workdayHintLabel">
-       <property name="visible">
-        <bool>false</bool>
-       </property>
-       <property name="text">
-        <string>工作日提醒会自动跳过周末及法定节假日调休。</string>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="nextTriggerLabelTitle">
-       <property name="text">
-        <string>下次触发时间：</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QLabel" name="nextTriggerLabel">
-       <property name="text">
-        <string>--</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+        <item row="0" column="0">
+         <widget class="QLabel" name="nameLabel">
+          <property name="text">
+           <string>任务名称：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="nameEdit">
+          <property name="placeholderText">
+           <string>例如：每周例会提醒</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="typeLabel">
+          <property name="text">
+           <string>提醒类型：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="typeCombo">
+          <item>
+           <property name="text">
+            <string>一次性</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>每天</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>工作日</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="priorityLabel">
+          <property name="text">
+           <string>优先级：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QComboBox" name="priorityCombo">
+          <item>
+           <property name="text">
+            <string>低</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>中</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>高</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="dateTimeLabel">
+          <property name="text">
+           <string>提醒时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QDateTimeEdit" name="dateTimeEdit">
+          <property name="displayFormat">
+           <string>yyyy-MM-dd HH:mm:ss</string>
+          </property>
+          <property name="calendarPopup">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="timeLabel">
+          <property name="text">
+           <string>时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QTimeEdit" name="timeEdit">
+          <property name="displayFormat">
+           <string>HH:mm:ss</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="0" colspan="2">
+         <widget class="QLabel" name="workdayHintLabel">
+          <property name="visible">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>工作日提醒会自动跳过周末及法定节假日调休。</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color:#eef4ff;border:1px solid #cad8ff;border-radius:8px;padding:6px 10px;color:#1f3b5d;</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="nextTriggerLabelTitle">
+          <property name="text">
+           <string>下次触发时间：</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLabel" name="nextTriggerLabel">
+          <property name="text">
+           <string>--</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
