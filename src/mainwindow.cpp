@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QIcon>
 #include <QMessageBox>
 #include <QSettings>
 #include "activereminderwindow.h"
@@ -87,6 +88,7 @@ MainWindow::~MainWindow()
 void MainWindow::setupUI()
 {
     setWindowTitle(tr("EasyNotify"));
+    setWindowIcon(QIcon(QStringLiteral(":/img/tray_icon.png")));
 
     // 创建中央部件
     QWidget *centralWidget = new QWidget(this);

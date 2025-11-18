@@ -5,6 +5,10 @@
 #include <QDateTime>
 #include <QFile>
 #include <QPushButton>
+#include <QDialogButtonBox>
+#include <QComboBox>
+#include <QSize>
+#include <QList>
 #include "logger.h"
 #include "workdaycalendar.h"
 
@@ -15,6 +19,9 @@ ActiveReminderEdit::ActiveReminderEdit(QWidget *parent)
 {
     LOG_INFO("创建提醒编辑对话框");
     ui->setupUi(this);
+    ui->buttonBox->setCenterButtons(true);
+    applyDialogStyle();
+    setupPrioritySelector();
     setupConnections();
     LOG_INFO("提醒编辑对话框初始化完成");
 }
@@ -36,6 +43,7 @@ void ActiveReminderEdit::prepareNewReminder()
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
     ui->priorityCombo->setCurrentIndex(1);
+    ui->nameEdit->setFocus();
 
     m_reminder = Reminder();
     m_reminder.setId(QUuid::createUuid().toString(QUuid::WithoutBraces));
@@ -68,6 +76,7 @@ void ActiveReminderEdit::prepareEditReminder(const Reminder &reminder)
 
     m_reminder = reminder;
     ui->nameEdit->setText(reminder.name());
+    ui->nameEdit->setFocus();
 
     int type = static_cast<int>(reminder.type());
     ui->typeCombo->setCurrentIndex(type);
@@ -243,7 +252,87 @@ bool ActiveReminderEdit::validateInput() const
 void ActiveReminderEdit::updateNextTriggerTime()
 {
     QDateTime nextTime = calculateNextTrigger();
-    ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
-    m_reminder.setNextTrigger(nextTime);
-    LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
+    if (nextTime.isValid()) {
+        ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
+        m_reminder.setNextTrigger(nextTime);
+        LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
+    } else {
+        ui->nextTriggerLabel->setText("--");
+    }
+}
+
+void ActiveReminderEdit::applyDialogStyle()
+{
+    setObjectName(QStringLiteral("ReminderEdit"));
+    if (auto okButton = ui->buttonBox->button(QDialogButtonBox::Ok)) {
+        okButton->setObjectName(QStringLiteral("primaryButton"));
+    }
+    if (auto cancelButton = ui->buttonBox->button(QDialogButtonBox::Cancel)) {
+        cancelButton->setObjectName(QStringLiteral("ghostButton"));
+    }
+
+    const QString style = QStringLiteral(R"(
+QDialog#ReminderEdit {
+    background-color: #f5f7fb;
+}
+QLabel#nextTriggerLabel {
+    font-weight: 600;
+    color: #2563eb;
+}
+QFrame#bodyFrame QLabel {
+    color: #1f2a37;
+}
+QLineEdit#nameEdit,
+QDateTimeEdit#dateTimeEdit,
+QTimeEdit#timeEdit,
+QComboBox#typeCombo,
+QComboBox#priorityCombo {
+    border: 1px solid #d5deef;
+    border-radius: 6px;
+    padding: 4px 8px;
+    background-color: #fbfcff;
+}
+QLineEdit#nameEdit:focus,
+QDateTimeEdit#dateTimeEdit:focus,
+QTimeEdit#timeEdit:focus,
+QComboBox#typeCombo:focus,
+QComboBox#priorityCombo:focus {
+    border-color: #2563eb;
+    background-color: #ffffff;
+}
+QPushButton#primaryButton {
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 18px;
+}
+QPushButton#primaryButton:hover {
+    background-color: #1d4ed8;
+}
+QPushButton#ghostButton {
+    background-color: transparent;
+    color: #1f2937;
+    border: 1px solid #d5deef;
+    border-radius: 6px;
+    padding: 6px 18px;
+}
+QPushButton#ghostButton:hover {
+    background-color: #edf2ff;
+}
+)");
+    setStyleSheet(style);
+}
+
+void ActiveReminderEdit::setupPrioritySelector()
+{
+    ui->priorityCombo->setIconSize(QSize(16, 16));
+    const QList<Reminder::Priority> options = {
+        Reminder::Priority::Low,
+        Reminder::Priority::Medium,
+        Reminder::Priority::High
+    };
+    for (int i = 0; i < options.size() && i < ui->priorityCombo->count(); ++i) {
+        ui->priorityCombo->setItemIcon(i, PriorityIconProvider::icon(options[i]));
+    }
 }

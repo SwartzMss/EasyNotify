@@ -2,6 +2,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <algorithm>
+#include "priorityiconprovider.h"
 
 CompletedReminderTableModel::CompletedReminderTableModel(QObject *parent)
     : QAbstractTableModel(parent)
@@ -51,6 +52,15 @@ QVariant CompletedReminderTableModel::data(const QModelIndex &index, int role) c
         case 3:
             return reminder.nextTrigger().toString("yyyy-MM-dd hh:mm:ss");
         }
+    }
+    if (role == Qt::DecorationRole && index.column() == 2) {
+        return PriorityIconProvider::icon(reminder.priority());
+    }
+    if (role == Qt::ForegroundRole && index.column() == 2) {
+        return PriorityIconProvider::color(reminder.priority());
+    }
+    if (role == Qt::TextAlignmentRole && index.column() == 2) {
+        return Qt::AlignCenter;
     }
     return QVariant();
 }

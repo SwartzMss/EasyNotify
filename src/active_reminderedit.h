@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QDateTime>
 #include <QTime>
+#include "priorityiconprovider.h"
 
 namespace Ui {
 class ReminderEdit;
@@ -36,6 +37,8 @@ private:
     QDateTime calculateNextTrigger() const;
     bool validateInput() const;
     void updateNextTriggerTime();
+    void applyDialogStyle();
+    void setupPrioritySelector();
 
     Ui::ReminderEdit *ui;
     Reminder m_reminder;
