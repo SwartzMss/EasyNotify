@@ -5,5 +5,6 @@
         <file>img/tray_icon_paused.png</file>
         <file>img/tray_icon_active.png</file>
         <file>sound/Ding.wav</file>
+        <file>data/workdays.json</file>
     </qresource>
-</RCC> 
+</RCC>

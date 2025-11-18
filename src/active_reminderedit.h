@@ -5,6 +5,7 @@
 #include "reminder.h"
 #include <QStringList>
 #include <QDateTime>
+#include <QTime>
 
 namespace Ui {
 class ReminderEdit;
@@ -27,6 +28,7 @@ private slots:
     void onOkClicked();
     void onCancelClicked();
     void onDateTimeChanged(const QDateTime &dateTime);
+    void onTimeChanged(const QTime &time);
     void onDaysChanged();
 
 private:

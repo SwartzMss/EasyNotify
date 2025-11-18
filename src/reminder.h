@@ -10,7 +10,8 @@ class Reminder {
 public:
     enum class Type {
         Once,
-        Daily
+        Daily,
+        Workday
     };
     enum class Priority {
         Low,
