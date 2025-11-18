@@ -8,6 +8,7 @@ const QString ConfigManager::REMINDERS_KEY = "reminders";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
 const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
+const QString ConfigManager::THEME_KEY = "theme";
 const QString ConfigManager::PORT_KEY = "remotePort";
 const QString ConfigManager::URL_KEY = "remoteUrl";
 
@@ -70,6 +71,13 @@ bool ConfigManager::isSoundEnabled() const
     return enabled;
 }
 
+QString ConfigManager::theme() const
+{
+    QString themeKey = config[THEME_KEY].toString("light");
+    LOG_INFO(QString("获取主题: %1").arg(themeKey));
+    return themeKey;
+}
+
 int ConfigManager::remotePort() const
 {
     int port = config[PORT_KEY].toInt(12345);
@@ -104,6 +112,13 @@ void ConfigManager::setSoundEnabled(bool enabled)
 {
     LOG_INFO(QString("设置声音提醒: %1").arg(enabled));
     config[SOUND_ENABLED_KEY] = enabled;
+    saveConfig();
+}
+
+void ConfigManager::setTheme(const QString &themeKey)
+{
+    LOG_INFO(QString("设置主题: %1").arg(themeKey));
+    config[THEME_KEY] = themeKey;
     saveConfig();
 }
 
@@ -177,6 +192,8 @@ void ConfigManager::loadConfig()
                 LOG_INFO(QString("配置加载成功，数据大小: %1 字节").arg(data.size()));
                 if (!config.contains(SOUND_ENABLED_KEY))
                     config[SOUND_ENABLED_KEY] = true;
+                if (!config.contains(THEME_KEY))
+                    config[THEME_KEY] = QStringLiteral("light");
                 if (!config.contains(PORT_KEY))
                     config[PORT_KEY] = 12345;
                 if (!config.contains(URL_KEY))
@@ -210,6 +227,7 @@ void ConfigManager::initDefaultConfig()
     config[PAUSED_KEY] = false;
     config[AUTO_START_KEY] = false;
     config[SOUND_ENABLED_KEY] = true;
+    config[THEME_KEY] = QStringLiteral("light");
     config[PORT_KEY] = 12345;
     config[URL_KEY] = "tcp://localhost:12345";
     config[REMINDERS_KEY] = QJsonArray();

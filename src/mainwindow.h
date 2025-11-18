@@ -5,6 +5,7 @@
 #include <QSystemTrayIcon>
 #include <QMenu>
 #include <QAction>
+#include <QComboBox>
 #include "activereminderwindow.h"
 #include "completedreminderwindow.h"
 #include "remindermanager.h"
@@ -29,6 +30,7 @@ private slots:
     void onPauseReminders();
     void onToggleAutoStart();
     void onToggleSound();
+    void onThemeChanged(int index);
     void onQuit();
     void displayNotification(const Reminder &reminder);
     void onRemoteMessage(const QString &message);
@@ -51,6 +53,7 @@ private:
     QAction *autoStartAction;
     QAction *soundAction;
     QAction *quitAction;
+    QComboBox *themeSelector;
     bool isPaused;
     bool autoStartEnabled;
     bool soundEnabled;

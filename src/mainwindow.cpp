@@ -1,13 +1,20 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+#include <QCloseEvent>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <QMessageBox>
 #include <QSettings>
+#include <QTabWidget>
+#include <QVBoxLayout>
+
 #include "activereminderwindow.h"
 #include "completedreminderwindow.h"
-#include <QCloseEvent>
 #include "configmanager.h"
 #include "logger.h"
 #include "remoteclient.h"
+#include "thememanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     , isPaused( ConfigManager::instance().isPaused())
     , autoStartEnabled(false)
     , soundEnabled(true)
+    , themeSelector(nullptr)
 {
     setWindowFlags(
         Qt::Window                                   
@@ -25,6 +33,18 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     setupUI();
+
+    if (themeSelector) {
+        const QString savedTheme = ConfigManager::instance().theme();
+        int savedIndex = themeSelector->findData(savedTheme);
+        if (savedIndex < 0) {
+            savedIndex = themeSelector->findData(QStringLiteral("light"));
+        }
+        if (savedIndex >= 0) {
+            themeSelector->setCurrentIndex(savedIndex);
+        }
+        onThemeChanged(themeSelector->currentIndex());
+    }
 
     // 创建提醒管理器(运行于工作线程)
     reminderManager = new ReminderManager();
@@ -90,10 +110,28 @@ void MainWindow::setupUI()
 
     // 创建中央部件
     QWidget *centralWidget = new QWidget(this);
+    centralWidget->setObjectName(QStringLiteral("centralWidget"));
     setCentralWidget(centralWidget);
 
     // 创建垂直布局
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+
+    // 添加主题切换条
+    QHBoxLayout *toolbarLayout = new QHBoxLayout();
+    QLabel *themeLabel = new QLabel(tr("界面主题"), centralWidget);
+    themeSelector = new QComboBox(centralWidget);
+    themeSelector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+    themeSelector->setMinimumWidth(160);
+    const QVector<ThemeManager::Theme> themes = ThemeManager::instance().availableThemes();
+    for (ThemeManager::Theme theme : themes) {
+        themeSelector->addItem(
+            ThemeManager::instance().displayName(theme),
+            ThemeManager::instance().key(theme));
+    }
+    toolbarLayout->addWidget(themeLabel);
+    toolbarLayout->addWidget(themeSelector);
+    toolbarLayout->addStretch();
+    mainLayout->addLayout(toolbarLayout);
 
     // 创建标签页控件
     QTabWidget *tabWidget = new QTabWidget(centralWidget);
@@ -125,6 +163,10 @@ void MainWindow::setupConnections()
             this, &MainWindow::onToggleSound);
     connect(quitAction, &QAction::triggered,
             this, &MainWindow::onQuit);
+    if (themeSelector) {
+        connect(themeSelector, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged),
+                this, &MainWindow::onThemeChanged);
+    }
 }
 
 void MainWindow::createTrayIcon()
@@ -212,6 +254,19 @@ void MainWindow::onToggleSound()
     }
     ConfigManager::instance().setSoundEnabled(soundEnabled);
     LOG_INFO(QString("声音提醒已%1").arg(soundEnabled ? "开启" : "关闭"));
+}
+
+void MainWindow::onThemeChanged(int index)
+{
+    if (!themeSelector || index < 0) {
+        return;
+    }
+    const QString themeKey = themeSelector->itemData(index).toString();
+    ThemeManager &manager = ThemeManager::instance();
+    ThemeManager::Theme theme = manager.themeFromKey(themeKey);
+    manager.applyTheme(theme);
+    ConfigManager::instance().setTheme(manager.key(theme));
+    LOG_INFO(QString("用户切换主题: %1").arg(manager.key(theme)));
 }
 
 void MainWindow::onQuit()
