@@ -8,53 +8,55 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += $$PWD/src
+
 SOURCES += \
-    src/main.cpp \
-    src/mainwindow.cpp \
-    src/active_reminderlist.cpp \
-    src/completed_reminderlist.cpp \
-    src/active_reminderedit.cpp \
-    src/remindermanager.cpp \
-    src/logger.cpp \
-    src/notificationPopup.cpp \
-    src/configmanager.cpp \
-    src/singleinstance.cpp \
-    src/reminder.cpp   \
-    src/active_remindertablemodel.cpp \
-    src/completed_remindertablemodel.cpp \
-    src/activereminderwindow.cpp \
-    src/completedreminderwindow.cpp \
-    src/remoteclient.cpp \
-    src/workdaycalendar.cpp \
-    src/priorityiconprovider.cpp
+    src/app/main.cpp \
+    src/core/config/configmanager.cpp \
+    src/core/logging/logger.cpp \
+    src/core/network/remoteclient.cpp \
+    src/core/providers/priorityiconprovider.cpp \
+    src/core/reminders/reminder.cpp \
+    src/core/reminders/remindermanager.cpp \
+    src/core/system/singleinstance.cpp \
+    src/core/calendar/workdaycalendar.cpp \
+    src/models/active_remindertablemodel.cpp \
+    src/models/completed_remindertablemodel.cpp \
+    src/ui/windows/mainwindow.cpp \
+    src/ui/windows/activereminderwindow.cpp \
+    src/ui/windows/completedreminderwindow.cpp \
+    src/ui/widgets/active_reminderlist.cpp \
+    src/ui/widgets/completed_reminderlist.cpp \
+    src/ui/widgets/active_reminderedit.cpp \
+    src/ui/notifications/notificationPopup.cpp
 
 HEADERS += \
-    src/mainwindow.h \
-    src/active_reminderlist.h \
-    src/completed_reminderlist.h \
-    src/active_reminderedit.h \
-    src/remindermanager.h \
-    src/logger.h \
-    src/notificationPopup.h \
-    src/configmanager.h \
-    src/singleinstance.h \
-    src/reminder.h \
-    src/active_remindertablemodel.h \
-    src/completed_remindertablemodel.h \
-    src/activereminderwindow.h \
-    src/completedreminderwindow.h \
-    src/remoteclient.h \
-    src/workdaycalendar.h \
-    src/priorityiconprovider.h
+    src/core/config/configmanager.h \
+    src/core/logging/logger.h \
+    src/core/network/remoteclient.h \
+    src/core/providers/priorityiconprovider.h \
+    src/core/reminders/reminder.h \
+    src/core/reminders/remindermanager.h \
+    src/core/system/singleinstance.h \
+    src/core/calendar/workdaycalendar.h \
+    src/models/active_remindertablemodel.h \
+    src/models/completed_remindertablemodel.h \
+    src/ui/windows/mainwindow.h \
+    src/ui/windows/activereminderwindow.h \
+    src/ui/windows/completedreminderwindow.h \
+    src/ui/widgets/active_reminderlist.h \
+    src/ui/widgets/completed_reminderlist.h \
+    src/ui/widgets/active_reminderedit.h \
+    src/ui/notifications/notificationPopup.h
 
 FORMS += \
-    src/mainwindow.ui \
-    src/active_reminderlist.ui \
-    src/completed_reminderlist.ui \
-    src/reminderedit.ui \
-    src/notificationPopup.ui \
-    src/activereminderwindow.ui \
-    src/completedreminderwindow.ui
+    src/ui/windows/mainwindow.ui \
+    src/ui/widgets/active_reminderlist.ui \
+    src/ui/widgets/completed_reminderlist.ui \
+    src/ui/widgets/reminderedit.ui \
+    src/ui/notifications/notificationPopup.ui \
+    src/ui/windows/activereminderwindow.ui \
+    src/ui/windows/completedreminderwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
