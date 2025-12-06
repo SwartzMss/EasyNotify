@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QRegularExpression>
 #include "core/logging/logger.h"
 
 namespace {
@@ -139,23 +140,41 @@ bool WorkdayCalendar::parseDocument(const QJsonDocument &doc)
     }
 
     const QJsonObject obj = doc.object();
-    const QJsonArray holidays = obj.value("holidays").toArray();
-    const QJsonArray makeup = obj.value("makeupDays").toArray();
-
     QSet<QDate> holidaysSet;
-    for (const QJsonValue &value : holidays) {
-        const QDate date = parseDate(value.toString());
-        if (date.isValid()) {
-            holidaysSet.insert(date);
+    QSet<QDate> makeupSet;
+
+    auto ingestArrays = [&](const QJsonArray &holidays, const QJsonArray &makeups) {
+        for (const QJsonValue &value : holidays) {
+            const QDate date = parseDate(value.toString());
+            if (date.isValid()) {
+                holidaysSet.insert(date);
+            }
         }
+        for (const QJsonValue &value : makeups) {
+            const QDate date = parseDate(value.toString());
+            if (date.isValid()) {
+                makeupSet.insert(date);
+            }
+        }
+    };
+
+    // 兼容旧格式（顶层两个数组）
+    if (obj.contains("holidays") || obj.contains("makeupDays")) {
+        ingestArrays(obj.value("holidays").toArray(), obj.value("makeupDays").toArray());
     }
 
-    QSet<QDate> makeupSet;
-    for (const QJsonValue &value : makeup) {
-        const QDate date = parseDate(value.toString());
-        if (date.isValid()) {
-            makeupSet.insert(date);
+    // 支持按年份分组的结构（years 或直接以年份为键）
+    const QRegularExpression yearRe(QStringLiteral("^\\d{4}$"));
+    QJsonObject yearsObj = obj.value("years").toObject();
+    if (yearsObj.isEmpty()) {
+        yearsObj = obj; // 直接遍历顶层年份键
+    }
+    for (auto it = yearsObj.constBegin(); it != yearsObj.constEnd(); ++it) {
+        if (!yearRe.match(it.key()).hasMatch() || !it.value().isObject()) {
+            continue;
         }
+        const QJsonObject yearBlock = it.value().toObject();
+        ingestArrays(yearBlock.value("holidays").toArray(), yearBlock.value("makeupDays").toArray());
     }
 
     m_holidays = holidaysSet;

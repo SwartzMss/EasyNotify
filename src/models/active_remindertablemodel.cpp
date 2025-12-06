@@ -185,12 +185,17 @@ void ActiveReminderTableModel::search(const QString &text)
 
 void ActiveReminderTableModel::updateFilteredList()
 {
+    beginResetModel();
+
+    // 当搜索为空时切回未过滤状态
     if (m_searchText.isEmpty()) {
         m_isFiltered = false;
-        emit layoutChanged();
+        m_filteredReminders.clear();
+        endResetModel();
         return;
     }
 
+    // 重建过滤列表
     m_filteredReminders.clear();
     for (const Reminder &reminder : m_reminders) {
         if (reminder.name().contains(m_searchText, Qt::CaseInsensitive)) {
@@ -198,5 +203,5 @@ void ActiveReminderTableModel::updateFilteredList()
         }
     }
     m_isFiltered = true;
-    emit layoutChanged();
+    endResetModel();
 }

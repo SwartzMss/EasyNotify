@@ -13,27 +13,18 @@ ReminderManager::ReminderManager(QObject *parent)
     : QObject(nullptr)
     , checkTimer(new QTimer(this))
     , isPaused(false)
-    , workerThread(new QThread)
 {
     Q_UNUSED(parent);
     qRegisterMetaType<Reminder>("Reminder");
     LOG_INFO("ReminderManager 初始化");
     setupTimer();
     loadReminders();
-    moveToThread(workerThread);
-    connect(workerThread, &QThread::started, checkTimer, qOverload<>(&QTimer::start));
-    workerThread->start();
+    checkTimer->start();
 }
 
 ReminderManager::~ReminderManager()
 {
     LOG_INFO("ReminderManager 析构");
-    if (workerThread) {
-        workerThread->quit();
-        workerThread->wait();
-        delete workerThread;
-        workerThread = nullptr;
-    }
     saveReminders();
 }
 

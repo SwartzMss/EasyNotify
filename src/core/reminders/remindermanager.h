@@ -8,8 +8,9 @@
 #include <QVector>
 #include "core/reminders/reminder.h"
 #include "core/config/configmanager.h"
-#include <QThread>
 #include <QRecursiveMutex>
+#include <QMutex>
+#include <QMutexLocker>
 
 class ReminderManager : public QObject
 {
@@ -42,7 +43,6 @@ private:
     void loadReminders();
     QTimer *checkTimer;
     bool isPaused;
-    QThread *workerThread;
     mutable QRecursiveMutex mutex;
     QVector<Reminder> m_reminders;
 };

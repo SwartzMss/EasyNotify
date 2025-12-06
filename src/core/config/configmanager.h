@@ -2,12 +2,10 @@
 #define CONFIGMANAGER_H
 
 #include <QObject>
-#include <QJsonObject>
 #include <QJsonArray>
-#include <QJsonDocument>
-#include <QFile>
-#include <QDir>
 #include <QCoreApplication>
+#include <QSqlDatabase>
+#include <QVariant>
 #include "core/logging/logger.h"
 
 class ConfigManager : public QObject
@@ -36,19 +34,23 @@ private:
     ~ConfigManager();
     void init();
     void initDefaultConfig();
-    void saveConfig();
     void loadConfig();
-    static void deduplicate(QJsonArray &reminders);
+    bool openDatabase();
+    void ensureTables();
     QString getConfigPath() const;
+    QVariant readSetting(const QString &key, const QVariant &defaultValue) const;
+    void writeSetting(const QString &key, const QVariant &value);
+    QJsonArray readRemindersFromDb() const;
+    void writeRemindersToDb(const QJsonArray &reminders);
+    static void deduplicate(QJsonArray &reminders);
 
-    QJsonObject config;
-    static const QString CONFIG_FILE;
-    static const QString REMINDERS_KEY;
+    static const QString CONFIG_DB;
     static const QString PAUSED_KEY;
     static const QString AUTO_START_KEY;
     static const QString SOUND_ENABLED_KEY;
     static const QString PORT_KEY;
     static const QString URL_KEY;
+    QSqlDatabase db;
 };
 
 #endif // CONFIGMANAGER_H 
