@@ -4,14 +4,10 @@
 #include <QSet>
 #include <QSqlQuery>
 #include <QSqlError>
-#include <QFile>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QDir>
 
-const QString ConfigManager::CONFIG_FILE = "config.json";
 const QString ConfigManager::CONFIG_DB = "config.db";
-const QString ConfigManager::REMINDERS_KEY = "reminders";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
 const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
@@ -144,7 +140,7 @@ void ConfigManager::setReminders(const QJsonArray &reminders)
 
 void ConfigManager::loadConfig()
 {
-    // 如果数据库没有任何设置，尝试从旧版 JSON 导入，否则填充默认值
+    // 如果数据库没有任何设置，填充默认值
     QSqlQuery query(db);
     query.exec(QStringLiteral("SELECT COUNT(*) FROM settings"));
     int count = 0;
@@ -152,13 +148,8 @@ void ConfigManager::loadConfig()
         count = query.value(0).toInt();
     }
     if (count == 0) {
-        LOG_INFO("设置表为空，尝试从旧版 JSON 迁移");
-        loadLegacyJsonIfNeeded();
-        // 如果仍为空则写入默认配置
-        query.exec(QStringLiteral("SELECT COUNT(*) FROM settings"));
-        if (query.next() && query.value(0).toInt() == 0) {
-            initDefaultConfig();
-        }
+        LOG_INFO("设置表为空，写入默认配置");
+        initDefaultConfig();
     }
 }
 
@@ -293,36 +284,4 @@ void ConfigManager::writeRemindersToDb(const QJsonArray &reminders)
         query.prepare(QStringLiteral("INSERT INTO reminders (id, name, type, priority, next_trigger, completed) "
                                      "VALUES (?, ?, ?, ?, ?, ?)"));
     }
-}
-
-void ConfigManager::loadLegacyJsonIfNeeded()
-{
-    QString legacyPath = QCoreApplication::applicationDirPath() + "/" + CONFIG_FILE;
-    QFile file(legacyPath);
-    if (!file.exists()) {
-        initDefaultConfig();
-        return;
-    }
-    if (!file.open(QIODevice::ReadOnly)) {
-        LOG_ERROR(QString("无法读取旧版配置文件: %1").arg(file.errorString()));
-        initDefaultConfig();
-        return;
-    }
-    QByteArray data = file.readAll();
-    QJsonDocument doc = QJsonDocument::fromJson(data);
-    file.close();
-    if (!doc.isObject()) {
-        LOG_ERROR("旧版配置格式错误，使用默认配置");
-        initDefaultConfig();
-        return;
-    }
-    QJsonObject legacy = doc.object();
-    writeSetting(PAUSED_KEY, legacy.value(PAUSED_KEY).toBool(false));
-    writeSetting(AUTO_START_KEY, legacy.value(AUTO_START_KEY).toBool(false));
-    writeSetting(SOUND_ENABLED_KEY, legacy.value(SOUND_ENABLED_KEY).toBool(true));
-    writeSetting(PORT_KEY, legacy.value(PORT_KEY).toInt(12345));
-    writeSetting(URL_KEY, legacy.value(URL_KEY).toString(QStringLiteral("tcp://localhost:12345")));
-    QJsonArray reminders = legacy.value(REMINDERS_KEY).toArray();
-    deduplicate(reminders);
-    writeRemindersToDb(reminders);
 }

@@ -35,7 +35,6 @@ private:
     void init();
     void initDefaultConfig();
     void loadConfig();
-    void loadLegacyJsonIfNeeded();
     bool openDatabase();
     void ensureTables();
     QString getConfigPath() const;
@@ -45,9 +44,7 @@ private:
     void writeRemindersToDb(const QJsonArray &reminders);
     static void deduplicate(QJsonArray &reminders);
 
-    static const QString CONFIG_FILE;
     static const QString CONFIG_DB;
-    static const QString REMINDERS_KEY;
     static const QString PAUSED_KEY;
     static const QString AUTO_START_KEY;
     static const QString SOUND_ENABLED_KEY;
