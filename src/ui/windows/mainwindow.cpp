@@ -8,7 +8,6 @@
 #include <QCloseEvent>
 #include "core/config/configmanager.h"
 #include "core/logging/logger.h"
-#include "core/network/remoteclient.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -31,11 +30,6 @@ MainWindow::MainWindow(QWidget *parent)
     reminderManager = new ReminderManager();
     connect(reminderManager, &ReminderManager::reminderTriggered,
             this, &MainWindow::displayNotification);
-
-    remoteClient = new RemoteClient(QUrl(ConfigManager::instance().remoteUrl()), this);
-    connect(remoteClient, &RemoteClient::remoteMessageReceived,
-            this, &MainWindow::onRemoteMessage);
-    remoteClient->start();
 
     // 连接提醒列表和提醒管理器
     activeWindow->setReminderManager(reminderManager);
@@ -69,17 +63,10 @@ void MainWindow::displayNotification(const Reminder &reminder)
     popup->show();
 }
 
-void MainWindow::onRemoteMessage(const QString &message)
-{
-    NotificationPopup *popup = new NotificationPopup(message, Reminder::Priority::Medium, soundEnabled);
-    popup->show();
-}
-
 MainWindow::~MainWindow()
 {
     LOG_INFO("MainWindow 析构");
     delete reminderManager;
-    delete remoteClient;
     delete activeWindow;
     delete completedWindow;
     delete ui;
