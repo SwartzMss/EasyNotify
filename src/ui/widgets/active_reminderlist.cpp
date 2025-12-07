@@ -2,20 +2,9 @@
 #include "ui_active_reminderlist.h"
 #include <QHeaderView>
 #include <QMessageBox>
-#include <QJsonDocument>
-#include <QJsonArray>
-#include <QFile>
-#include <QDateTime>
-#include <QFileDialog>
-#include <QCursor>
 #include "core/reminders/remindermanager.h"
 #include "core/logging/logger.h"
 #include "ui/widgets/active_reminderedit.h"
-#include <QMenu>
-#include <QAction>
-#include <QContextMenuEvent>
-#include <QCoreApplication>
-#include <QSet>
 
 enum ColumnIndex {
     Name = 0,
@@ -135,8 +124,6 @@ void ActiveReminderList::applyWidgetStyles()
 
     styleButton(ui->addButton, "#2563eb", "#ffffff", "#1d4ed8", "#1d4ed8");
     styleButton(ui->deleteButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
-    styleButton(ui->importButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
-    styleButton(ui->exportButton, "#ffffff", "#111827", "#e5e7eb", "#f3f4f6");
 
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setStyleSheet(QStringLiteral(
@@ -165,11 +152,6 @@ void ActiveReminderList::loadReminders(const QList<Reminder> &reminders)
 {
     LOG_INFO(QString("加载提醒列表，共 %1 个提醒").arg(reminders.size()));
     model->loadFromJson(reminders);
-}
-
-QJsonArray ActiveReminderList::getReminders() const
-{
-    return model->saveToJson();
 }
 
 void ActiveReminderList::addNewReminder()
@@ -342,102 +324,6 @@ void ActiveReminderList::onDeleteClicked()
     }
 }
 
-void ActiveReminderList::onImportClicked()
-{
-    LOG_INFO("开始导入提醒");
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("导入提醒"), "",
-        tr("JSON文件 (*.json);;所有文件 (*)"));
-
-    if (fileName.isEmpty()) {
-        LOG_INFO("取消导入提醒");
-        return;
-    }
-
-    LOG_INFO(QString("从文件导入提醒: %1").arg(fileName));
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly)) {
-        LOG_ERROR(QString("无法打开文件: %1, 错误: %2")
-                 .arg(fileName)
-                 .arg(file.errorString()));
-        QMessageBox::warning(this, tr("错误"),
-            tr("无法打开文件 %1:\n%2").arg(fileName).arg(file.errorString()));
-        return;
-    }
-
-    QByteArray data = file.readAll();
-    QJsonParseError parseError;
-    QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
-    if (parseError.error != QJsonParseError::NoError) {
-        LOG_ERROR(QString("JSON 解析失败: %1").arg(parseError.errorString()));
-        QMessageBox::warning(this, tr("错误"),
-            tr("无法解析文件 %1:\n%2").arg(fileName).arg(parseError.errorString()));
-        return;
-    }
-
-    if (doc.isArray()) {
-        QList<Reminder> imported;
-        QSet<QString> ids;
-        if (reminderManager) {
-            const QVector<Reminder> existing = reminderManager->getReminders();
-            for (const Reminder &r : existing)
-                ids.insert(r.id());
-        }
-        for (const QJsonValue &value : doc.array()) {
-            if (!value.isObject())
-                continue;
-            Reminder reminder = Reminder::fromJson(value.toObject());
-            if (ids.contains(reminder.id())) {
-                LOG_WARNING(QString("跳过重复的提醒 ID: %1").arg(reminder.id()));
-                continue;
-            }
-            ids.insert(reminder.id());
-            imported.append(reminder);
-            if (reminderManager) {
-                reminderManager->addReminder(reminder);
-            }
-        }
-        LOG_INFO(QString("成功导入 %1 个提醒").arg(imported.size()));
-        if (!imported.isEmpty())
-            loadReminders(imported);
-    } else {
-        LOG_ERROR("导入文件格式错误");
-        QMessageBox::warning(this, tr("错误"),
-            tr("文件格式错误"));
-    }
-}
-
-void ActiveReminderList::onExportClicked()
-{
-    LOG_INFO("开始导出提醒");
-    QString fileName = QFileDialog::getSaveFileName(this,
-        tr("导出提醒"), "",
-        tr("JSON文件 (*.json);;所有文件 (*)"));
-
-    if (fileName.isEmpty()) {
-        LOG_INFO("取消导出提醒");
-        return;
-    }
-
-    if (!fileName.endsWith(".json", Qt::CaseInsensitive))
-        fileName += ".json";
-
-    LOG_INFO(QString("导出提醒到文件: %1").arg(fileName));
-    QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) {
-        LOG_ERROR(QString("无法保存文件: %1, 错误: %2")
-                 .arg(fileName)
-                 .arg(file.errorString()));
-        QMessageBox::warning(this, tr("错误"),
-            tr("无法保存文件 %1:\n%2").arg(fileName).arg(file.errorString()));
-        return;
-    }
-
-    QJsonDocument doc(getReminders());
-    file.write(doc.toJson());
-    LOG_INFO(QString("成功导出 %1 个提醒").arg(doc.array().size()));
-}
-
 void ActiveReminderList::onSearchTextChanged(const QString &text)
 {
     LOG_INFO(QString("搜索文本变更: '%1'").arg(text));
@@ -453,16 +339,6 @@ QPushButton *ActiveReminderList::addButton() const
 QPushButton *ActiveReminderList::deleteButton() const
 {
     return ui->deleteButton;
-}
-
-QPushButton *ActiveReminderList::importButton() const
-{
-    return ui->importButton;
-}
-
-QPushButton *ActiveReminderList::exportButton() const
-{
-    return ui->exportButton;
 }
 
 QTableView *ActiveReminderList::tableView() const

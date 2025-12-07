@@ -37,23 +37,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="deleteButton">
+     <widget class="QPushButton" name="deleteButton">
        <property name="text">
         <string>删除</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="importButton">
-       <property name="text">
-        <string>导入</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="exportButton">
-       <property name="text">
-        <string>导出</string>
        </property>
       </widget>
      </item>
