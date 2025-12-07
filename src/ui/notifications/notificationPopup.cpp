@@ -2,7 +2,6 @@
 #include <QScreen>
 #include <QApplication>
 #include <QPushButton>
-#include <QStyle>
 #include "ui/notifications/notificationPopup.h"
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -10,6 +9,7 @@
 #include <QScopedPointer>
 #include <QList>
 #include <QPointer>
+#include "core/providers/priorityiconprovider.h"
 
 QList<QPointer<NotificationPopup>> NotificationPopup::s_popups;
 
@@ -39,22 +39,9 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui->titleTextLabel->clear();
     ui->messageLabel->setText(title);
 
-    // 根据优先级选择图标
-    QStyle *style = QApplication::style();
-    QIcon icon;
-    switch (m_priority) {
-    case Priority::Low:
-        icon = style->standardIcon(QStyle::SP_MessageBoxInformation);
-        break;
-    case Priority::High:
-        icon = style->standardIcon(QStyle::SP_MessageBoxCritical);
-        break;
-    case Priority::Medium:
-    default:
-        icon = style->standardIcon(QStyle::SP_MessageBoxWarning);
-        break;
-    }
-    ui->priorityLabel->setPixmap(icon.pixmap(20, 20));
+    // 根据优先级选择卡通图标
+    QIcon icon = PriorityIconProvider::icon(m_priority);
+    ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
     
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::startFadeOut);
@@ -94,7 +81,7 @@ NotificationPopup::NotificationPopup(const QString &title,
         " border-bottom-left-radius: 10px;"
         " border-bottom-right-radius: 10px;");
     
-    setFixedSize(250, 100);
+    setFixedSize(220, 100);
 
     soundEffect->setSource(QUrl(QStringLiteral("qrc:/sound/Ding.wav")));
 }
