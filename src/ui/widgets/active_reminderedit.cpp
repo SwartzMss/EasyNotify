@@ -12,6 +12,28 @@
 #include "core/logging/logger.h"
 #include "core/calendar/workdaycalendar.h"
 
+namespace {
+constexpr auto kDateTimeFormat = "yyyy-MM-dd HH:mm";
+constexpr auto kTimeFormat = "HH:mm";
+constexpr int kMaxNameLength = 6;
+
+QDateTime toMinutePrecision(const QDateTime &dt)
+{
+    if (!dt.isValid()) {
+        return dt;
+    }
+    QDateTime rounded(dt);
+    const QTime time = rounded.time();
+    rounded.setTime(QTime(time.hour(), time.minute()));
+    return rounded;
+}
+
+QTime toMinutePrecision(const QTime &time)
+{
+    return QTime(time.hour(), time.minute());
+}
+}
+
 
 ActiveReminderEdit::ActiveReminderEdit(QWidget *parent)
     : QDialog(parent)
@@ -38,7 +60,7 @@ void ActiveReminderEdit::prepareNewReminder()
     setWindowTitle(tr("新增提醒"));
 
     ui->nameEdit->clear();
-    QDateTime now = QDateTime::currentDateTime();
+    const QDateTime now = toMinutePrecision(QDateTime::currentDateTime());
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
@@ -82,10 +104,11 @@ void ActiveReminderEdit::prepareEditReminder(const Reminder &reminder)
     ui->typeCombo->setCurrentIndex(type);
     ui->priorityCombo->setCurrentIndex(static_cast<int>(reminder.priority()));
 
-    QDateTime nextTrigger = reminder.nextTrigger();
+    const QDateTime nextTrigger = toMinutePrecision(reminder.nextTrigger());
     ui->dateTimeEdit->setDateTime(nextTrigger);
     ui->timeEdit->setTime(nextTrigger.time());
 
+    m_reminder.setNextTrigger(nextTrigger);
     onTypeChanged(type);
     LOG_INFO("编辑提醒准备完成");
 }
@@ -133,13 +156,13 @@ void ActiveReminderEdit::onTypeChanged(int index)
 
 void ActiveReminderEdit::onDateTimeChanged(const QDateTime &dateTime)
 {
-    LOG_INFO(QString("日期时间变更为: %1").arg(dateTime.toString("yyyy-MM-dd HH:mm:ss")));
+    LOG_INFO(QString("日期时间变更为: %1").arg(dateTime.toString(kDateTimeFormat)));
     updateNextTriggerTime();
 }
 
 void ActiveReminderEdit::onTimeChanged(const QTime &time)
 {
-    LOG_INFO(QString("时间变更为: %1").arg(time.toString("HH:mm:ss")));
+    LOG_INFO(QString("时间变更为: %1").arg(time.toString(kTimeFormat)));
     updateNextTriggerTime();
 }
 
@@ -183,21 +206,22 @@ QDateTime ActiveReminderEdit::calculateNextTrigger() const
 
     switch (type) {
         case Reminder::Type::Once: {
-            nextTrigger = ui->dateTimeEdit->dateTime();
-            LOG_INFO(QString("计算一次性提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+            nextTrigger = toMinutePrecision(ui->dateTimeEdit->dateTime());
+            LOG_INFO(QString("计算一次性提醒时间: %1").arg(nextTrigger.toString(kDateTimeFormat)));
             break;
         }
         case Reminder::Type::Daily: {
-            QTime time = ui->timeEdit->time();
+            const QTime time = toMinutePrecision(ui->timeEdit->time());
             nextTrigger = QDateTime(now.date(), time);
             if (nextTrigger <= now) {
                 nextTrigger = nextTrigger.addDays(1);
             }
-            LOG_INFO(QString("计算每日提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+            nextTrigger = toMinutePrecision(nextTrigger);
+            LOG_INFO(QString("计算每日提醒时间: %1").arg(nextTrigger.toString(kDateTimeFormat)));
             break;
         }
         case Reminder::Type::Workday: {
-            QTime time = ui->timeEdit->time();
+            const QTime time = toMinutePrecision(ui->timeEdit->time());
             QDateTime candidate(now.date(), time);
             if (candidate <= now) {
                 candidate = candidate.addDays(1);
@@ -209,7 +233,8 @@ QDateTime ActiveReminderEdit::calculateNextTrigger() const
             } else {
                 nextTrigger = candidate;
             }
-            LOG_INFO(QString("计算工作日提醒时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+            nextTrigger = toMinutePrecision(nextTrigger);
+            LOG_INFO(QString("计算工作日提醒时间: %1").arg(nextTrigger.toString(kDateTimeFormat)));
             break;
         }
     }
@@ -219,8 +244,8 @@ QDateTime ActiveReminderEdit::calculateNextTrigger() const
 
 bool ActiveReminderEdit::validateInput() const
 {
-    bool isValid = !ui->nameEdit->text().trimmed().isEmpty();
-    if (!isValid) {
+    const QString name = ui->nameEdit->text().trimmed();
+    if (name.isEmpty()) {
         QMessageBox::warning(const_cast<ActiveReminderEdit*>(this),
             tr("输入错误"),
             tr("提醒名称不能为空！"));
@@ -228,20 +253,28 @@ bool ActiveReminderEdit::validateInput() const
         return false;
     }
 
+    if (name.size() > kMaxNameLength) {
+        QMessageBox::warning(const_cast<ActiveReminderEdit*>(this),
+            tr("输入错误"),
+            tr("提醒名称不能超过 %1 个字！当前长度：%2").arg(kMaxNameLength).arg(name.size()));
+        LOG_WARNING(QString("提醒名称过长: %1 (限制 %2)").arg(name.size()).arg(kMaxNameLength));
+        return false;
+    }
+
     // 检查一次性提醒的时间是否有效
     if (ui->typeCombo->currentIndex() == 0) { // 一次性提醒
-        QDateTime selectedTime = ui->dateTimeEdit->dateTime();
-        QDateTime currentTime = QDateTime::currentDateTime();
+        const QDateTime selectedTime = toMinutePrecision(ui->dateTimeEdit->dateTime());
+        const QDateTime currentTime = toMinutePrecision(QDateTime::currentDateTime());
         
         if (selectedTime <= currentTime) {
             QMessageBox::warning(const_cast<ActiveReminderEdit*>(this),
                 tr("时间设置错误"),
                 tr("一次性提醒的时间必须晚于当前时间！\n\n当前时间：%1\n设置时间：%2")
-                    .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss"))
-                    .arg(selectedTime.toString("yyyy-MM-dd HH:mm:ss")));
+                    .arg(currentTime.toString(kDateTimeFormat))
+                    .arg(selectedTime.toString(kDateTimeFormat)));
             LOG_WARNING(QString("一次性提醒时间无效: %1 <= %2")
-                .arg(selectedTime.toString("yyyy-MM-dd HH:mm:ss"))
-                .arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));
+                .arg(selectedTime.toString(kDateTimeFormat))
+                .arg(currentTime.toString(kDateTimeFormat)));
             return false;
         }
     }
@@ -253,9 +286,9 @@ void ActiveReminderEdit::updateNextTriggerTime()
 {
     QDateTime nextTime = calculateNextTrigger();
     if (nextTime.isValid()) {
-        ui->nextTriggerLabel->setText(nextTime.toString("yyyy-MM-dd HH:mm:ss"));
+        ui->nextTriggerLabel->setText(nextTime.toString(kDateTimeFormat));
         m_reminder.setNextTrigger(nextTime);
-        LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString("yyyy-MM-dd HH:mm:ss")));
+        LOG_INFO(QString("更新下次触发时间: %1").arg(nextTime.toString(kDateTimeFormat)));
     } else {
         ui->nextTriggerLabel->setText("--");
     }
@@ -265,9 +298,11 @@ void ActiveReminderEdit::applyDialogStyle()
 {
     setObjectName(QStringLiteral("ReminderEdit"));
     if (auto okButton = ui->buttonBox->button(QDialogButtonBox::Ok)) {
+        okButton->setText(tr("确定"));
         okButton->setObjectName(QStringLiteral("primaryButton"));
     }
     if (auto cancelButton = ui->buttonBox->button(QDialogButtonBox::Cancel)) {
+        cancelButton->setText(tr("取消"));
         cancelButton->setObjectName(QStringLiteral("ghostButton"));
     }
 

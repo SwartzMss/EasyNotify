@@ -14,7 +14,6 @@ SOURCES += \
     src/app/main.cpp \
     src/core/config/configmanager.cpp \
     src/core/logging/logger.cpp \
-    src/core/network/remoteclient.cpp \
     src/core/providers/priorityiconprovider.cpp \
     src/core/reminders/reminder.cpp \
     src/core/reminders/remindermanager.cpp \
@@ -27,13 +26,13 @@ SOURCES += \
     src/ui/windows/completedreminderwindow.cpp \
     src/ui/widgets/active_reminderlist.cpp \
     src/ui/widgets/completed_reminderlist.cpp \
+    src/ui/widgets/reminderliststyler.cpp \
     src/ui/widgets/active_reminderedit.cpp \
     src/ui/notifications/notificationPopup.cpp
 
 HEADERS += \
     src/core/config/configmanager.h \
     src/core/logging/logger.h \
-    src/core/network/remoteclient.h \
     src/core/providers/priorityiconprovider.h \
     src/core/reminders/reminder.h \
     src/core/reminders/remindermanager.h \
@@ -46,6 +45,7 @@ HEADERS += \
     src/ui/windows/completedreminderwindow.h \
     src/ui/widgets/active_reminderlist.h \
     src/ui/widgets/completed_reminderlist.h \
+    src/ui/widgets/reminderliststyler.h \
     src/ui/widgets/active_reminderedit.h \
     src/ui/notifications/notificationPopup.h
 

@@ -3,13 +3,13 @@
  <class>CompletedReminderList</class>
  <widget class="QWidget" name="CompletedReminderList">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>531</width>
-    <height>310</height>
-   </rect>
-  </property>
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>520</width>
+     <height>300</height>
+    </rect>
+   </property>
   <property name="sizePolicy">
    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
     <horstretch>0</horstretch>

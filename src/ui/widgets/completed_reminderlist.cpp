@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include "core/reminders/remindermanager.h"
 #include "core/logging/logger.h"
+#include "ui/widgets/reminderliststyler.h"
 
 enum ColumnIndex {
     Name = 0,
@@ -22,6 +23,7 @@ CompletedReminderList::CompletedReminderList(QWidget *parent)
     LOG_INFO("创建提醒列表界面");
     ui->setupUi(this);
     setupModel();
+    applyWidgetStyles();
     setupConnections();
     LOG_INFO("提醒列表界面初始化完成");
 }
@@ -64,6 +66,11 @@ void CompletedReminderList::setupModel()
     ui->tableView->setAlternatingRowColors(true);
     ui->tableView->setShowGrid(false);
     LOG_INFO("数据模型设置完成");
+}
+
+void CompletedReminderList::applyWidgetStyles()
+{
+    ReminderListStyler::apply(ui->searchEdit, nullptr, ui->deleteButton, ui->tableView);
 }
 
 void CompletedReminderList::loadReminders(const QList<Reminder> &reminders)

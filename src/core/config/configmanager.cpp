@@ -11,8 +11,6 @@ const QString ConfigManager::CONFIG_DB = "config.db";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
 const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
-const QString ConfigManager::PORT_KEY = "remotePort";
-const QString ConfigManager::URL_KEY = "remoteUrl";
 
 ConfigManager& ConfigManager::instance()
 {
@@ -76,20 +74,6 @@ bool ConfigManager::isSoundEnabled() const
     return enabled;
 }
 
-int ConfigManager::remotePort() const
-{
-    int port = readSetting(PORT_KEY, 12345).toInt();
-    LOG_INFO(QString("获取远程端口: %1").arg(port));
-    return port;
-}
-
-QString ConfigManager::remoteUrl() const
-{
-    QString url = readSetting(URL_KEY, QStringLiteral("tcp://localhost:12345")).toString();
-    LOG_INFO(QString("获取远程地址: %1").arg(url));
-    return url;
-}
-
 void ConfigManager::setAutoStart(bool autoStart)
 {
     LOG_INFO(QString("设置开机启动: %1").arg(autoStart));
@@ -109,18 +93,6 @@ void ConfigManager::setSoundEnabled(bool enabled)
 {
     LOG_INFO(QString("设置声音提醒: %1").arg(enabled));
     writeSetting(SOUND_ENABLED_KEY, enabled);
-}
-
-void ConfigManager::setRemotePort(int port)
-{
-    LOG_INFO(QString("设置远程端口: %1").arg(port));
-    writeSetting(PORT_KEY, port);
-}
-
-void ConfigManager::setRemoteUrl(const QString &url)
-{
-    LOG_INFO(QString("设置远程地址: %1").arg(url));
-    writeSetting(URL_KEY, url);
 }
 
 QJsonArray ConfigManager::getReminders() const
@@ -159,8 +131,6 @@ void ConfigManager::initDefaultConfig()
     writeSetting(PAUSED_KEY, false);
     writeSetting(AUTO_START_KEY, false);
     writeSetting(SOUND_ENABLED_KEY, true);
-    writeSetting(PORT_KEY, 12345);
-    writeSetting(URL_KEY, QStringLiteral("tcp://localhost:12345"));
     writeRemindersToDb(QJsonArray());
 }
 

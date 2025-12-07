@@ -35,7 +35,6 @@ nmake
 - `isPaused`：是否暂停提醒
 - `autoStart`：开机启动
 - `soundEnabled`：声音提示
-- `remoteUrl` / `remotePort`：远程触发地址
 - `reminders` 表字段：`id`、`name`、`type`、`priority`、`nextTrigger`、`completed`
 
 提醒类型：`0` 一次性；`1` 每日；`2` 工作日（跳过周末、法定节假日与调休补班）。优先级：`0` 低、`1` 中、`2` 高。
@@ -61,12 +60,6 @@ nmake
 ```
 
 每个年份下的 `holidays` 视为法定节假日，`makeupDays` 视为调休补班日。可按年度维护，更新后重启程序生效。
-
-## 远程触发
-
-程序启动后会根据 `remoteUrl` 配置通过 TCP 主动连接到远程服务，
-从该连接接收文本或 JSON 消息并在桌面弹出提醒。例如服务端发送一条
-字符串即可在桌面看到通知。
 
 ## 许可证
 

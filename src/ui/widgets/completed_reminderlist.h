@@ -32,6 +32,7 @@ public slots:
 private:
     void setupConnections();
     void setupModel();
+    void applyWidgetStyles();
     void deleteReminder(const QModelIndex &index);
     void refreshList();
     void searchReminders(const QString &text);

@@ -3,13 +3,13 @@
  <class>CompletedReminderWindow</class>
  <widget class="QWidget" name="CompletedReminderWindow">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>600</width>
-    <height>400</height>
-   </rect>
-  </property>
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>580</width>
+     <height>400</height>
+    </rect>
+   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">

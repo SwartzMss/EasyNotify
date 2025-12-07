@@ -59,7 +59,7 @@
          <string>提醒信息</string>
         </property>
         <property name="styleSheet">
-         <string notr="true">font-size:14px;font-weight:600;color:#1f2937;</string>
+         <string notr="true">font-size:12px;font-weight:600;color:#1f2937;</string>
         </property>
        </widget>
       </item>
@@ -83,6 +83,9 @@
         </item>
         <item row="0" column="1">
          <widget class="QLineEdit" name="nameEdit">
+          <property name="maxLength">
+           <number>6</number>
+          </property>
           <property name="placeholderText">
            <string>例如：每周例会提醒</string>
           </property>
@@ -150,7 +153,7 @@
         <item row="3" column="1">
          <widget class="QDateTimeEdit" name="dateTimeEdit">
           <property name="displayFormat">
-           <string>yyyy-MM-dd HH:mm:ss</string>
+           <string>yyyy-MM-dd HH:mm</string>
           </property>
           <property name="calendarPopup">
            <bool>true</bool>
@@ -167,7 +170,7 @@
         <item row="4" column="1">
          <widget class="QTimeEdit" name="timeEdit">
           <property name="displayFormat">
-           <string>HH:mm:ss</string>
+           <string>HH:mm</string>
           </property>
          </widget>
         </item>
