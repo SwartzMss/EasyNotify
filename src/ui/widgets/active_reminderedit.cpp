@@ -42,14 +42,14 @@ void ActiveReminderEdit::prepareNewReminder()
     ui->dateTimeEdit->setDateTime(now);
     ui->timeEdit->setTime(now.time());
     ui->typeCombo->setCurrentIndex(0);
-    ui->priorityCombo->setCurrentIndex(1);
+    ui->priorityCombo->setCurrentIndex(0);
     ui->nameEdit->setFocus();
 
     m_reminder = Reminder();
     m_reminder.setId(QUuid::createUuid().toString(QUuid::WithoutBraces));
     m_reminder.setType(Reminder::Type::Once);
     m_reminder.setNextTrigger(now);
-    m_reminder.setPriority(Reminder::Priority::Medium);
+    m_reminder.setPriority(Reminder::Priority::Low);
 
     onTypeChanged(0);
     LOG_INFO("新建提醒准备完成");
@@ -326,7 +326,7 @@ QPushButton#ghostButton:hover {
 
 void ActiveReminderEdit::setupPrioritySelector()
 {
-    ui->priorityCombo->setIconSize(QSize(16, 16));
+    ui->priorityCombo->setIconSize(QSize(22, 22));
     const QList<Reminder::Priority> options = {
         Reminder::Priority::Low,
         Reminder::Priority::Medium,
