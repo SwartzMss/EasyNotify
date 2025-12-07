@@ -14,7 +14,6 @@ SOURCES += \
     src/app/main.cpp \
     src/core/config/configmanager.cpp \
     src/core/logging/logger.cpp \
-    src/core/network/remoteclient.cpp \
     src/core/providers/priorityiconprovider.cpp \
     src/core/reminders/reminder.cpp \
     src/core/reminders/remindermanager.cpp \
@@ -34,7 +33,6 @@ SOURCES += \
 HEADERS += \
     src/core/config/configmanager.h \
     src/core/logging/logger.h \
-    src/core/network/remoteclient.h \
     src/core/providers/priorityiconprovider.h \
     src/core/reminders/reminder.h \
     src/core/reminders/remindermanager.h \
