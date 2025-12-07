@@ -27,6 +27,7 @@ SOURCES += \
     src/ui/windows/completedreminderwindow.cpp \
     src/ui/widgets/active_reminderlist.cpp \
     src/ui/widgets/completed_reminderlist.cpp \
+    src/ui/widgets/reminderliststyler.cpp \
     src/ui/widgets/active_reminderedit.cpp \
     src/ui/notifications/notificationPopup.cpp
 
@@ -46,6 +47,7 @@ HEADERS += \
     src/ui/windows/completedreminderwindow.h \
     src/ui/widgets/active_reminderlist.h \
     src/ui/widgets/completed_reminderlist.h \
+    src/ui/widgets/reminderliststyler.h \
     src/ui/widgets/active_reminderedit.h \
     src/ui/notifications/notificationPopup.h
 

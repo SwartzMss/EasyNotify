@@ -58,7 +58,7 @@ QVariant ActiveReminderTableModel::data(const QModelIndex &index, int role) cons
     if (role == Qt::ForegroundRole && index.column() == 2) {
         return PriorityIconProvider::color(reminder.priority());
     }
-    if (role == Qt::TextAlignmentRole && index.column() == 2) {
+    if (role == Qt::TextAlignmentRole && index.column() != 0) {
         return Qt::AlignCenter;
     }
     return QVariant();

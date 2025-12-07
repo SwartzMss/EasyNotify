@@ -9,6 +9,21 @@
 #include <QMetaType>
 #include "core/calendar/workdaycalendar.h"
 
+namespace {
+constexpr auto kDateTimeFormat = "yyyy-MM-dd HH:mm";
+
+QDateTime toMinutePrecision(const QDateTime &dt)
+{
+    if (!dt.isValid()) {
+        return dt;
+    }
+    QDateTime rounded(dt);
+    const QTime t = rounded.time();
+    rounded.setTime(QTime(t.hour(), t.minute()));
+    return rounded;
+}
+}
+
 ReminderManager::ReminderManager(QObject *parent)
     : QObject(nullptr)
     , checkTimer(new QTimer(this))
@@ -42,7 +57,9 @@ void ReminderManager::loadReminders()
     m_reminders.clear();
     for (const QJsonValue &value : reminders) {
         if (value.isObject()) {
-            m_reminders.append(Reminder::fromJson(value.toObject()));
+            Reminder reminder = Reminder::fromJson(value.toObject());
+            reminder.setNextTrigger(toMinutePrecision(reminder.nextTrigger()));
+            m_reminders.append(reminder);
         }
     }
     
@@ -61,7 +78,9 @@ void ReminderManager::addReminder(const Reminder &reminder)
             return;
         }
     }
-    m_reminders.append(reminder);
+    Reminder normalized = reminder;
+    normalized.setNextTrigger(toMinutePrecision(reminder.nextTrigger()));
+    m_reminders.append(normalized);
     saveReminders();
 }
 
@@ -70,7 +89,9 @@ void ReminderManager::updateReminder(const Reminder &reminder)
     QMutexLocker locker(&mutex);
     for (int i = 0; i < m_reminders.size(); ++i) {
         if (m_reminders[i].id() == reminder.id()) {
-            m_reminders[i] = reminder;
+            Reminder normalized = reminder;
+            normalized.setNextTrigger(toMinutePrecision(reminder.nextTrigger()));
+            m_reminders[i] = normalized;
             saveReminders();
             break;
         }
@@ -130,7 +151,7 @@ void ReminderManager::checkReminders()
     }
 
     QDateTime currentTime = QDateTime::currentDateTime();
-    LOG_DEBUG(QString("检查提醒，当前时间: %1").arg(currentTime.toString("yyyy-MM-dd HH:mm:ss")));
+    LOG_DEBUG(QString("检查提醒，当前时间: %1").arg(currentTime.toString(kDateTimeFormat)));
     
     for (auto it = m_reminders.begin(); it != m_reminders.end(); ++it) {
         Reminder &reminder = *it;
@@ -139,7 +160,7 @@ void ReminderManager::checkReminders()
         
         LOG_DEBUG(QString("检查提醒 [%1]: 下次触发时间 = %2")
             .arg(id)
-            .arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+            .arg(nextTrigger.toString(kDateTimeFormat)));
             
         if (shouldTrigger(reminder)) {
             LOG_INFO(QString("触发提醒 [%1]").arg(id));
@@ -162,8 +183,8 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
         LOG_INFO(QString("一次性提醒已完成，标记 completed"));
         return;
     } else if (type == Reminder::Type::Daily) {
-        nextTrigger = reminder.nextTrigger().addDays(1);
-        LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+        nextTrigger = toMinutePrecision(reminder.nextTrigger().addDays(1));
+        LOG_INFO(QString("每日提醒，下次触发时间: %1").arg(nextTrigger.toString(kDateTimeFormat)));
     } else if (type == Reminder::Type::Workday) {
         const bool hasValidTrigger = reminder.nextTrigger().isValid();
         QDate baseDate = hasValidTrigger
@@ -174,17 +195,20 @@ void ReminderManager::calculateNextTrigger(Reminder &reminder)
         }
         WorkdayCalendar &calendar = WorkdayCalendar::instance();
         const QDate nextDate = calendar.nextWorkday(baseDate, true);
-        const QTime triggerTime = hasValidTrigger ? reminder.nextTrigger().time() : QTime::currentTime();
+        const QTime triggerTime = hasValidTrigger
+            ? reminder.nextTrigger().time()
+            : QTime::currentTime();
         if (nextDate.isValid()) {
             nextTrigger = QDateTime(nextDate, triggerTime);
         } else {
             nextTrigger = QDateTime(baseDate, triggerTime);
         }
-        LOG_INFO(QString("工作日提醒，下次触发时间: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+        nextTrigger = toMinutePrecision(nextTrigger);
+        LOG_INFO(QString("工作日提醒，下次触发时间: %1").arg(nextTrigger.toString(kDateTimeFormat)));
     }
 
     reminder.setNextTrigger(nextTrigger);
-    LOG_INFO(QString("下次触发时间设置为: %1").arg(nextTrigger.toString("yyyy-MM-dd HH:mm:ss")));
+    LOG_INFO(QString("下次触发时间设置为: %1").arg(nextTrigger.toString(kDateTimeFormat)));
 }
 
 bool ReminderManager::shouldTrigger(const Reminder &reminder) const

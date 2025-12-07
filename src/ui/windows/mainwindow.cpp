@@ -97,7 +97,7 @@ void MainWindow::setupUI()
     tabWidget->addTab(completedWindow, tr("已完成提醒"));
 
     // 设置窗口大小
-    setFixedSize(600, 400);
+    setFixedSize(580, 400);
 }
 
 void MainWindow::setupConnections()
