@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QSortFilterProxyModel>
-#include <QJsonArray>
 #include "ui/widgets/active_reminderedit.h"
 #include "core/reminders/remindermanager.h"
 #include "models/active_remindertablemodel.h"
@@ -24,19 +23,14 @@ public:
 
     void setReminderManager(ReminderManager *manager);
     void loadReminders(const QList<Reminder> &reminders);
-    QJsonArray getReminders() const;
     QPushButton *addButton() const;
     QPushButton *deleteButton() const;
-    QPushButton *importButton() const;
-    QPushButton *exportButton() const;
     QTableView *tableView() const;
 
 public slots:
     void onAddClicked();
     void onEditClicked();
     void onDeleteClicked();
-    void onImportClicked();
-    void onExportClicked();
     void onSearchTextChanged(const QString &text);
 
 private:
