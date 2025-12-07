@@ -2,9 +2,12 @@
 #include "core/logging/logger.h"
 #include <QSettings>
 #include <QSet>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QJsonObject>
+#include <QDir>
 
-const QString ConfigManager::CONFIG_FILE = "config.json";
-const QString ConfigManager::REMINDERS_KEY = "reminders";
+const QString ConfigManager::CONFIG_DB = "config.db";
 const QString ConfigManager::PAUSED_KEY = "isPaused";
 const QString ConfigManager::AUTO_START_KEY = "autoStart";
 const QString ConfigManager::SOUND_ENABLED_KEY = "soundEnabled";
@@ -25,26 +28,30 @@ ConfigManager::ConfigManager(QObject *parent)
 
 ConfigManager::~ConfigManager()
 {
-    LOG_INFO("ConfigManager 析构函数被调用，准备保存配置");
-    saveConfig();
+    LOG_INFO("ConfigManager 析构函数被调用");
 }
 
 void ConfigManager::init()
 {
     LOG_INFO("初始化配置管理器");
+    if (!openDatabase()) {
+        LOG_ERROR("配置数据库打开失败，将尝试使用默认配置");
+        return;
+    }
+    ensureTables();
     loadConfig();
 }
 
 QString ConfigManager::getConfigPath() const
 {
-    QString path = QCoreApplication::applicationDirPath() + "/" + CONFIG_FILE;
+    QString path = QCoreApplication::applicationDirPath() + "/" + CONFIG_DB;
     LOG_INFO(QString("获取配置文件路径: %1").arg(path));
     return path;
 }
 
 bool ConfigManager::isPaused() const
 {
-    bool paused = config[PAUSED_KEY].toBool();
+    bool paused = readSetting(PAUSED_KEY, false).toBool();
     LOG_INFO(QString("获取暂停状态: %1").arg(paused));
     return paused;
 }
@@ -52,34 +59,33 @@ bool ConfigManager::isPaused() const
 void ConfigManager::setPaused(bool paused)
 {
     LOG_INFO(QString("设置暂停状态: %1").arg(paused));
-    config[PAUSED_KEY] = paused;
-    saveConfig();
+    writeSetting(PAUSED_KEY, paused);
 }
 
 bool ConfigManager::isAutoStart() const
 {
-    bool autoStart = config[AUTO_START_KEY].toBool();
+    bool autoStart = readSetting(AUTO_START_KEY, false).toBool();
     LOG_INFO(QString("获取开机启动状态: %1").arg(autoStart));
     return autoStart;
 }
 
 bool ConfigManager::isSoundEnabled() const
 {
-    bool enabled = config[SOUND_ENABLED_KEY].toBool(true);
+    bool enabled = readSetting(SOUND_ENABLED_KEY, true).toBool();
     LOG_INFO(QString("获取声音提醒状态: %1").arg(enabled));
     return enabled;
 }
 
 int ConfigManager::remotePort() const
 {
-    int port = config[PORT_KEY].toInt(12345);
+    int port = readSetting(PORT_KEY, 12345).toInt();
     LOG_INFO(QString("获取远程端口: %1").arg(port));
     return port;
 }
 
 QString ConfigManager::remoteUrl() const
 {
-    QString url = config[URL_KEY].toString("tcp://localhost:12345");
+    QString url = readSetting(URL_KEY, QStringLiteral("tcp://localhost:12345")).toString();
     LOG_INFO(QString("获取远程地址: %1").arg(url));
     return url;
 }
@@ -87,7 +93,6 @@ QString ConfigManager::remoteUrl() const
 void ConfigManager::setAutoStart(bool autoStart)
 {
     LOG_INFO(QString("设置开机启动: %1").arg(autoStart));
-    config[AUTO_START_KEY] = autoStart;
 #ifdef Q_OS_WIN
     QSettings settings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
     if (autoStart) {
@@ -97,34 +102,30 @@ void ConfigManager::setAutoStart(bool autoStart)
         settings.remove(QCoreApplication::applicationName());
     }
 #endif
-    saveConfig();
+    writeSetting(AUTO_START_KEY, autoStart);
 }
 
 void ConfigManager::setSoundEnabled(bool enabled)
 {
     LOG_INFO(QString("设置声音提醒: %1").arg(enabled));
-    config[SOUND_ENABLED_KEY] = enabled;
-    saveConfig();
+    writeSetting(SOUND_ENABLED_KEY, enabled);
 }
 
 void ConfigManager::setRemotePort(int port)
 {
     LOG_INFO(QString("设置远程端口: %1").arg(port));
-    config[PORT_KEY] = port;
-    saveConfig();
+    writeSetting(PORT_KEY, port);
 }
 
 void ConfigManager::setRemoteUrl(const QString &url)
 {
     LOG_INFO(QString("设置远程地址: %1").arg(url));
-    config[URL_KEY] = url;
-    saveConfig();
+    writeSetting(URL_KEY, url);
 }
 
 QJsonArray ConfigManager::getReminders() const
 {
-    QJsonArray reminders = config[REMINDERS_KEY].toArray();
-    deduplicate(reminders);
+    QJsonArray reminders = readRemindersFromDb();
     LOG_INFO(QString("获取提醒列表，共 %1 个提醒").arg(reminders.size()));
     return reminders;
 }
@@ -134,86 +135,33 @@ void ConfigManager::setReminders(const QJsonArray &reminders)
     QJsonArray unique = reminders;
     deduplicate(unique);
     LOG_INFO(QString("设置提醒列表，共 %1 个提醒").arg(unique.size()));
-    config[REMINDERS_KEY] = unique;
-    saveConfig();
-}
-
-void ConfigManager::saveConfig()
-{
-    QString path = getConfigPath();
-    LOG_INFO(QString("保存配置到文件: %1").arg(path));
-    
-    QFile file(path);
-    if (file.open(QIODevice::WriteOnly)) {
-        QJsonDocument doc(config);
-        QByteArray jsonData = doc.toJson();
-        qint64 bytesWritten = file.write(jsonData);
-        file.close();
-        
-        if (bytesWritten == jsonData.size()) {
-            LOG_INFO(QString("配置保存成功，数据大小: %1 字节").arg(jsonData.size()));
-        } else {
-            LOG_ERROR(QString("配置保存不完整，预期写入 %1 字节，实际写入 %2 字节")
-                     .arg(jsonData.size())
-                     .arg(bytesWritten));
-        }
-    } else {
-        LOG_ERROR(QString("保存配置失败: %1").arg(file.errorString()));
-    }
+    writeRemindersToDb(unique);
 }
 
 void ConfigManager::loadConfig()
 {
-    QString path = getConfigPath();
-    LOG_INFO(QString("从文件加载配置: %1").arg(path));
-    
-    QFile file(path);
-    if (file.exists()) {
-        if (file.open(QIODevice::ReadOnly)) {
-            QByteArray data = file.readAll();
-            QJsonDocument doc = QJsonDocument::fromJson(data);
-            if (doc.isObject()) {
-                config = doc.object();
-                LOG_INFO(QString("配置加载成功，数据大小: %1 字节").arg(data.size()));
-                if (!config.contains(SOUND_ENABLED_KEY))
-                    config[SOUND_ENABLED_KEY] = true;
-                if (!config.contains(PORT_KEY))
-                    config[PORT_KEY] = 12345;
-                if (!config.contains(URL_KEY))
-                    config[URL_KEY] = "tcp://localhost:12345";
-            } else {
-                LOG_ERROR(QString("配置文件格式错误，数据大小: %1 字节").arg(data.size()));
-                initDefaultConfig();
-            }
-            file.close();
-        } else {
-            LOG_ERROR(QString("打开配置文件失败: %1").arg(file.errorString()));
-            initDefaultConfig();
-        }
-    } else {
-        LOG_INFO("配置文件不存在，创建默认配置");
-        initDefaultConfig();
+    // 如果数据库没有任何设置，填充默认值
+    QSqlQuery query(db);
+    query.exec(QStringLiteral("SELECT COUNT(*) FROM settings"));
+    int count = 0;
+    if (query.next()) {
+        count = query.value(0).toInt();
     }
-
-    if (config.contains(REMINDERS_KEY) && config[REMINDERS_KEY].isArray()) {
-        QJsonArray reminders = config[REMINDERS_KEY].toArray();
-        deduplicate(reminders);
-        config[REMINDERS_KEY] = reminders;
-        saveConfig();
+    if (count == 0) {
+        LOG_INFO("设置表为空，写入默认配置");
+        initDefaultConfig();
     }
 }
 
 void ConfigManager::initDefaultConfig()
 {
     LOG_INFO("初始化默认配置");
-    config = QJsonObject();
-    config[PAUSED_KEY] = false;
-    config[AUTO_START_KEY] = false;
-    config[SOUND_ENABLED_KEY] = true;
-    config[PORT_KEY] = 12345;
-    config[URL_KEY] = "tcp://localhost:12345";
-    config[REMINDERS_KEY] = QJsonArray();
-    saveConfig();
+    writeSetting(PAUSED_KEY, false);
+    writeSetting(AUTO_START_KEY, false);
+    writeSetting(SOUND_ENABLED_KEY, true);
+    writeSetting(PORT_KEY, 12345);
+    writeSetting(URL_KEY, QStringLiteral("tcp://localhost:12345"));
+    writeRemindersToDb(QJsonArray());
 }
 
 void ConfigManager::deduplicate(QJsonArray &reminders)
@@ -233,4 +181,107 @@ void ConfigManager::deduplicate(QJsonArray &reminders)
         unique.append(obj);
     }
     reminders = unique;
+}
+
+bool ConfigManager::openDatabase()
+{
+    db = QSqlDatabase::addDatabase("QSQLITE", "config_connection");
+    db.setDatabaseName(getConfigPath());
+    if (!db.open()) {
+        LOG_ERROR(QString("打开配置数据库失败: %1").arg(db.lastError().text()));
+        return false;
+    }
+    return true;
+}
+
+void ConfigManager::ensureTables()
+{
+    QSqlQuery query(db);
+    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS settings ("
+                                   "key TEXT PRIMARY KEY,"
+                                   "value TEXT)"))) {
+        LOG_ERROR(QString("创建 settings 表失败: %1").arg(query.lastError().text()));
+    }
+    if (!query.exec(QStringLiteral("CREATE TABLE IF NOT EXISTS reminders ("
+                                   "id TEXT PRIMARY KEY,"
+                                   "name TEXT,"
+                                   "type INTEGER,"
+                                   "priority INTEGER,"
+                                   "next_trigger TEXT,"
+                                   "completed INTEGER)"))) {
+        LOG_ERROR(QString("创建 reminders 表失败: %1").arg(query.lastError().text()));
+    }
+}
+
+QVariant ConfigManager::readSetting(const QString &key, const QVariant &defaultValue) const
+{
+    QSqlQuery query(db);
+    query.prepare(QStringLiteral("SELECT value FROM settings WHERE key = ?"));
+    query.addBindValue(key);
+    if (query.exec() && query.next()) {
+        return query.value(0);
+    }
+    return defaultValue;
+}
+
+void ConfigManager::writeSetting(const QString &key, const QVariant &value)
+{
+    QSqlQuery query(db);
+    query.prepare(QStringLiteral("REPLACE INTO settings (key, value) VALUES (?, ?)"));
+    query.addBindValue(key);
+    query.addBindValue(value);
+    if (!query.exec()) {
+        LOG_ERROR(QString("写入设置失败 [%1]: %2").arg(key, query.lastError().text()));
+    }
+}
+
+QJsonArray ConfigManager::readRemindersFromDb() const
+{
+    QJsonArray array;
+    QSqlQuery query(db);
+    if (query.exec(QStringLiteral("SELECT id, name, type, priority, next_trigger, completed FROM reminders"))) {
+        while (query.next()) {
+            QJsonObject obj;
+            obj["id"] = query.value(0).toString();
+            obj["name"] = query.value(1).toString();
+            obj["type"] = query.value(2).toInt();
+            obj["priority"] = query.value(3).toInt();
+            obj["nextTrigger"] = query.value(4).toString();
+            obj["completed"] = query.value(5).toBool();
+            array.append(obj);
+        }
+    } else {
+        LOG_ERROR(QString("读取提醒失败: %1").arg(query.lastError().text()));
+    }
+    return array;
+}
+
+void ConfigManager::writeRemindersToDb(const QJsonArray &reminders)
+{
+    QSqlQuery query(db);
+    if (!query.exec(QStringLiteral("DELETE FROM reminders"))) {
+        LOG_ERROR(QString("清空提醒表失败: %1").arg(query.lastError().text()));
+        return;
+    }
+    query.prepare(QStringLiteral("INSERT INTO reminders (id, name, type, priority, next_trigger, completed) "
+                                 "VALUES (?, ?, ?, ?, ?, ?)"));
+    for (const QJsonValue &val : reminders) {
+        if (!val.isObject())
+            continue;
+        QJsonObject obj = val.toObject();
+        query.addBindValue(obj.value("id").toString());
+        query.addBindValue(obj.value("name").toString());
+        query.addBindValue(obj.value("type").toInt());
+        query.addBindValue(obj.value("priority").toInt());
+        query.addBindValue(obj.value("nextTrigger").toString());
+        query.addBindValue(obj.value("completed").toBool() ? 1 : 0);
+        if (!query.exec()) {
+            LOG_ERROR(QString("写入提醒失败 (ID=%1): %2")
+                      .arg(obj.value("id").toString(),
+                           query.lastError().text()));
+        }
+        query.clear();
+        query.prepare(QStringLiteral("INSERT INTO reminders (id, name, type, priority, next_trigger, completed) "
+                                     "VALUES (?, ?, ?, ?, ?, ?)"));
+    }
 }
