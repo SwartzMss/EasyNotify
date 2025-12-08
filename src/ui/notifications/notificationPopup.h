@@ -13,6 +13,7 @@
 #include <QPointer>
 #include <QCloseEvent>
 #include <QSoundEffect>
+#include <QScreen>
 
 class NotificationPopup : public QWidget {
     Q_OBJECT
@@ -21,7 +22,8 @@ public:
     NotificationPopup(const QString &title,
                       Priority priority = Priority::Medium,
                       bool soundEnabled = true,
-                      QWidget *parent = nullptr);
+                      QWidget *parent = nullptr,
+                      QScreen *targetScreen = nullptr);
     
     void show();
 
@@ -38,6 +40,7 @@ private:
     void moveToCenter();
     void repositionCornerPopups();
     void scheduleAutoClose();
+    QScreen *placementScreen() const;
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn;
     QPropertyAnimation *fadeOut;
@@ -45,5 +48,6 @@ private:
     QSoundEffect *soundEffect;
     bool m_soundEnabled;
     QPointer<QWidget> m_anchorWidget;
+    QPointer<QScreen> m_targetScreen;
     bool m_isCornerPopup = false;
 };

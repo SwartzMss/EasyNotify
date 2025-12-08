@@ -9,6 +9,7 @@
 #include <QScopedPointer>
 #include <QList>
 #include <QPointer>
+#include <QHash>
 #include "core/providers/priorityiconprovider.h"
 
 QList<QPointer<NotificationPopup>> NotificationPopup::s_cornerPopups;
@@ -17,13 +18,15 @@ QPointer<NotificationPopup> NotificationPopup::s_centerPopup;
 NotificationPopup::NotificationPopup(const QString &title,
                                      Priority priority,
                                      bool soundEnabled,
-                                     QWidget *parent)
+                                     QWidget *parent,
+                                     QScreen *targetScreen)
   : QWidget(nullptr, Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::X11BypassWindowManagerHint),
     ui(new Ui::NotificationPopup),
     m_priority(priority),
     soundEffect(new QSoundEffect(this)),
     m_soundEnabled(soundEnabled),
-    m_anchorWidget(parent)
+    m_anchorWidget(parent),
+    m_targetScreen(targetScreen)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
@@ -146,6 +149,14 @@ void NotificationPopup::moveToCenter()
 {
     m_isCornerPopup = false;
 
+    if (QScreen *screen = placementScreen()) {
+        QRect avail = screen->availableGeometry();
+        int x = avail.x() + (avail.width() - width()) / 2;
+        int y = avail.y() + (avail.height() - height()) / 2;
+        move(x, y);
+        return;
+    }
+
     if (m_anchorWidget) {
         QRect anchorRect = m_anchorWidget->frameGeometry();
         if (anchorRect.isValid()) {
@@ -156,13 +167,11 @@ void NotificationPopup::moveToCenter()
         }
     }
 
-    QScreen *screen = m_anchorWidget ? m_anchorWidget->screen() : QGuiApplication::primaryScreen();
-    if (!screen)
-        screen = QGuiApplication::primaryScreen();
-    if (!screen)
+    QScreen *fallback = QGuiApplication::primaryScreen();
+    if (!fallback)
         return;
 
-    QRect avail = screen->availableGeometry();
+    QRect avail = fallback->availableGeometry();
     int x = avail.x() + (avail.width() - width()) / 2;
     int y = avail.y() + (avail.height() - height()) / 2;
     move(x, y);
@@ -170,14 +179,9 @@ void NotificationPopup::moveToCenter()
 
 void NotificationPopup::repositionCornerPopups()
 {
-    QScreen *screen = QGuiApplication::primaryScreen();
-    if (!screen)
-        return;
-
-    QRect avail = screen->availableGeometry();
     const int margin = 8;
+    QHash<QScreen *, int> perScreenIndex;
 
-    int visibleIndex = 0;
     for (int i = 0; i < s_cornerPopups.size(); ++i) {
         NotificationPopup *popup = s_cornerPopups.at(i);
         if (!popup) {
@@ -186,11 +190,26 @@ void NotificationPopup::repositionCornerPopups()
             continue;
         }
 
+        QScreen *screen = popup->placementScreen();
+        if (!screen)
+            continue;
+
+        QRect avail = screen->availableGeometry();
+        int visibleIndex = perScreenIndex.value(screen, 0);
         int x = avail.x() + avail.width() - popup->width() - margin;
         int y = avail.y() + avail.height() - ((visibleIndex + 1) * (popup->height() + margin));
         popup->move(x, y);
-        ++visibleIndex;
+        perScreenIndex[screen] = visibleIndex + 1;
     }
+}
+
+QScreen *NotificationPopup::placementScreen() const
+{
+    if (m_targetScreen)
+        return m_targetScreen.data();
+    if (m_anchorWidget)
+        return m_anchorWidget->screen();
+    return QGuiApplication::primaryScreen();
 }
 
 void NotificationPopup::startFadeOut()
