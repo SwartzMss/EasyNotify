@@ -32,12 +32,18 @@ private slots:
     void startFadeOut();
 
 private:
-    static QList<QPointer<NotificationPopup>> s_popups;
-    void repositionPopups();
+    static QList<QPointer<NotificationPopup>> s_cornerPopups;
+    static QPointer<NotificationPopup> s_centerPopup;
+    void attachToCornerStack();
+    void moveToCenter();
+    void repositionCornerPopups();
+    void scheduleAutoClose();
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn;
     QPropertyAnimation *fadeOut;
     Priority m_priority;
     QSoundEffect *soundEffect;
     bool m_soundEnabled;
+    QPointer<QWidget> m_anchorWidget;
+    bool m_isCornerPopup = false;
 };

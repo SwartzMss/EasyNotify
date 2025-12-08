@@ -11,7 +11,8 @@
 #include <QPointer>
 #include "core/providers/priorityiconprovider.h"
 
-QList<QPointer<NotificationPopup>> NotificationPopup::s_popups;
+QList<QPointer<NotificationPopup>> NotificationPopup::s_cornerPopups;
+QPointer<NotificationPopup> NotificationPopup::s_centerPopup;
 
 NotificationPopup::NotificationPopup(const QString &title,
                                      Priority priority,
@@ -21,7 +22,8 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui(new Ui::NotificationPopup),
     m_priority(priority),
     soundEffect(new QSoundEffect(this)),
-    m_soundEnabled(soundEnabled)
+    m_soundEnabled(soundEnabled),
+    m_anchorWidget(parent)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
@@ -90,16 +92,16 @@ void NotificationPopup::show()
 {
     adjustSize();
 
-    // Always show popup on the primary screen instead of the cursor screen
-    QScreen *screen = QGuiApplication::primaryScreen();
-
-    QRect avail = screen->availableGeometry();
-
-    const int margin = 8;
-    int index = s_popups.size();
-    int x = avail.x() + avail.width()  - width()  - margin;
-    int y = avail.y() + avail.height() - ((index + 1) * (height() + margin));
-    move(x, y);
+    if (m_priority == Priority::High) {
+        if (s_centerPopup && s_centerPopup != this) {
+            s_centerPopup->attachToCornerStack();
+            s_centerPopup.clear();
+        }
+        moveToCenter();
+        s_centerPopup = this;
+    } else {
+        attachToCornerStack();
+    }
 
     setWindowOpacity(0);
     QWidget::show();
@@ -111,43 +113,100 @@ void NotificationPopup::show()
         soundEffect->play();
     }
 
-
-    s_popups.append(this);
+    scheduleAutoClose();
 }
 
 void NotificationPopup::closeEvent(QCloseEvent *event)
 {
     QWidget::closeEvent(event);
 
-    int index = s_popups.indexOf(this);
-    if (index != -1)
-        s_popups.removeAt(index);
+    if (m_isCornerPopup) {
+        int index = s_cornerPopups.indexOf(this);
+        if (index != -1)
+            s_cornerPopups.removeAt(index);
+        repositionCornerPopups();
+        m_isCornerPopup = false;
+    }
 
-    repositionPopups();
+    if (s_centerPopup == this) {
+        s_centerPopup.clear();
+    }
 }
 
-void NotificationPopup::repositionPopups()
+void NotificationPopup::attachToCornerStack()
 {
-    if (s_popups.isEmpty())
+    if (!m_isCornerPopup) {
+        s_cornerPopups.append(this);
+        m_isCornerPopup = true;
+    }
+    repositionCornerPopups();
+}
+
+void NotificationPopup::moveToCenter()
+{
+    m_isCornerPopup = false;
+
+    if (m_anchorWidget) {
+        QRect anchorRect = m_anchorWidget->frameGeometry();
+        if (anchorRect.isValid()) {
+            int x = anchorRect.x() + (anchorRect.width() - width()) / 2;
+            int y = anchorRect.y() + (anchorRect.height() - height()) / 2;
+            move(x, y);
+            return;
+        }
+    }
+
+    QScreen *screen = m_anchorWidget ? m_anchorWidget->screen() : QGuiApplication::primaryScreen();
+    if (!screen)
+        screen = QGuiApplication::primaryScreen();
+    if (!screen)
         return;
 
+    QRect avail = screen->availableGeometry();
+    int x = avail.x() + (avail.width() - width()) / 2;
+    int y = avail.y() + (avail.height() - height()) / 2;
+    move(x, y);
+}
+
+void NotificationPopup::repositionCornerPopups()
+{
+    QScreen *screen = QGuiApplication::primaryScreen();
+    if (!screen)
+        return;
+
+    QRect avail = screen->availableGeometry();
     const int margin = 8;
-    for (int i = 0; i < s_popups.size(); ++i) {
-        NotificationPopup *popup = s_popups.at(i);
-        if (!popup)
+
+    int visibleIndex = 0;
+    for (int i = 0; i < s_cornerPopups.size(); ++i) {
+        NotificationPopup *popup = s_cornerPopups.at(i);
+        if (!popup) {
+            s_cornerPopups.removeAt(i);
+            --i;
             continue;
+        }
 
-        // Keep popups anchored to the primary screen
-        QScreen *screen = QGuiApplication::primaryScreen();
-
-        QRect avail = screen->availableGeometry();
         int x = avail.x() + avail.width() - popup->width() - margin;
-        int y = avail.y() + avail.height() - ((i + 1) * (popup->height() + margin));
+        int y = avail.y() + avail.height() - ((visibleIndex + 1) * (popup->height() + margin));
         popup->move(x, y);
+        ++visibleIndex;
     }
 }
 
 void NotificationPopup::startFadeOut()
 {
     fadeOut->start();
+}
+
+void NotificationPopup::scheduleAutoClose()
+{
+    if (m_priority != Priority::Low)
+        return;
+
+    constexpr int kAutoCloseMs = 5 * 60 * 1000;
+    QTimer::singleShot(kAutoCloseMs, this, [this]() {
+        if (!isVisible())
+            return;
+        startFadeOut();
+    });
 }

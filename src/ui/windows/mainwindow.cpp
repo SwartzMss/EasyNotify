@@ -59,7 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::displayNotification(const Reminder &reminder)
 {
-    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled);
+    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled, this);
     popup->show();
 }
 
