@@ -3,6 +3,8 @@
 #include <QIcon>
 #include <QMessageBox>
 #include <QSettings>
+#include <QGuiApplication>
+#include <QScreen>
 #include "ui/windows/activereminderwindow.h"
 #include "ui/windows/completedreminderwindow.h"
 #include <QCloseEvent>
@@ -59,7 +61,22 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::displayNotification(const Reminder &reminder)
 {
-    NotificationPopup *popup = new NotificationPopup(reminder.name(), reminder.priority(), soundEnabled, this);
+    QScreen *trayScreen = nullptr;
+    if (trayIcon) {
+        QRect trayRect = trayIcon->geometry();
+        if (!trayRect.isNull()) {
+            trayScreen = QGuiApplication::screenAt(trayRect.center());
+        }
+    }
+    if (!trayScreen) {
+        trayScreen = QGuiApplication::primaryScreen();
+    }
+
+    NotificationPopup *popup = new NotificationPopup(reminder.name(),
+                                                     reminder.priority(),
+                                                     soundEnabled,
+                                                     this,
+                                                     trayScreen);
     popup->show();
 }
 
