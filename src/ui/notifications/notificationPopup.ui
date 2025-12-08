@@ -66,7 +66,7 @@
       <item>
        <widget class="QLabel" name="titleTextLabel">
         <property name="styleSheet">
-         <string>color: #E0E0E0; font-weight: bold; font-size: 12px;</string>
+         <string>color: #333333; font-weight: bold; font-size: 12px;</string>
         </property>
         <property name="text">
          <string/>
@@ -89,7 +89,7 @@
       <item>
        <widget class="QPushButton" name="closeButton">
         <property name="styleSheet">
-         <string>QPushButton { color: #CCCCCC; background: transparent; border: none; font-size: 16px; } QPushButton:hover { color: #ff6666; }</string>
+         <string>QPushButton { color: #888888; background: transparent; border: none; font-size: 16px; } QPushButton:hover { color: #d9534f; }</string>
         </property>
         <property name="text">
          <string>×</string>
@@ -147,7 +147,7 @@
            </sizepolicy>
           </property>
           <property name="styleSheet">
-           <string>color: #E0E0E0; font-size: 13px;</string>
+           <string>color: #444444; font-size: 13px;</string>
           </property>
           <property name="text">
            <string>提醒内容</string>

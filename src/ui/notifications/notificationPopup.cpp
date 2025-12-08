@@ -65,8 +65,9 @@ NotificationPopup::NotificationPopup(const QString &title,
     connect(fadeOut, &QPropertyAnimation::finished, this, &NotificationPopup::close);
 
     setStyleSheet(R"(
-      QWidget {
-        background: #2C2C2C;
+      QWidget#NotificationPopup {
+        background: #FFFFFF;
+        border: 1px solid #E0E0E0;
         border-radius: 10px;
       }
     )");
@@ -76,13 +77,13 @@ NotificationPopup::NotificationPopup(const QString &title,
     // 设置头部和内容区域不同背景色
     // 头部采用稍浅的强调色，并在底部加入边框与内容区域区分
     ui->headerWidget->setStyleSheet(
-        "background: #3A3F44;"
+        "background: #F7F7F7;"
         " border-top-left-radius: 10px;"
         " border-top-right-radius: 10px;"
-        " border-bottom: 1px solid #232323;");
+        " border-bottom: 1px solid #E0E0E0;");
     // 内容区域保持较暗背景色
     ui->contentWidget->setStyleSheet(
-        "background: #232323;"
+        "background: #FFFFFF;"
         " border-bottom-left-radius: 10px;"
         " border-bottom-right-radius: 10px;");
     
