@@ -41,4 +41,5 @@ private:
     Priority m_priority;
     QSoundEffect *soundEffect;
     bool m_soundEnabled;
+    QPointer<QWidget> m_anchorWidget;
 };

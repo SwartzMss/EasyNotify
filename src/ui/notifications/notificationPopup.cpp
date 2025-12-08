@@ -21,7 +21,8 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui(new Ui::NotificationPopup),
     m_priority(priority),
     soundEffect(new QSoundEffect(this)),
-    m_soundEnabled(soundEnabled)
+    m_soundEnabled(soundEnabled),
+    m_anchorWidget(parent)
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
@@ -90,16 +91,29 @@ void NotificationPopup::show()
 {
     adjustSize();
 
-    // Always show popup on the primary screen instead of the cursor screen
-    QScreen *screen = QGuiApplication::primaryScreen();
+    bool positioned = false;
+    if (m_priority == Priority::High && m_anchorWidget) {
+        QRect anchorRect = m_anchorWidget->frameGeometry();
+        if (anchorRect.isValid()) {
+            int x = anchorRect.x() + (anchorRect.width() - width()) / 2;
+            int y = anchorRect.y() + (anchorRect.height() - height()) / 2;
+            move(x, y);
+            positioned = true;
+        }
+    }
 
-    QRect avail = screen->availableGeometry();
+    if (!positioned) {
+        // Always show popup on the primary screen instead of the cursor screen
+        QScreen *screen = QGuiApplication::primaryScreen();
 
-    const int margin = 8;
-    int index = s_popups.size();
-    int x = avail.x() + avail.width()  - width()  - margin;
-    int y = avail.y() + avail.height() - ((index + 1) * (height() + margin));
-    move(x, y);
+        QRect avail = screen->availableGeometry();
+
+        const int margin = 8;
+        int index = s_popups.size();
+        int x = avail.x() + avail.width()  - width()  - margin;
+        int y = avail.y() + avail.height() - ((index + 1) * (height() + margin));
+        move(x, y);
+    }
 
     setWindowOpacity(0);
     QWidget::show();
@@ -112,7 +126,9 @@ void NotificationPopup::show()
     }
 
 
-    s_popups.append(this);
+    if (m_priority != Priority::High) {
+        s_popups.append(this);
+    }
     scheduleAutoClose();
 }
 
