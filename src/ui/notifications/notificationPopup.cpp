@@ -31,22 +31,23 @@ NotificationPopup::NotificationPopup(const QString &title,
     ui->setupUi(this);
     setAttribute(Qt::WA_ShowWithoutActivating);
     setAttribute(Qt::WA_StyledBackground);
-    setAutoFillBackground(true);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setAutoFillBackground(false);
 
     // Slight shadow to lift the popup off the screen
     auto *shadow = new QGraphicsDropShadowEffect(this);
-    shadow->setBlurRadius(12);
-    shadow->setOffset(0, 2);
+    shadow->setBlurRadius(16);
+    shadow->setOffset(0, 4);
+    shadow->setColor(QColor(0, 0, 0, 60));
     setGraphicsEffect(shadow);
 
-    // 设置标题图标和消息
+    // 设置标题图标
     ui->titleLabel->setPixmap(QIcon(":/img/tray_icon_active.png").pixmap(24, 24));
-    ui->titleTextLabel->clear();
     ui->messageLabel->setText(title);
 
     // 根据优先级选择卡通图标
     QIcon icon = PriorityIconProvider::icon(m_priority);
-    ui->priorityLabel->setPixmap(icon.pixmap(24, 24));
+    ui->priorityLabel->setPixmap(icon.pixmap(36, 36));
     
     // 关闭按钮
     connect(ui->closeButton, &QPushButton::clicked, this, &NotificationPopup::startFadeOut);
@@ -65,28 +66,28 @@ NotificationPopup::NotificationPopup(const QString &title,
     connect(fadeOut, &QPropertyAnimation::finished, this, &NotificationPopup::close);
 
     setStyleSheet(R"(
-      QWidget {
-        background: #2C2C2C;
+      QWidget#NotificationPopup {
+        background: #FFFFFF;
+        border: 1.5px solid #2d3748;
         border-radius: 10px;
       }
     )");
 
     setAttribute(Qt::WA_DeleteOnClose);
 
-    // 设置头部和内容区域不同背景色
-    // 头部采用稍浅的强调色，并在底部加入边框与内容区域区分
+    // 设置头部和内容区域不同背景色，分隔线移动到内容顶部以避免贴着图标
     ui->headerWidget->setStyleSheet(
-        "background: #3A3F44;"
+        "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f5f8ff, stop:1 #e3e8f4);"
         " border-top-left-radius: 10px;"
         " border-top-right-radius: 10px;"
-        " border-bottom: 1px solid #232323;");
+        " border-bottom: 1px solid #d1d7e3;");
     // 内容区域保持较暗背景色
     ui->contentWidget->setStyleSheet(
-        "background: #232323;"
+        "background: #FFFFFF;"
         " border-bottom-left-radius: 10px;"
         " border-bottom-right-radius: 10px;");
     
-    setFixedSize(220, 100);
+    setFixedSize(180, 90);
 
     soundEffect->setSource(QUrl(QStringLiteral("qrc:/sound/Ding.wav")));
 }
