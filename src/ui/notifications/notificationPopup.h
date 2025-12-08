@@ -34,6 +34,7 @@ private slots:
 private:
     static QList<QPointer<NotificationPopup>> s_popups;
     void repositionPopups();
+    void scheduleAutoClose();
     QScopedPointer<Ui::NotificationPopup> ui;
     QPropertyAnimation *fadeIn;
     QPropertyAnimation *fadeOut;

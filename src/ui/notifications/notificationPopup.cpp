@@ -113,6 +113,7 @@ void NotificationPopup::show()
 
 
     s_popups.append(this);
+    scheduleAutoClose();
 }
 
 void NotificationPopup::closeEvent(QCloseEvent *event)
@@ -150,4 +151,17 @@ void NotificationPopup::repositionPopups()
 void NotificationPopup::startFadeOut()
 {
     fadeOut->start();
+}
+
+void NotificationPopup::scheduleAutoClose()
+{
+    if (m_priority != Priority::Low)
+        return;
+
+    constexpr int kAutoCloseMs = 5 * 60 * 1000;
+    QTimer::singleShot(kAutoCloseMs, this, [this]() {
+        if (!isVisible())
+            return;
+        startFadeOut();
+    });
 }
